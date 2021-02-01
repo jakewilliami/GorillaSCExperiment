@@ -1,0 +1,37 @@
+@import '/style/style.less';
+
+// set margin at top of container
+.container {
+    margin-top: 10vh; // 20% of the view height
+}
+
+/* define grid class for image array */
+// define overall grid structure as 554x554 pixels;
+// that is, 530x530 plus 12 pixels on each side of 
+// the array
+.grid5x5 {
+    width:554px;
+    height:554px;
+    clear:both;
+}
+// define image box, which contains the image and the
+// margin around all four sides of that image;
+// 110 pixels is 96 pixels (the width and height of
+// the image) plus 6*2 (6 pixels on each side) of the
+// the square
+.grid5x5>div {
+    width:110px;
+    height:110px;
+    float:left;
+    line-height:110px;
+    text-align:center;    
+}
+// define image itself, which is within the image box;
+// 96x96 pixels; the size of the images in the image array
+// from Excel.
+.grid5x5>div>img {
+    display:inline-block;
+    vertical-align:middle;
+    width:96px;
+    height:96px;
+}
