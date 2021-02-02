@@ -1,13 +1,23 @@
 from PIL import Image # this is used to create the images
-import glob # this is used for reading the directory (folder) of images
+import os # this is for reading paths
+from glob import glob
+from pathlib import Path # as above
 import random # this is used to choose 25 unique random images
 from math import ceil, floor
 
-distractors = glob.glob("Distractor/*") # this is where you need to put your path to directory
-cars = glob.glob("Cars/*")
-faces = glob.glob("Faces/*")
-hf_pareidolia = glob.glob("Highface pareidolia/*")
-lf_pareidolia = glob.glob("Lowface pareidolia/*")
+# data_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "data")
+# data_dir = os.path.join(os.path.dirname(os.path.realpath(os.path.dirname(os.path.realpath(__file__)))), "data")
+data_dir = os.path.join(Path(os.path.realpath(__file__)).parents[1], "data")
+
+print(data_dir)
+
+# distractors = [os.path.abspath(i) for i in os.listdir(os.path.join(data_dir, "Distractor"))] # this is where you need to put your path to directory
+distractors glob.glob(os.path.join(data_dir, "Distractor"))
+print(distractors)
+cars = [os.path.abspath(i) for i in os.listdir(os.path.join(data_dir, "Cars"))]
+faces = [os.path.abspath(i) for i in os.listdir(os.path.join(data_dir, "Faces"))]
+hf_pareidolia = [os.path.abspath(i) for i in os.listdir(os.path.join(data_dir, "Highface pareidolia"))]
+lf_pareidolia = [os.path.abspath(i) for i in os.listdir(os.path.join(data_dir, "Lowface pareidolia"))]
 
 randtarget = random.choice(cars + faces + hf_pareidolia + lf_pareidolia)
 listofimages = random.sample(distractors, 24)
@@ -79,21 +89,21 @@ def create_collage_resize(images_per_row, img_width, img_height, desired_frame_w
 
 img_width, img_height = Image.open(listofimages[0]).size # get size of images (assume all same size)
 
-# --------
+# ---------------------------------
 # CHANGE THIS SECTION
-# --------
+# ---------------------------------
 
 padding = 5
 arr_height, arr_width = (530, 530)
 nrows, ncols = (5, 5)
 
-# ---------
+# ---------------------------------
 
 wo_borders = create_collage_with_outer_borders(nrows, ncols, img_width, img_height, padding, listofimages)
 img = create_collage(nrows, img_width, img_height, padding, listofimages)
 img_resized = create_collage_resize(nrows, img_width, img_height, arr_height, arr_width, padding, listofimages)
 
 # using PNG because JPEG is lossy
-wo_borders.save("out_with_borders.png", "PNG", quality = 80, optimize = True, progressive = True)
-img.save("out.png", "PNG", quality = 80, optimize = True, progressive = True)
-img_resized.save("out_resized.png", "PNG", quality = 80, optimize = True, progressive = True)
+wo_borders.save(os.path.join("out", "out_with_borders.png"), "PNG", quality = 80, optimize = True, progressive = True)
+img.save(os.path.join("out", "out.png"), "PNG", quality = 80, optimize = True, progressive = True)
+img_resized.save(os.path.join("out", "out_resized.png"), "PNG", quality = 80, optimize = True, progressive = True)
