@@ -1,8 +1,21 @@
 import gorilla = require('gorilla/gorilla');
+import stateMachine = require("gorilla/state_machine");
+
 import utils = require('utils');
+
 const nImagesInGrid: number = 25;
 var stimConditions: string[] = ['D', 'C', 'F', 'HF', 'LF'];
 const fixationLength: number = 500;
+
+/* ------------------------------------- */
+
+
+enum State {
+    Instructions,
+    Trial,
+    Finish,
+}
+
 gorilla.ready(function(){
     const randomCondition: string = utils.takeRand(stimConditions);
     console.log(randomCondition);
@@ -66,7 +79,7 @@ gorilla.ready(function(){
     
     // while (true) {
         loadTrial();
-        
+        console.log(blockArray.length);
     //     if (blockArray.length === 0) {
     //         break;
     //     }
