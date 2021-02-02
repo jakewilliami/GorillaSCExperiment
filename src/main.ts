@@ -62,8 +62,8 @@ gorilla.ready(function(){
             var isPresent: boolean = false;
             
             // hide so that all images are generated at the same time
-            $('#gorilla').hide();
-            gorilla.refreshLayout();
+//             $('#gorilla').hide();
+//             gorilla.refreshLayout();
             if (randTrial % 2 == 0) {
                 // generate a list of 25 random distractors
                 // Construct 25 random distractor urls
@@ -123,70 +123,78 @@ gorilla.ready(function(){
             */
             
             // populate our trial screen
-            gorilla.populate('#gorilla', 'exp', {trials: trialArray});
-            // hide main bits of display
-            // $('.trial-array').hide();
-            // $('.gorilla-fixation-cross').hide();
-            // console.log(trialArray);
-            // gorilla.refreshLayout();
-        
             
-            /*
-            // Display the fixation cross
-            $('#gorilla')
-                .queue(function () {
-                    $('.gorilla-fixation-cross').show();
-                    gorilla.refreshLayout();
-                    $(this).dequeue();
-                })// end queue for '#gorilla'
-                .delay(fixationLength)
-                .queue(function () {
-                    $('.gorilla-fixation-cross').hide();
-                    gorilla.refreshLayout();
-                    $(this).dequeue();
-                }) // end queue for '#gorilla'
-                .delay(afterFixationLength);
-              */  
-                
-                // display array of images
+             $('#gorilla').hide();
+            
+            gorilla.populateAndLoad($('#gorilla'), 'exp', { distractors: randomURLs }, (err) => {
+                    $('#gorilla').show();
+
+    //             gorilla.populate('#gorilla', 'exp', {trials: trialArray});
+                // hide main bits of display
+                // $('.trial-array').hide();
+                // $('.gorilla-fixation-cross').hide();
+                // console.log(trialArray);
+                // gorilla.refreshLayout();
+
+
+                /*
+                // Display the fixation cross
                 $('#gorilla')
                     .queue(function () {
-                        // $('.trial-array').show();
-                        // $('#gorilla').show();
+                        $('.gorilla-fixation-cross').show();
+                        gorilla.refreshLayout();
+                        $(this).dequeue();
+                    })// end queue for '#gorilla'
+                    .delay(fixationLength)
+                    .queue(function () {
+                        $('.gorilla-fixation-cross').hide();
                         gorilla.refreshLayout();
                         $(this).dequeue();
                     }) // end queue for '#gorilla'
-                
-                $('#gorilla').show();
-                gorilla.refreshLayout();
-        
-            $('.response-button').on('click', (event: JQueryEventObject) => {
-                // may not need this line
-                gorilla.refreshLayout();
-        
-                gorilla.metric({
-                    trialNo: trial_number,
-                    trial_condition: isPresent, // present or absent trial; previously "condition1"
-                    target_condition: condType, // type of condition; previously "condition2"
-                    target_img: randomTargetImage, // the name of the taget image (or null); previously "stim1"
-                    target_location: null,
-                    key: null, // the response key for this trial
-                    correct: null, // boolean; whether correct or not
-                    response_time: null, // response time
-                    reponse_time: null,
-                }) // end metric
-            
-                // increment trial number
-                trial_number++;
-                gorilla.store(GorillaStoreKeys.CurrentTrialNo, trial_number);
-        
-                // move on transition
-                $('#gorilla')
-                    .queue(function () {
-                        machine.transition(State.Trial);
-                        $(this).dequeue();
-                    }); // end queue for '#gorilla'
-            }) // end response button on click (event: JQueryEventObject)
+                    .delay(afterFixationLength);
+                  */  
+
+                    // display array of images
+                    $('#gorilla')
+                        .queue(function () {
+                            // $('.trial-array').show();
+                            // $('#gorilla').show();
+                            gorilla.refreshLayout();
+                            $(this).dequeue();
+                        }) // end queue for '#gorilla'
+
+//                     $('#gorilla').show();
+//                     gorilla.refreshLayout();
+
+                $('.response-button').on('click', (event: JQueryEventObject) => {
+                    // may not need this line
+                    gorilla.refreshLayout();
+
+                    gorilla.metric({
+                        trialNo: trial_number,
+                        trial_condition: isPresent, // present or absent trial; previously "condition1"
+                        target_condition: condType, // type of condition; previously "condition2"
+                        target_img: randomTargetImage, // the name of the taget image (or null); previously "stim1"
+                        target_location: null,
+                        key: null, // the response key for this trial
+                        correct: null, // boolean; whether correct or not
+                        response_time: null, // response time
+                        reponse_time: null,
+                    }) // end metric
+
+                    // increment trial number
+                    trial_number++;
+                    gorilla.store(GorillaStoreKeys.CurrentTrialNo, trial_number);
+
+                    // move on transition
+                    $('#gorilla')
+                        .queue(function () {
+                            machine.transition(State.Trial);
+                            $(this).dequeue();
+                        }); // end queue for '#gorilla'
+                }) // end response button on click (event: JQueryEventObject)
+
+             }) // end populate and load
         }, // end onEnter
         
         // The onExit function is executed whenever a state is left.  
