@@ -1,9 +1,17 @@
 @import '/style/style.less';
 
-// set margin at top of container to be 10% of the
-// view height of the page
+// define response button
+.response-button {
+    font-size:64px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+// set margin at top of container
 .container {
-    margin-top: 10vh;
+    margin-top: 10vh; // 20% of the view height
 }
 
 /* define grid class for image array */
@@ -11,9 +19,12 @@
 // that is, 530x530 plus 12 pixels on each side of 
 // the array
 .grid5x5 {
-    width:554px;
-    height:554px;
-    clear:both;
+    // position: absolute;
+    // place-self: center;
+    // vertical-align: middle;
+    width: 10cm;
+    height: 10cm;
+    clear :both;
 }
 // define image box, which contains the image and the
 // margin around all four sides of that image;
@@ -21,18 +32,25 @@
 // the image) plus 6*2 (6 pixels on each side) of the
 // the square
 .grid5x5>div {
-    width:110px;
-    height:110px;
-    float:left;
-    line-height:110px;
-    text-align:center;    
+    // position: absolute;
+    // position: relative;
+    // left: 50%;
+    // top: 50%;
+    // transform: translate(-50%, -50%);
+    // place-self: center;
+    width: 2cm;
+    height: 2cm;
+    float: left;
+    line-height: 2cm;
+    text-align: center;    
 }
 // define image itself, which is within the image box;
 // 96x96 pixels; the size of the images in the image array
 // from Excel.
 .grid5x5>div>img {
     display:inline-block;
-    vertical-align:middle;
-    width:96px;
-    height:96px;
+    // position: absolute;
+    vertical-align: middle;
+    width: 1.8cm;
+    height: 1.8cm;
 }
