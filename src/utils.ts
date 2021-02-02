@@ -44,12 +44,19 @@ const lowFacePrefix: string = 'LF';
 const imageExt: string = 'jpg';
 
 export function randInt(lower: number, upper: number) {
-    return Math.floor(Math.random() * upper) + lower;
+    return Math.floor(Math.random() * upper - lower + 1) + lower;
 }
 
 export function randVal(arr: any[]) {
     const randomIndex: number = randInt(0, arr.length - 1);
     return arr[randomIndex];
+}
+
+export function takeRand(arr: any[]) {
+    const randInd: number = randInt(0, arr.length - 1);
+    const randVal = arr[randInd];
+    arr.splice(randInd, 1);
+    return randVal;
 }
 
 export function chooseNUniqueRandomWithinRange(n: number, lower: number, upper: number) {
@@ -64,6 +71,14 @@ export function chooseNUniqueRandomWithinRange(n: number, lower: number, upper: 
     return arr;
 }
 
+export function constructBlockArray() {
+    var arr: number[] = [];
+    for (var i = 1; i < 51; i++) {
+        arr.push(i);
+    }
+    return arr;
+}
+
 function constructStimName(prefix: string, imageNumber: number) {
     return prefix + imageNumber + '.' + imageExt;
 }
@@ -71,26 +86,14 @@ function constructStimName(prefix: string, imageNumber: number) {
 export function constructImageName(imageType: string, imageNumber: number) {
     switch(imageType) {
         case 'D':
-        case 'Distractor':
-        case 'distractor':
             return constructStimName(distractorPrefix, imageNumber);
         case 'C':
-        case 'Car':
-        case 'car':
             return constructStimName(carPrefix, imageNumber);
         case 'F':
-        case 'Face':
-        case 'face':
             return constructStimName(facePrefix, imageNumber);
         case 'HF':
-        case 'HighFace':
-        case 'highface':
-        case 'highFace':
             return constructStimName(highFacePrefix, imageNumber);
         case 'LF':
-        case 'LowFace':
-        case 'lowface':
-        case 'lowFace':
             return constructStimName(lowFacePrefix, imageNumber);
     }
 }
@@ -98,26 +101,14 @@ export function constructImageName(imageType: string, imageNumber: number) {
 export function constructRandImageName(imageType: string) {
     switch(imageType) {
         case 'D':
-        case 'Distractor':
-        case 'distractor':
             return constructImageName(distractorPrefix, randInt(Dstart, Dend));
         case 'C':
-        case 'Car':
-        case 'car':
             return constructImageName(carPrefix, randInt(Tstart, Tend));
         case 'F':
-        case 'Face':
-        case 'face':
             return constructImageName(facePrefix, randInt(Tstart, Tend));
         case 'HF':
-        case 'HighFace':
-        case 'highface':
-        case 'highFace':
             return constructImageName(highFacePrefix, randInt(Tstart, Tend));
         case 'LF':
-        case 'LowFace':
-        case 'lowface':
-        case 'lowFace':
             return constructImageName(lowFacePrefix, randInt(Tstart, Tend));
     }
 }
@@ -134,4 +125,38 @@ export function generateDistractorArray(n: number) {
 
 export function insert(arr: string[], index: number, item: string) {
     return arr.splice(index, 0, item);
+}
+
+export function insertAtRandom(arr: string[], item: string) {
+    return insert(arr, randInt(0, arr.length), item);
+}
+
+export function getCondCode(condition: string) {
+    switch (condition) {
+        case 'F':
+            return 1;
+        case 'C':
+            return 2;
+        case 'LF':
+            return 3;
+        case 'HF':
+            return 4;
+    }
+    // should never get here
+    return 0;
+}
+
+export function encodeTargetType(condition: string) {
+    switch (condition) {
+        case 'F':
+            return 'face';
+        case 'C':
+            return 'car';
+        case 'LF':
+            return 'low';
+        case 'HF':
+            return 'high';
+    }
+    // should never get here
+    return null;
 }
