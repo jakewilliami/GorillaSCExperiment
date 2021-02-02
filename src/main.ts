@@ -23,11 +23,10 @@ var GorillaStoreKeys = {
     Finished: 'finished'
 }
 
-var finishedFlag: boolean = gorilla.retrieve(GorillaStoreKeys.Finished, false);
-
 gorilla.ready(function(){
     var SM = new stateMachine.StateMachine();
     var trial_number: number = 1;
+    var finishedFlag: boolean = gorilla.retrieve(GorillaStoreKeys.Finished, false);
     
     // In this state we will display our instructions for the task
     SM.addState(State.Instructions, {
@@ -41,16 +40,20 @@ gorilla.ready(function(){
         } // end onEnter
     }) // end addState
     
+    var blockArray = utils.constructBlockArray();
+    
     // in this state, an array of images will be displayed and a response button
     // will be pressed
     SM.addState(State.Trial, {
         // the onEnter functions is executed when a state is entered
         onEnter: (machine: stateMachine.Machine) => {
-            const randomCondition: string = utils.takeRand(stimConditions);
-            var blockArray = utils.constructBlockArray();
+            const randomCondition: string = utils.randVal(stimConditions); // previously takeRand
             var trialArray: string[] = [];
             var currentTrial: number = 0;
             const randTrial: number = utils.takeRand(blockArray);
+            console.log(randTrial);
+            
+            // metrics
             const condType = utils.encodeTargetType(randomCondition);
             const blockCode: number = utils.getCondCode(randomCondition);
         
@@ -58,6 +61,9 @@ gorilla.ready(function(){
             var randomTargetImage = null;
             var isPresent: boolean = false;
             
+            // hide so that all images are generated at the same time
+            $('#gorilla').hide();
+            gorilla.refreshLayout();
             if (randTrial % 2 == 0) {
                 // generate a list of 25 random distractors
                 // Construct 25 random distractor urls
@@ -84,7 +90,8 @@ gorilla.ready(function(){
                 const randomConditionImage: string = utils.constructRandImageName(randomCondition);
                 const randomConditionImageURL: string = gorilla.stimuliURL(randomConditionImage);
                 utils.insertAtRandom(randomURLs, randomConditionImageURL);
-        
+                console.log(randomCondition);
+                console.log(randomConditionImage);
                 // update trialArray with array of distractors plus one random target
                 var trialArray: string[] = randomURLs;
         
@@ -97,7 +104,7 @@ gorilla.ready(function(){
                 // TODO:
                 // Insert at random then DO NOT REPEAT POSITION
             } // end if
-        
+            
             /*
             // Build our screen
             $('#gorilla').hide();
@@ -114,16 +121,18 @@ gorilla.ready(function(){
                 }) // end button response on click
             }) // end populateAndLoad
             */
-        
+            
             // populate our trial screen
-            gorilla.populate('#gorilla', 'trial', {trial: trialArray});
+            gorilla.populate('#gorilla', 'exp', {trials: trialArray});
             // hide main bits of display
             // $('.trial-array').hide();
             // $('.gorilla-fixation-cross').hide();
-            gorilla.refreshLayout();
+            // console.log(trialArray);
+            // gorilla.refreshLayout();
         
-        
-            /*// Display the fixation cross
+            
+            /*
+            // Display the fixation cross
             $('#gorilla')
                 .queue(function () {
                     $('.gorilla-fixation-cross').show();
@@ -137,21 +146,23 @@ gorilla.ready(function(){
                     $(this).dequeue();
                 }) // end queue for '#gorilla'
                 .delay(afterFixationLength);
-<<<<<<< HEAD
-                */
-=======
->>>>>>> 16308f0b715df0ba74bff080bab87fc596149dca
-        
-            $('.response-button').on('click', (event: JQueryEventObject) => {
+              */  
+                
                 // display array of images
                 $('#gorilla')
                     .queue(function () {
-                        $('.trial-array').show();
+                        // $('.trial-array').show();
+                        // $('#gorilla').show();
                         gorilla.refreshLayout();
                         $(this).dequeue();
                     }) // end queue for '#gorilla'
+                
+                $('#gorilla').show();
+                gorilla.refreshLayout();
+        
+            $('.response-button').on('click', (event: JQueryEventObject) => {
                 // may not need this line
-                // gorilla.refreshLayout();
+                gorilla.refreshLayout();
         
                 gorilla.metric({
                     trialNo: trial_number,
@@ -164,29 +175,33 @@ gorilla.ready(function(){
                     response_time: null, // response time
                     reponse_time: null,
                 }) // end metric
-            }) // end response button on click (event: JQueryEventObject)
             
-            // increment trial number
-            trial_number++;
-            gorilla.store(GorillaStoreKeys.CurrentTrialNo, trial_number);
+                // increment trial number
+                trial_number++;
+                gorilla.store(GorillaStoreKeys.CurrentTrialNo, trial_number);
         
-            // move on transition
-            $('#gorilla')
-                .queue(function () {
-                    machine.transition(State.Trial);
-                    $(this).dequeue();
-                }); // end queue for '#gorilla'
+                // move on transition
+                $('#gorilla')
+                    .queue(function () {
+                        machine.transition(State.Trial);
+                        $(this).dequeue();
+                    }); // end queue for '#gorilla'
+            }) // end response button on click (event: JQueryEventObject)
         }, // end onEnter
         
+        // The onExit function is executed whenever a state is left.  
+        // It is the last thing a state will do
         onExit: (machine: stateMachine.Machine) => {
-            // if (blockArray.length === 0) {
+            if (blockArray.length === 0) {
+                console.log("blockArray is now empty!");
                 var trialFinished: boolean = true;
                 gorilla.store(GorillaStoreKeys.Finished, trialFinished);
                 machine.transition(State.Finish);
-            // }
+            }
         } // end onExit
     }); // end addState
     
+    // this is the state we enter when we have finished the task
     SM.addState(State.Finish, {
         onEnter: (machine: stateMachine.Machine) => {
             gorilla.populate('#gorilla', 'finish', {});
@@ -200,13 +215,15 @@ gorilla.ready(function(){
     // calling this function starts gorilla and the task as a whole
     gorilla.run(function () {
         // while (true) {
+        if (!finishedFlag) {
             SM.start(State.Instructions);
             
             // if (blockArray.length === 0) {
             //     break;
             // }
-        // } //end while
+        } else { //end while
         
-        SM.start(State.Finish);
+            SM.start(State.Finish);
+        }
     }) // end gorilla run
 }) // end gorilla ready
