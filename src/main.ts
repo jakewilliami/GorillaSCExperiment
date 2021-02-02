@@ -12,7 +12,7 @@ const afterFixationLength: number = 500;
 
 
 enum State {
-    // Instructions,
+    Instructions,
     Trial,
     Finish,
 }
@@ -23,7 +23,7 @@ var GorillaStoreKeys = {
     Finished: 'finished'
 }
 
-var finishedFlag: bool = gorilla.retrieve(GorillaStoreKeys.Finished, false)
+var finishedFlag: boolean = gorilla.retrieve(GorillaStoreKeys.Finished, false);
 
 gorilla.ready(function(){
     var SM = new stateMachine.StateMachine();
@@ -55,7 +55,7 @@ gorilla.ready(function(){
         
             // predefining metrics
             var randomTargetImage = null;
-            var isPresent: bool = false;
+            var isPresent: boolean = false;
             
             if (randTrial % 2 == 0) {
                 // generate a list of 25 random distractors
@@ -88,10 +88,10 @@ gorilla.ready(function(){
                 var trialArray: string[] = randomURLs;
         
                 // update target image name
-                var randomTargetImage = randomConditionImage;
+                var randomTargetImage: any = randomConditionImage;
         
                 // update isPresent variable (i.e., target has been shown)
-                var isPresent: bool = true;
+                var isPresent: boolean = true;
         
                 // TODO:
                 // Insert at random then DO NOT REPEAT POSITION
@@ -137,17 +137,16 @@ gorilla.ready(function(){
                 }) // end queue for '#gorilla'
                 .delay(afterFixationLength);
         
-            // display array of images
-            $('#gorilla')
-                .queue(function () {
-                    $('.trial-array').show();
-                    gorilla.refreshLayout();
-                    $(this).dequeue();
-                }) // end queue for '#gorilla'
-        
             $('.response-button').on('click', (event: JQueryEventObject) => {
+                // display array of images
+                $('#gorilla')
+                    .queue(function () {
+                        $('.trial-array').show();
+                        gorilla.refreshLayout();
+                        $(this).dequeue();
+                    }) // end queue for '#gorilla'
                 // may not need this line
-                gorilla.refreshLayout();
+                // gorilla.refreshLayout();
         
                 gorilla.metric({
                     trialNo: trial_number,
@@ -175,11 +174,11 @@ gorilla.ready(function(){
         }, // end onEnter
         
         onExit: (machine: stateMachine.Machine) => {
-            if (blockArray.length === 0) {
-                trialFinished = true;
+            // if (blockArray.length === 0) {
+                var trialFinished: boolean = true;
                 gorilla.store(GorillaStoreKeys.Finished, trialFinished);
                 machine.transition(State.Finish);
-            }
+            // }
         } // end onExit
     }); // end addState
     
@@ -195,14 +194,14 @@ gorilla.ready(function(){
     
     // calling this function starts gorilla and the task as a whole
     gorilla.run(function () {
-        while (true) {
-            SM.Start(State.Instructions);
+        // while (true) {
+            SM.start(State.Instructions);
             
-            if (blockArray.length === 0) {
-                break;
-            }
-        } //end while
+            // if (blockArray.length === 0) {
+            //     break;
+            // }
+        // } //end while
         
-        SM.Start(State.Finish);
+        SM.start(State.Finish);
     }) // end gorilla run
 }) // end gorilla ready
