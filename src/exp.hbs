@@ -1,12 +1,13 @@
 <div class="container" align="center">
     <div class="grid5x5">
-        {{#each distractors}}
+        {{#each trials}}
             <div>
                 <img src={{this}}>
             </div>
         {{/each}}
     </div>
-    {{!--   <div>--}}
-	    {{!--    <button class="btn btn-primary" id="exit-button">Press to End</button>--}}
-    {{!--</div>--}}
+       <div>
+           <button class="btn btn-primary response-button" data-response="Next">Next</button>
+	        {{!--<button class="btn btn-primary" id="exit-button">Press to End</button>--}}
+    </div>
 </div>
