@@ -137,7 +137,10 @@ gorilla.ready(function(){
                     $(this).dequeue();
                 }) // end queue for '#gorilla'
                 .delay(afterFixationLength);
+<<<<<<< HEAD
                 */
+=======
+>>>>>>> 16308f0b715df0ba74bff080bab87fc596149dca
         
             $('.response-button').on('click', (event: JQueryEventObject) => {
                 // display array of images
