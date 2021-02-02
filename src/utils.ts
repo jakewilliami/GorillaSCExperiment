@@ -42,7 +42,7 @@ const lowFacePrefix: string = 'LF';
 const imageExt: string = 'jpg';
 
 export function randInt(lower: number, upper: number) {
-    return Math.floor(Math.random() * upper - lower + 1) + lower;
+    return Math.floor(Math.random() * (upper - lower + 1)) + lower;
 }
 
 export function randVal(arr: any[]) {
@@ -52,6 +52,8 @@ export function randVal(arr: any[]) {
 
 export function takeRand(arr: any[]) {
     const randInd: number = randInt(0, arr.length - 1);
+    console.log("The chosen random index for takeRand is:");
+    console.log(randInd);
     const randVal = arr[randInd];
     arr.splice(randInd, 1);
     return randVal;
