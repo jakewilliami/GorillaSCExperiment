@@ -157,6 +157,7 @@ export function encodeTargetType(condition: string) {
         case 'HF':
             return 'high';
     }
+  
     // should never get here
     return null;
 }
