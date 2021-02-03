@@ -14,8 +14,9 @@ const afterFixationDelay: number = 0;
 // possible states in state machine
 enum State {
 	Instructions,
-	Block,
+	PracticeTrial,
 	Trial,
+	Block,
 	Finish,
 }
 
@@ -48,13 +49,20 @@ gorilla.ready(function(){
 	SM.addState(State.Instructions, {
 		onEnter: (machine: stateMachine.Machine) => {
 			var text: string = "Hello and welcome to this experiment.  It is the love child of genius people."
-			gorilla.populate('#gorilla', 'instructions', {introduction: text});
+			var examples: string[] = constructURLArray(["EC.jpg", "EF.jpg", "EP.jpg"]);
+			gorilla.populate('#gorilla', 'instructions', {
+			    introduction: text,
+			    e1: examples[0],
+			    e2: examples[1],
+			    e3: examples[2],
+			    imSize: "3cm"
+			}); // end populate
 			gorilla.refreshLayout();
 			$('#start-button').one('click', (event: JQueryEventObject) => {
 				machine.transition(State.Trial);
 			}) // end on click start button
 		} // end onEnter
-	}) // end addState
+	}) // end addState Instructions
 
     // here we define arrays of values so that we can choose a certain value,
     // take it *from* the array, and that value is hence not repeating.
@@ -67,6 +75,7 @@ gorilla.ready(function(){
 	SM.addState(State.Trial, {
 		// the onEnter functions is executed when a state is entered
 		onEnter: (machine: stateMachine.Machine) => {
+			// setTimeout(() => {}, 3000)
 			const randomCondition: string = utils.randVal(stimConditions); // previously takeRand
 			var trialArray: string[] = [];
 			var currentTrial: number = 0;
@@ -80,7 +89,7 @@ gorilla.ready(function(){
 			// initialising some metrics
 			var randomTargetImage = null;
 			var isPresent: boolean = false;
-
+			
 			// hide so that all images are generated at the same time
 			if (randTrial % 2 == 0) {
 				// generate a list of 25 random distractors
@@ -182,7 +191,7 @@ gorilla.ready(function(){
 			console.log('----------------------------------------------------------');
 		}, // end onEnter
 
-		// The onExit function is executed whenever a state is left.  
+		// The onExit function is executed whenever a state is left.
 		// It is the last thing a state will do
 		onExit: (machine: stateMachine.Machine) => {
 			if (blockArray.length === 0) {
@@ -192,7 +201,7 @@ gorilla.ready(function(){
 				machine.transition(State.Finish);
 			} // end if
 		} // end onExit
-	}); // end addState
+	}); // end addState Trial
 
 	// this is the state we enter when we have finished the task
 	SM.addState(State.Finish, {
@@ -203,7 +212,7 @@ gorilla.ready(function(){
 				gorilla.finish();
 			})
 		} // end onEnter
-	}) // end addState
+	}) // end addState Finish
 
 	// calling this function starts gorilla and the task as a whole
 	gorilla.run(function () {
