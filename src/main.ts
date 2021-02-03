@@ -25,6 +25,8 @@ var GorillaStoreKeys = {
 }
 
 gorilla.ready(function(){
+    const constTrialType: string = 'F';
+    
 	// initialise state machine
 	var SM = new stateMachine.StateMachine();
 	// start at trial one
@@ -43,7 +45,11 @@ gorilla.ready(function(){
 		} // end onEnter
 	}) // end addState
 
-	var blockArray = utils.constructBlockArray();
+    // here we define arrays of values so that we can choose a certain value,
+    // take it *from* the array, and that value is hence not repeating.
+	var blockArray: number[] = utils.constructBlockArray();
+	var possibleTrialTargets: number[] = utils.constructTargetArray();
+	var possibleTrialPositions: number[] = utils.constructTargetArray();
 
 	// in this state, an array of images will be displayed and a response button
 	// will be pressed
@@ -87,26 +93,28 @@ gorilla.ready(function(){
 					randomURLs.push(distractorURL);
 				}
 
-				// add random condition url to a random place in the array
-				const randomConditionImage: string = utils.constructRandImageName(randomCondition);
-				const randomConditionImageURL: string = gorilla.stimuliURL(randomConditionImage);
-				utils.insertAtRandom(randomURLs, randomConditionImageURL);
-				console.log(randomCondition);
-				console.log(randomConditionImage);
+				// choose a random image from the possible image set.  This image cannot be repeated
+				const randomImageNumber: number = utils.takeRand(possibleTrialTargets) + 1; // add one because array is from 0:24
+				const conditionImage: string = utils.constructImageName(constTrialType, randomImageNumber);
+				const conditionImageURL: string = gorilla.stimuliURL(conditionImage);
+				
+				// insert image at random position.  This position cannot be repeated
+				const randPosition: number = utils.takeRand(possibleTrialPositions);
+				utils.insert(randomURLs, randPosition, conditionImageURL)
+				
+				console.log(conditionImage);
+				console.log(randPosition);
 				// update trialArray with array of distractors plus one random target
 				var trialArray: string[] = randomURLs;
 				// update target image name
-				var randomTargetImage: any = randomConditionImage;
+				var randomTargetImage: any = conditionImage;
 				// update isPresent variable (i.e., target has been shown)
 				var isPresent: boolean = true;
-
-				// TODO:
-				// Insert at random then DO NOT REPEAT POSITION
 			} // end if
 
 			// hide the display till the images are loaded
-			$('#gorilla').hide();
-
+ 			$('#gorilla').hide();
+            // $('.trial-array').hide();
 			// populate our trial screen
 			gorilla.populateAndLoad($('#gorilla'), 'exp', { trials: trialArray }, (err) => {
 				/*
@@ -167,7 +175,6 @@ gorilla.ready(function(){
 		// It is the last thing a state will do
 		onExit: (machine: stateMachine.Machine) => {
 			if (blockArray.length === 0) {
-				console.log("blockArray is now empty!");
 				var trialFinished: boolean = true;
 				gorilla.store(GorillaStoreKeys.Finished, trialFinished);
 				machine.transition(State.Finish);
