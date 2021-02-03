@@ -9,7 +9,7 @@ from math import ceil, floor
 # CHANGE THIS SECTION
 # --------------------------------------------------------
 
-target_type = None # can be 'F', 'D', 'C', 'HF', or 'LF'.  Leaving it as `None` will choose a random one
+target_type = None # can be 'F', 'D', 'C', 'HF', or 'LF'.  Leaving it as `None` will choose a random one.  Can input target type from command line
 padding = 5
 arr_height, arr_width = (530, 530)
 nrows, ncols = (5, 5)
@@ -46,6 +46,7 @@ target_dict = {
 
 listofimages = random.sample(distractors, 24)
 
+# make array
 if target_type in target_dict:
     if target_type != 'D':
         randtarget = random.choice(target_dict[target_type])
@@ -58,6 +59,7 @@ else:
     listofimages.append(randtarget)
     listofimages = random.sample(listofimages, len(listofimages))
 
+# create collage with borders
 def create_collage_with_outer_borders(cols, rows, img_width, img_height, padding, listofimages):
     width = (img_width * cols) + (padding * (cols - 1))
     height = (img_height * rows) + (padding * (rows - 1))
@@ -87,6 +89,7 @@ def create_collage_with_outer_borders(cols, rows, img_width, img_height, padding
 
     return new_im
 
+# create collage without borders
 def create_collage(images_per_row, img_width, img_height, padding, images):
     frame_width = (img_width * images_per_row) + (padding * (images_per_row - 1))
     cell_width = ceil((frame_width + padding) / images_per_row)
@@ -115,16 +118,20 @@ def create_collage(images_per_row, img_width, img_height, padding, images):
 
     return new_im
 
+# create collage without borders and resize
 def create_collage_resize(images_per_row, img_width, img_height, desired_frame_width, desired_frame_height, padding, images):
     im = create_collage(images_per_row, img_width, img_height, padding, images)
     return im.resize((desired_frame_width, desired_frame_height))
 
-img_width, img_height = Image.open(listofimages[0]).size # get size of images (assume all same size)
+# get size of images (assume all same size)
+img_width, img_height = Image.open(listofimages[0]).size
 
+# make images
 wo_borders = create_collage_with_outer_borders(nrows, ncols, img_width, img_height, padding, listofimages)
 img = create_collage(nrows, img_width, img_height, padding, listofimages)
 img_resized = create_collage_resize(nrows, img_width, img_height, arr_height, arr_width, padding, listofimages)
 
+# save images
 # using PNG because JPEG is lossy
 wo_borders.save(os.path.join("out", "out_with_borders.png"), "PNG", quality = 80, optimize = True, progressive = True)
 img.save(os.path.join("out", "out.png"), "PNG", quality = 80, optimize = True, progressive = True)
