@@ -24,6 +24,16 @@ var GorillaStoreKeys = {
 	Finished: 'finished'
 }
 
+function constructURLArray(stimArr: string[]) {
+    var URLs: string[] = [];
+	for (var i = 0; i < stimArr.length; i++) {
+		const URL: string = gorilla.stimuliURL(stimArr[i]);
+		URLs.push(URL);
+	}
+	
+	return URLs;
+}
+
 gorilla.ready(function(){
     const constTrialType: string = 'F';
     
@@ -60,7 +70,7 @@ gorilla.ready(function(){
 			var trialArray: string[] = [];
 			var currentTrial: number = 0;
 			const randTrial: number = utils.takeRand(blockArray);
-			console.log(randTrial);
+			console.log('The random trial number chosen is ' + randTrial);
 
 			// some metrics for later
 			const condType = utils.encodeTargetType(randomCondition);
@@ -75,11 +85,7 @@ gorilla.ready(function(){
 				// generate a list of 25 random distractors
 				// Construct 25 random distractor urls
 				const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid);
-				var randomDistractorURLs: string[] = [];
-				for (var i = 0; i < randomDistractors.length; i++) {
-					const distractorURL: string = gorilla.stimuliURL(randomDistractors[i]);
-					randomDistractorURLs.push(distractorURL);
-				}
+				const randomDistractorURLs: string[] = constructURLArray(randomDistractors);
 
 				// update trialArray with array of distractors
 				var trialArray: string[] = randomDistractorURLs;
@@ -87,11 +93,7 @@ gorilla.ready(function(){
 				// choose from list of targets and append to the 24 distractor images
 				// Construct 24 random distractor urls
 				const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid - 1);
-				var randomURLs: string[] = [];
-				for (var i = 0; i < randomDistractors.length; i++) {
-					const distractorURL: string = gorilla.stimuliURL(randomDistractors[i]);
-					randomURLs.push(distractorURL);
-				}
+				const randomURLs: string[] = constructURLArray(randomDistractors);
 
 				// choose a random image from the possible image set.  This image cannot be repeated
 				const randomImageNumber: number = utils.takeRand(possibleTrialTargets) + 1; // add one because array is from 0:24
@@ -102,8 +104,8 @@ gorilla.ready(function(){
 				const randPosition: number = utils.takeRand(possibleTrialPositions);
 				utils.insert(randomURLs, randPosition, conditionImageURL)
 				
-				console.log(conditionImage);
-				console.log(randPosition);
+				console.log('The target image is a ' + utils.encodeTargetType(constTrialType) + ' and is named ' + conditionImage);
+				console.log('The target ' + utils.encodeTargetType(constTrialType) + ' is inserted at position ' + randPosition);
 				// update trialArray with array of distractors plus one random target
 				var trialArray: string[] = randomURLs;
 				// update target image name
@@ -114,7 +116,6 @@ gorilla.ready(function(){
 
 			// hide the display till the images are loaded
  			$('#gorilla').hide();
-            // $('.trial-array').hide();
 			// populate our trial screen
 			gorilla.populateAndLoad($('#gorilla'), 'exp', { trials: trialArray }, (err) => {
 				/*
@@ -142,39 +143,47 @@ gorilla.ready(function(){
 				        gorilla.refreshLayout();
 				        $(this).dequeue();
 				    }) // end queue for '#gorilla'
+                
+                $(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
+                    const e = event.which;
 
-				$('.response-button').on('click', (event: JQueryEventObject) => {
-					gorilla.metric({
-						trialNo: trial_number,
-						trial_condition: isPresent, // present or absent trial; previously "condition1"
-						target_condition: condType, // type of condition; previously "condition2"
-						target_img: randomTargetImage, // the name of the taget image (or null); previously "stim1"
-						target_location: null,
-						key: null, // the response key for this trial
-						correct: null, // boolean; whether correct or not
-						response_time: null, // response time
-						reponse_time: null,
-					}) // end metric
+                    if (e === 107 || e === 108) {
+                        // get string of key pressed from character code
+                        var key = String.fromCharCode(e);
 
-					// increment trial number
-					trial_number++;
-					gorilla.store(GorillaStoreKeys.CurrentTrialNo, trial_number);
-
-					// move on transition
-					$('#gorilla')
-						.queue(function () {
-							machine.transition(State.Trial);
-							$(this).dequeue();
-						}); // end queue for '#gorilla'
-				}) // end response button on click (event: JQueryEventObject)
-
+    					gorilla.metric({
+    						trialNo: trial_number,
+    						trial_condition: isPresent, // present or absent trial; previously "condition1"
+    						target_condition: condType, // type of condition; previously "condition2"
+    						target_img: randomTargetImage, // the name of the taget image (or null); previously "stim1"
+    						target_location: null,
+    						key: null, // the response key for this trial
+    						correct: null, // boolean; whether correct or not
+    						response_time: null, // response time
+    						reponse_time: null,
+    					}) // end metric
+    
+    					// increment trial number
+    					trial_number++;
+    					gorilla.store(GorillaStoreKeys.CurrentTrialNo, trial_number);
+    
+    					// move on transition
+    					$('#gorilla')
+    						.queue(function () {
+    							machine.transition(State.Trial);
+    							$(this).dequeue();
+    						}); // end queue for '#gorilla'
+                    } // end checking if key pressed is 75:76 (K or L)
+    			}) // end response keypress (event: JQueryEventObject)
 			}) // end populate and load
+			console.log('----------------------------------------------------------');
 		}, // end onEnter
 
 		// The onExit function is executed whenever a state is left.  
 		// It is the last thing a state will do
 		onExit: (machine: stateMachine.Machine) => {
 			if (blockArray.length === 0) {
+			    $(document).off('keypress')
 				var trialFinished: boolean = true;
 				gorilla.store(GorillaStoreKeys.Finished, trialFinished);
 				machine.transition(State.Finish);
