@@ -1,12 +1,9 @@
 @import '/style/style.less';
 
 // define response button
-.response-button {
-    font-size:64px;
-    padding-top: 0px;
-    padding-bottom: 0px;
-    padding-left: 3px;
-    padding-right: 3px;
+.fixation-cross {
+    position: relative;
+    bottom: 10pt;
 }
 
 // set margin at top of container
@@ -18,7 +15,7 @@
 // define overall grid structure as 554x554 pixels;
 // that is, 530x530 plus 12 pixels on each side of 
 // the array
-.grid5x5 {
+.trial-array {
     // position: absolute;
     // place-self: center;
     // vertical-align: middle;
@@ -31,7 +28,7 @@
 // 110 pixels is 96 pixels (the width and height of
 // the image) plus 6*2 (6 pixels on each side) of the
 // the square
-.grid5x5>div {
+.trial-array>div {
     // position: absolute;
     // position: relative;
     // left: 50%;
@@ -47,7 +44,7 @@
 // define image itself, which is within the image box;
 // 96x96 pixels; the size of the images in the image array
 // from Excel.
-.grid5x5>div>img {
+.trial-array>div>img {
     display:inline-block;
     // position: absolute;
     vertical-align: middle;
