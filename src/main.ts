@@ -5,8 +5,9 @@ import utils = require('utils');
 
 const nImagesInGrid: number = 25;
 var stimConditions: string[] = ['D', 'C', 'F', 'HF', 'LF'];
+const beforeFixationDelay: number = 0;
 const fixationLength: number = 500;
-const afterFixationLength: number = 500;
+const afterFixationDelay: number = 0;
 
 /* ------------------------------------- */
 
@@ -115,31 +116,33 @@ gorilla.ready(function(){
 			} // end if
 
 			// hide the display till the images are loaded
- 			$('#gorilla').hide();
+ 			// $('#gorilla').hide();
+ 			$('.trial-array').hide();
+ 			$('.instruction').hide();
 			// populate our trial screen
-			gorilla.populateAndLoad($('#gorilla'), 'exp', { trials: trialArray }, (err) => {
-				/*
+			gorilla.populateAndLoad($('#gorilla'), 'trial', { trials: trialArray }, (err) => {
 				// Display the fixation cross
 				$('#gorilla')
-				.queue(function () {
-				$('.gorilla-fixation-cross').show();
-				gorilla.refreshLayout();
-				$(this).dequeue();
-				})// end queue for '#gorilla'
-				.delay(fixationLength)
-				.queue(function () {
-				$('.gorilla-fixation-cross').hide();
-				gorilla.refreshLayout();
-				$(this).dequeue();
-				}) // end queue for '#gorilla'
-				.delay(afterFixationLength);
-				*/  
+				    .delay(beforeFixationDelay)
+    				.queue(function () {
+        				$('.fixation-cross').show();
+        				gorilla.refreshLayout();
+        				$(this).dequeue();
+    				})// end queue for '#gorilla'
+    				.delay(fixationLength)
+    				.queue(function () {
+        				$('.fixation-cross').hide();
+        				gorilla.refreshLayout();
+        				$(this).dequeue();
+    				}) // end queue for '#gorilla'
+    				.delay(afterFixationDelay);
 
 				// display array of images
 				$('#gorilla')
 				    .queue(function () {
-				        // $('.trial-array').show();
-				        $('#gorilla').show();
+				        $('.trial-array').show();
+				        $('.instruction').show();
+				        // $('#gorilla').show();
 				        gorilla.refreshLayout();
 				        $(this).dequeue();
 				    }) // end queue for '#gorilla'
