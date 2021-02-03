@@ -8,6 +8,10 @@ This utils.ts file exports the following helper functions:
       - Extracts a random element from an array.  *This is a modifying function*.  It will return the element it extracts, like pop.
   - chooseNUniqueRandomWithinRange(n, lower, upper)
       - Chooses n many unique random numbers between lower and upper bounds
+  - constructBlockArray()
+      - Constructs an array of values 1:50.
+  - constructTargetArray()
+      - Constructs an array of values 0:24.
   - constructImageName(imageType, imageNumber)
       - constructs the image file name given the imageType and the imageNumber.  ImageType can be one of ['D', 'F', 'C', 'HF', 'LF'].
   - constructRandImageName(imageType)
@@ -52,8 +56,6 @@ export function randVal(arr: any[]) {
 
 export function takeRand(arr: any[]) {
     const randInd: number = randInt(0, arr.length - 1);
-    console.log("The chosen random index for takeRand is:");
-    console.log(randInd);
     const randVal = arr[randInd];
     arr.splice(randInd, 1);
     return randVal;
@@ -71,12 +73,11 @@ export function chooseNUniqueRandomWithinRange(n: number, lower: number, upper: 
 }
 
 export function constructBlockArray() {
-    // var arr: number[] = [];
-    // for (var i = 1; i < 51; i++) {
-    //     arr.push(i);
-    // }
-    // return arr;
     return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
+}
+
+export function constructTargetArray() {
+    return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 }
 
 function constructStimName(prefix: string, imageNumber: number) {
