@@ -89,6 +89,7 @@ gorilla.ready(function(){
 			// initialising some metrics
 			var randomTargetImage = null;
 			var isPresent: boolean = false;
+			var isCorrect: boolean = false;
 			
 			// hide so that all images are generated at the same time
 			if (randTrial % 2 == 0) {
@@ -162,6 +163,11 @@ gorilla.ready(function(){
                     if (e === 107 || e === 108) {
                         // get string of key pressed from character code
                         var key = String.fromCharCode(e);
+						
+						// check if key press was correct
+						if (isPresent && e == 107) {
+							var isCorrect: boolean = true;
+						}
 
     					gorilla.metric({
     						trialNo: trial_number,
@@ -170,7 +176,7 @@ gorilla.ready(function(){
     						target_img: randomTargetImage, // the name of the taget image (or null); previously "stim1"
     						target_location: null,
     						key: null, // the response key for this trial
-    						correct: null, // boolean; whether correct or not
+    						correct: isCorrect, // boolean; whether correct or not
     						response_time: null, // response time
     						reponse_time: null,
     					}) // end metric
