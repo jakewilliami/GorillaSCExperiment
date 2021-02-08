@@ -1,3 +1,20 @@
+// define where numbered distractors start and end
+const Dstart: number = 1;
+const Dend: number = 49;
+// define where numbered targets start and end
+const Tstart: number = 1;
+const Tend: number = 5; // 25
+
+// define distractor and target prefix
+const distractorPrefix: string = 'D';
+const carPrefix: string = 'C';
+const facePrefix: string = 'F';
+const highFacePrefix: string = 'HF';
+const lowFacePrefix: string = 'LF';
+
+// define file extension
+const imageExt: string = 'jpg';
+
 /*
 This utils.ts file exports the following helper functions:
   - randInt(lower, upper)
@@ -26,24 +43,11 @@ This utils.ts file exports the following helper functions:
       - Takes in one of ['D', 'F', 'C', 'HF', 'LF'] and codes them into strings, as defined by Lizzie.
   - getCondCode(condition)
       - Takes in one of  ['D', 'F', 'C', 'HF', 'LF'] and codes them into numbers, as defined by Lizzie.
+  - encodeTargetTypeHR(condition)
+      - Takes in one of ['D', 'F', 'C', 'HF', 'LF'] and codes them into human-readable strings, as defined by Lizzie.
 */
 
-// define where numbered distractors start and end
-const Dstart: number = 1;
-const Dend: number = 49;
-// define where numbered targets start and end
-const Tstart: number = 1;
-const Tend: number = 25;
-
-// define distractor and target prefix
-const distractorPrefix: string = 'D';
-const carPrefix: string = 'C';
-const facePrefix: string = 'F';
-const highFacePrefix: string = 'HF';
-const lowFacePrefix: string = 'LF';
-
-// define file extension
-const imageExt: string = 'jpg';
+/*--------------------------------------*/
 
 export function randInt(lower: number, upper: number) {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower;
@@ -73,11 +77,21 @@ export function chooseNUniqueRandomWithinRange(n: number, lower: number, upper: 
 }
 
 export function constructBlockArray() {
-    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
+    var arr: number[] = [];
+    for (var i = 1; i <= (Tend * 2); i++) {
+        arr.push(i)
+    }
+    return arr;
+    // return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
 }
 
 export function constructTargetArray() {
-    return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+    var arr: number[] = [];
+    for (var i = 0; i < Tend; i++) {
+        arr.push(i)
+    }
+    return arr;
+    // return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 }
 
 function constructStimName(prefix: string, imageNumber: number) {
@@ -160,4 +174,19 @@ export function encodeTargetType(condition: string) {
     }
     // should never get here
     return null;
+}
+
+export function encodeTargetTypeHR(condition: string) {
+    switch (condition) {
+        case 'F':
+            return 'images of faces';
+        case 'C':
+            return 'images of cars';
+        case 'LF':
+            return 'low-faceness pareidolia images';
+        case 'HF':
+            return 'high-faceness pareidolia images';
+    }
+    // should never get here
+    return 0;
 }
