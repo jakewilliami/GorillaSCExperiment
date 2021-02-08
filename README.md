@@ -2,7 +2,7 @@
     A Simple Search Task using Gorilla Experiment Builder
 </h1>
 
-<p align="center"><i>Developed by Lizzie Collyer and Jake Ireland, early Feb., 2021, using [Gorilla Experiment Builder's](https://gorilla.sc/) code editor.</i></p>
+<p align="center"><i>Developed by Lizzie Collyer and Jake Ireland, early Feb., 2021, using <a href="https://gorilla.sc/">Gorilla Experiment Builder's</a> code editor.</i></p>
 
 ## Policy Decision
 
