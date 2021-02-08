@@ -58,3 +58,15 @@ All main code is within a function parameter taken in by the function call `gori
 We have used `gorilla/state_machine` to transition between trials, blocks, instructions, etc.  The main state machine call happens in the `gorilla.run` function.  When you add a state to the state machine, the function `addState` takes in two arguments: the state name you are adding, and a dictionary.  This dictionary consists of two keys: `onEnter` (whose value is a function which is executed every time the state is entered), and `onExit` (whose value is a function which is executed when the state is left).
 
 You can pass a parameter to the state.  As far as I can tell, you can only pass a single parameter.  However, to overcome this you can create an `interface`.  The way you pass parameters to the `onEnter` part of a state is as follows:
+```typescript
+SM.addState(State.MyState, {
+    onEnter: (machine: stateMachine.Machine, someParameter: string) => {
+    ....
+    }
+})
+```
+And then you call this in `transition`:
+```typescript
+machine.transition(State.MyState, 'hello world')
+```
+This works well `onEnter`, but as of time of writing (Feb., 2021), this functionality does not exist `onExit`.
