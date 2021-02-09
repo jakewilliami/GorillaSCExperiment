@@ -1,9 +1,17 @@
+// define proportion of distractors (i.e., 50% of trials)
+// are distractor arrays, so prop. is 0.5
+const proportionOfDistractors: number = 0.5;
+const proportionOfTargets: number = 1 - proportionOfDistractors;
+
 // define where numbered distractors start and end
 const Dstart: number = 1;
 const Dend: number = 49;
 // define where numbered targets start and end
 const Tstart: number = 1;
-const Tend: number = 5; // 25
+const Tend: number = 25;
+// define how many practice trials you have
+const Pstart: number = 1;
+const Pend: number = 6;
 
 // define distractor and target prefix
 const distractorPrefix: string = 'D';
@@ -11,6 +19,7 @@ const carPrefix: string = 'C';
 const facePrefix: string = 'F';
 const highFacePrefix: string = 'HF';
 const lowFacePrefix: string = 'LF';
+const practicePrefix: string = 'P'; // P for Practice
 
 // define file extension
 const imageExt: string = 'jpg';
@@ -29,6 +38,8 @@ This utils.ts file exports the following helper functions:
       - Constructs an array of values 1:50.
   - constructTargetArray()
       - Constructs an array of values 0:24.
+  - constructPracticeArray()
+      - Constructs an array of values 1:6.
   - constructImageName(imageType, imageNumber)
       - constructs the image file name given the imageType and the imageNumber.  ImageType can be one of ['D', 'F', 'C', 'HF', 'LF'].
   - constructRandImageName(imageType)
@@ -36,9 +47,9 @@ This utils.ts file exports the following helper functions:
   - generateDistractorArray(n)
       - Generates an array of n many distractor names
   - insert(array, index, item)
-      - Inserts item into array at specified index
-  - insertAtRandom(arr, item)
-      - Inserts item into array at random.
+      - Inserts item into array at specified index, then returns the array.
+  - insertAtRandom(array, item)
+      - Inserts item into array at random, then returns the array.
   - encodeTargetType(condition)
       - Takes in one of ['D', 'F', 'C', 'HF', 'LF'] and codes them into strings, as defined by Lizzie.
   - getCondCode(condition)
@@ -49,17 +60,24 @@ This utils.ts file exports the following helper functions:
 
 /*--------------------------------------*/
 
+// set modulo value
+export const moduloVal: number = Math.floor(1 / proportionOfTargets);
+const numberOfTrialImages: number = Tend - Tstart + 1;
+export const nTrialsPerBlock: number = Math.floor(numberOfTrialImages / proportionOfTargets);
+const numberOfPracticeImages: number = Pend - Tstart + 1;
+const nPracticeTrials: number = Math.floor(numberOfPracticeImages / proportionOfTargets);
+
 export function randInt(lower: number, upper: number) {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower;
 }
 
 export function randVal(arr: any[]) {
-    const randomIndex: number = randInt(0, arr.length - 1);
+    const randomIndex: number = randInt(0, (arr.length - 1));
     return arr[randomIndex];
 }
 
 export function takeRand(arr: any[]) {
-    const randInd: number = randInt(0, arr.length - 1);
+    const randInd: number = randInt(0, (arr.length - 1));
     const randVal = arr[randInd];
     arr.splice(randInd, 1);
     return randVal;
@@ -76,21 +94,27 @@ export function chooseNUniqueRandomWithinRange(n: number, lower: number, upper: 
     return arr;
 }
 
-export function constructBlockArray() {
+export function _constructNumberArray(lower: number, upper: number) {
     var arr: number[] = [];
-    for (var i = 1; i <= (Tend * 2); i++) {
+    for (var i = lower; i <= upper; i++) {
         arr.push(i)
     }
     return arr;
     // return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
 }
 
+export function constructBlockArray() {
+    return _constructNumberArray(Tstart, nTrialsPerBlock)
+    // return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
+}
+
 export function constructTargetArray() {
-    var arr: number[] = [];
-    for (var i = 0; i < Tend; i++) {
-        arr.push(i)
-    }
-    return arr;
+    return _constructNumberArray((Tstart - 1), (Tend - 1))
+    // return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+}
+
+export function constructPracticeArray() {
+    return _constructNumberArray(Pstart, nPracticeTrials)
     // return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 }
 
@@ -110,6 +134,8 @@ export function constructImageName(imageType: string, imageNumber: number) {
             return constructStimName(highFacePrefix, imageNumber);
         case 'LF':
             return constructStimName(lowFacePrefix, imageNumber);
+        case 'P':
+            return constructStimName(practicePrefix, imageNumber);
     }
 }
 
@@ -138,12 +164,24 @@ export function generateDistractorArray(n: number) {
     return distractorImageNumbers;
 }
 
+export function generatePracticeArray() {
+    var practiceNumbers: number[] = chooseNUniqueRandomWithinRange((Pend - Pstart + 1), Pstart, Pend);
+    var practiceImages: string[] = [];
+    for (var i = 0; i < practiceNumbers.length; i++) {
+        practiceImages.push(constructImageName(practicePrefix, practiceNumbers[i]));
+    }
+    
+    return practiceImages;
+}
+
 export function insert(arr: string[], index: number, item: string) {
-    return arr.splice(index, 0, item);
+    arr.splice(index, 0, item);
+    return arr;
 }
 
 export function insertAtRandom(arr: string[], item: string) {
-    return insert(arr, randInt(0, arr.length), item);
+    insert(arr, randInt(0, arr.length), item);
+    return arr;
 }
 
 export function getCondCode(condition: string) {
@@ -179,13 +217,13 @@ export function encodeTargetType(condition: string) {
 export function encodeTargetTypeHR(condition: string) {
     switch (condition) {
         case 'F':
-            return 'images of faces';
+            return 'face';
         case 'C':
-            return 'images of cars';
+            return 'car';
         case 'LF':
-            return 'low-faceness pareidolia images';
+            return 'object that looks like a face';
         case 'HF':
-            return 'high-faceness pareidolia images';
+            return 'object that looks like a face';
     }
     // should never get here
     return 0;
