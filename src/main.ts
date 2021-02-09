@@ -1,22 +1,3 @@
-/*
-Today we:
-  - [feature] Added practice trials (states);
-  - [bug] Fixed trial count
-  - [feature] Added flexible target proportions (e.g., 0.5 =? 50% of trials are targets);
-  - [feature] Added feedback for practice trials (i.e., after each trial telling participants whether or not they were correct in their response);
-  - [feature] Now record trial array (e.g., ["D9.jpg", "D1.jpg", "D19.jpg", ..., "F12.jpg", ..., "D16.jpg"]);
-  - [feature] Added practice instructions to display before practice trials;
-  - [edit] Added bird images for practice trials instead of faces;
-  - [edit] Updated instructions;
-  - [feature] Added after-practice instructions (states);
-  - [edit] Updated in-trial instructions;
-
-Still to do:
-  - [feature] Add demographics state and record responses.
-  - [bug?] Timing bug?;
-  - [feature] ITI metric?
-*/
-
 import gorilla = require('gorilla/gorilla');
 import stateMachine = require("gorilla/state_machine");
 
@@ -39,8 +20,8 @@ const exampleImages: Object = {
     'C': 'EC.jpg',
     'F': 'EF.jpg',
     'P': 'EP.jpg', // pareidolia
-    'HF': ['EP1.jpg', 'EP2.jpg', 'EP3.jpg', 'EP4.jpg'],
-    'LF': ['EP1.jpg', 'EP2.jpg', 'EP3.jpg', 'EP4.jpg'],
+    'HF': ['P1.jpg', 'P2.jpg', 'P3.jpg', 'P4.jpg'],
+    'LF': ['P1.jpg', 'P2.jpg', 'P3.jpg', 'P4.jpg'],
 };
 
 /* ------------------------------------- */
@@ -316,40 +297,40 @@ gorilla.ready(function(){
 	                    console.log(incorrectPracticeCounter);
 	                    console.log(incorrectMessage);
 	                    switch (incorrectPracticeCounter) {
-	                        case 1: 
+	                        case 1:
 	                            incorrectMessage = "Incorrect.";
 	                            break;
-	                        case 2: 
+	                        case 2:
 	                            incorrectMessage = "Incorrect again...";
 	                            break;
-	                        case 3: 
+	                        case 3:
 	                            incorrectMessage = "Are you even trying?";
 	                            break;
-	                        case 4: 
+	                        case 4:
 	                            incorrectMessage = "Seriously, are you joking with me?";
 	                            break;
-	                        case 5: 
+	                        case 5:
 	                            incorrectMessage = "Right, so you're not trying.";
 	                            break;
-	                        case 6: 
+	                        case 6:
 	                            incorrectMessage = "Children could do better than you.";
 	                            break;
-	                        case 7: 
+	                        case 7:
 	                            incorrectMessage = "You're wasting everybody's time.";
 	                            break;
-	                        case 8: 
+	                        case 8:
 	                            incorrectMessage = "Look at yourself, you look ridiculous.";
 	                            break;
-	                        case 9: 
+	                        case 9:
 	                            incorrectMessage = "[sigh]";
 	                            break;
-	                        case 10: 
+	                        case 10:
 	                            incorrectMessage = "This relationship isn't working out.";
 	                            break;
-	                        case 11: 
+	                        case 11:
 	                            incorrectMessage = "You're breaking my heart.";
 	                            break;
-	                        case 12: 
+	                        case 12:
 	                            incorrectMessage = "We are genuinely considering disqualifying you from this experiment";
 	                            break;
 	                    };
@@ -445,42 +426,60 @@ gorilla.ready(function(){
 					possibleTrialPositions: possibleTrialPositions
 				} as BlockStruct;
 				
+				// $('.std-block').hide();
+				// $('.pareidolia-block').hide();
+				
+				// const examples: string[] = exampleImages[targetType];
+				// const possibleExamples: number[] = utils._constructNumberArray(1, examples.length);
+				
+				// gorilla.populate('#gorilla', 'block-instructions', {
+				// 	trialType: utils.encodeTargetTypeHR(targetType),
+				// 	example: gorilla.stimuliURL(exampleImages['C']),
+				// 	e1: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
+				// 	e2: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
+				// 	e3: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
+				// 	e4: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
+				// 	imSize: exampleImSize
+				// }); // end populate
+				
 				// populate our trial screen
 				if ((targetType === 'LF') || (targetType === 'HF')) {
-				    const examples: string[] = exampleImages[targetType];
-				    const possibleExamples: number[] = utils._constructNumberArray(1, examples.length);
-				    $('.pareidolia-block').show();
-				    gorilla.refreshLayout();
-				    gorilla.populateAndLoad($('#gorilla'), 'block-instruction', {
-    					trialType: utils.encodeTargetTypeHR(targetType),
-    					e1: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
-    					e2: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
-    					e3: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
-    					e4: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
-    					imSize: exampleImSize
-    			        }, (err) => {
-        					// transition when required
-        					$(document).one('keypress', (event: JQueryEventObject) => {
-        						// $(document).off('keypress');
-        						machine.transition(State.Trial, blockStruct);
-        					}) // end on keypress
-    				}) // end populate and load
+					const examples: string[] = utils.shuffle(exampleImages[targetType]);
+					$('.pareidolia-block').show();
+					gorilla.populate('#gorilla', 'pareidolia-block-instructions', {
+						trialType: utils.encodeTargetTypeHR(targetType),
+						e1: gorilla.stimuliURL(examples[0]),
+						e2: gorilla.stimuliURL(examples[1]),
+						e3: gorilla.stimuliURL(examples[2]),
+						e4: gorilla.stimuliURL(examples[3]),
+						imSize: exampleImSize
+					}); // end populate
+					gorilla.refreshLayout();
+					$(document).one('keypress', (event: JQueryEventObject) => {
+						// $(document).off('keypress');
+						machine.transition(State.Trial, blockStruct);
+					}) // end on keypress
 				}
 				else {
-				    $('.std-block').show();
-				    gorilla.refreshLayout();
-    				gorilla.populateAndLoad($('#gorilla'), 'block-instruction', {
-    					trialType: utils.encodeTargetTypeHR(targetType),
-    					example: gorilla.stimuliURL(exampleImages['C']),
+					$('.std-block').show();
+					gorilla.populate('#gorilla', 'std-block-instructions', {
+						trialType: utils.encodeTargetTypeHR(targetType),
+    					example: gorilla.stimuliURL(exampleImages[targetType]),
     					imSize: exampleImSize
-    			        }, (err) => {
-        					// transition when required
-        					$(document).one('keypress', (event: JQueryEventObject) => {
-        						// $(document).off('keypress');
-        						machine.transition(State.Trial, blockStruct);
-        					}) // end on keypress
-    				}) // end populate and load
-				} // end target type checking for variable display
+					}); // end populate
+					gorilla.refreshLayout();
+					$(document).one('keypress', (event: JQueryEventObject) => {
+						// $(document).off('keypress');
+						machine.transition(State.Trial, blockStruct);
+					}) // end on keypress
+				} // end if (target type checking for variable display)
+				
+				// gorilla.refreshLayout();
+				
+				// $(document).one('keypress', (event: JQueryEventObject) => {
+					// $(document).off('keypress');
+					// machine.transition(State.Trial, blockStruct);
+				// }) // end on keypress
 			} // end if
 	    }, // end onEnter
 	    
@@ -586,17 +585,7 @@ gorilla.ready(function(){
 				}) // end populate and load
 				console.log('----------------------------------------------------------');
 			} // end if-else
-		}, // end onEnter
-
-		// The onExit function is executed whenever a state is left.
-		// It is the last thing a state will do
-		// onExit: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-		// 	$(document).unbind('keypress')
-		// 	if (blockStruct.blockArray.length === 0) {
-		// 	    $(document).unbind('keypress');
-		// 		machine.transition(State.Block);
-		// 	}
-		// } // end onExit
+		} // end onEnter
 	}); // end addState Trial
 	
 	SM.addState(State.FixationCross, {
@@ -751,10 +740,7 @@ gorilla.ready(function(){
 						}); // end queue for '#gorilla'
 				})
 				.run();
-		}, // end onEnter
-		
-// 		onExit: (machine: stateMachine.Machine, metric: TrialStruct) => {
-// 		} // end onExit
+		} // end onEnter
 	}) // end addState ImageArray
 
 	// this is the state we enter when we have finished the task
