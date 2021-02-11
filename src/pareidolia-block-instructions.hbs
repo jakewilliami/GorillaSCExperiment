@@ -1,16 +1,18 @@
 <div class="fullheight fullsize" style="position:relative;">
-    <div class="gorilla-zone" data-left="0%" data-right="0%" data-top="0%" data-bottom="30%">
-        <div class="gorilla-float content" align="center">
-            <div class="pareidolia-block">
-                <p>Please feel free to take a short break before proceeding.</p>
-                <p>The target image you are now searching for is an <i>{{trialType}}</i>. An example image is shown below. Please respond as quickly and accurately as possible.</p>
-                <div align="center">
-                    <img src={{e1}} alt="Image" style="width:{{imSize}};height:{{imSize}};">
-                    <img src={{e2}} alt="Image" style="width:{{imSize}};height:{{imSize}};">
-                    <img src={{e3}} alt="Image" style="width:{{imSize}};height:{{imSize}};">
-                    <img src={{e4}} alt="Image" style="width:{{imSize}};height:{{imSize}};">
-                <div>
+    <div class="content-container">
+       <div class="pareidolia-block">
+            <h1>Part {{blockCounter}} of {{nBlocks}}</h1>
+            <p>Please feel free to take a short break before proceeding.</p>
+            <p>The target images you are now searching for are <b><i>{{trialType}}</i></b>. Below are some examples of these images. Please respond as quickly and accurately as possible.</p>
+            <div align="center">
+                <img src={{e1}} alt="Image" style="width:{{imSize}};height:{{imSize}};">
+                <img src={{e2}} alt="Image" style="width:{{imSize}};height:{{imSize}};">
+                <img src={{e3}} alt="Image" style="width:{{imSize}};height:{{imSize}};">
+                <img src={{e4}} alt="Image" style="width:{{imSize}};height:{{imSize}};">
             </div>
         </div>
+    </div>
+    <div class="button-container">
+        <button class="btn btn-primary" id="start-button">Next</button>
     </div>
 </div>
