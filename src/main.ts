@@ -101,6 +101,9 @@ var keypressAllowed: boolean = false;
 // set trial number
 var trialNumber: number = 0;
 
+// set absent counter
+var absentCount: number = 0;
+
 // block counter and number of blocks for block title
 var blockCounter: number = 0;
 const nBlocks: number = stimConditions.length;
@@ -610,6 +613,8 @@ gorilla.ready(function(){
 				console.log("The random trial number is " + randTrial);
 				console.log("If this number is not zero mod " + utils.moduloVal + " then it should be a target")
 				if (randTrial % utils.moduloVal == 0) {
+				    // increment absent counter
+				    absentCount++;
 					// generate a list of 25 random distractors
 					// Construct 25 random distractor urls
 					const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid);
@@ -622,6 +627,7 @@ gorilla.ready(function(){
 				    trialStruct.humanReadableTrialArray = randomDistractors;
 					trialStruct.isPresent = false;
 					trialStruct.isPresentString = 'absent';
+					trialStruct.targetImg = 'absent' + absentCount;
 				} else {
 					// choose from list of targets and append to the 24 distractor images
 					// Construct 24 random distractor urls
@@ -845,7 +851,7 @@ gorilla.ready(function(){
 		onEnter: (machine: stateMachine.Machine) => {
 			gorilla.populate('#gorilla', 'finish', {});
 			gorilla.refreshLayout();
-			$('#finish-button').one('click', (event: JQueryEventObject) => {
+			$('#next-button').one('click', (event: JQueryEventObject) => {
 				gorilla.finish();
 			})
 		} // end onEnter
