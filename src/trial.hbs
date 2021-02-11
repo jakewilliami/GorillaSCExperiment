@@ -1,5 +1,6 @@
-<div class="gorilla-zone" data-left="0%" data-right="0%" data-top="15%" data-bottom="40%">
-	<div class="gorilla-float centered">
+<!-- <div class="gorilla-zone" data-left="0%" data-right="0%" data-top="15%" data-bottom="40%"> -->
+	<!-- <div class="gorilla-float centered"> -->
+	<div class="trial-container">
 		<div class="trial-array" hidden>
             {{#each trials}}
                 <div>
@@ -8,19 +9,21 @@
             {{/each}}
         </div>
         <div class="instruction" align="center" hidden>
-            <h4>Press <kbd>K</kbd> if target present.  Press <kbd>L</kbd> if no target present.</h4>
+            <h4><kbd>K</kbd> = target present. <kbd>L</kbd> = target absent.</h4>
             {{!--<button class="btn btn-primary response-button" data-response="Next">Next</button>--}}
 	        {{!--<button class="btn btn-primary" id="exit-button">Press to End</button>--}}
         </div>
-		<span class="fixation-cross" style="font-size: 84px;" hidden>+</span>
-		<div class="timeout-feedback" hidden>
+	<!-- </div> -->
+	<!-- <div class="content-container"> -->
+		<span class="fixation-cross" style="font-size: 84px;" hidden>+</span> <!-- approx 63pt -->
+		<div class="timeout-feedback" style="font-size: 14pt;" hidden>
 		    <h4>You took too long to respond.</h4>
 	    </div>
-	    <div class="practice-feedback-correct" hidden>
+	    <div class="practice-feedback-correct" style="font-size: 14pt;" hidden>
 		    <h4>Correct!</h4>
 	    </div>
-	    <div class="practice-feedback-incorrect" hidden>
-		    <h4>{{incorrectMessage}}</h4>
+	    <div class="practice-feedback-incorrect" style="font-size: 14pt;" hidden>
+		    <h4>Incorrect</h4>
 	    </div>
 	</div>
-</div>
+<!-- </div> -->

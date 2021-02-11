@@ -3,7 +3,6 @@ import stateMachine = require("gorilla/state_machine");
 
 import utils = require('utils');
 
-const nImagesInGrid: number = 25;
 var stimConditions: string[] = ['C', 'F', 'HF', 'LF'];
 const exampleTargets: string[] = ['EC.jpg', 'EF.jpg', 'EP.jpg'];
 const beforeFixationDelay: number = 500;
@@ -14,20 +13,25 @@ const presentationTime: number = rawPresentationTime + beforeFixationDelay + fix
 // const presentationTime: number = rawPresentationTime;
 const timeoutMessageLength: number = 1000;
 const practiceFeedbackMessageLength: number = 1000;
-const exampleImSize: string = "4cm";
+const exampleImSize: string = "3cm";
+const consentFilename: string = "PareidoliaVisualSearch_InfoSheet.pdf";
+const debriefFilename: string = "PareidoliaVisualSearch_Debriefing.pdf";
 
 const exampleImages: Object = {
     'C': 'EC.jpg',
     'F': 'EF.jpg',
-    'P': 'EP.jpg', // pareidolia
-    'HF': ['P1.jpg', 'P2.jpg', 'P3.jpg', 'P4.jpg'],
-    'LF': ['P1.jpg', 'P2.jpg', 'P3.jpg', 'P4.jpg'],
+    'P': ['P1.jpg', 'P2.jpg', 'P3.jpg', 'P4.jpg', 'P5.jpg', 'P6.jpg'], // practice
+    'HF': ['PE1.jpg', 'PE2.jpg', 'PE3.jpg', 'PE4.jpg'], // pareidolia example
+    'LF': ['PE1.jpg', 'PE2.jpg', 'PE3.jpg', 'PE4.jpg'],
 };
 
 /* ------------------------------------- */
 
 // possible states in state machine
 enum State {
+	Consent,
+	RequestFullscreen,
+	Demographics,
 	Instructions,
 	PracticeInstructions,
 	PracticeTrial,
@@ -38,6 +42,7 @@ enum State {
 	FixationCross,
 	ImageArray,
 	Block,
+	Debrief,
 	Finish,
 }
 
@@ -94,9 +99,25 @@ function constructURLArray(stimArr: string[]) {
 var keypressAllowed: boolean = false;
 
 // set trial number
-var trialNumber: number = 1;
+var trialNumber: number = 0;
 
-var incorrectPracticeCounter: number = 0
+// block counter and number of blocks for block title
+var blockCounter: number = 0;
+const nBlocks: number = stimConditions.length;
+
+// // onclick for dropdown press
+// window.onclick = function(event) {
+// 	if (!event.target.matches('.dropbtn')) {
+// 		var dropdowns = document.getElementsByClassName("dropdown-content");
+// 		var i;
+// 		for (i = 0; i < dropdowns.length; i++) {
+// 			var openDropdown = dropdowns[i];
+// 			if (openDropdown.classList.contains('show')) {
+// 				openDropdown.classList.remove('show');
+// 			}
+// 		}
+// 	}
+// }
 
 // this is the main gorilla function call!
 gorilla.ready(function(){
@@ -108,49 +129,126 @@ gorilla.ready(function(){
 	
 	// start at trial one
 	var trial_number: number = gorilla.retrieve('trial_number', 1, true);
-	var finishedFlag: boolean = gorilla.retrieve('finished', false, true);
+
+	SM.addState(State.Consent, {
+		onEnter: (machine: stateMachine.Machine) => {
+		  //  var elem = document.body; // Make the body go full screen.
+            // requestFullScreen(elem);
+            
+			gorilla.populate('#gorilla', 'consent', {
+				consentform: gorilla.resourceURL(consentFilename)
+			})
+			gorilla.refreshLayout();
+			$('#start-button').one('click', (event: JQueryEventObject) => {
+				machine.transition(State.RequestFullscreen);
+			}) // end on keypress
+			$('#decline-button').one('click', (event: JQueryEventObject) => {
+				machine.transition(State.Finish);
+			}) // end on keypress
+		} // end onEnter
+	}) // end addState State.Consent
+	
+	SM.addState(State.RequestFullscreen, {
+		onEnter: (machine: stateMachine.Machine) => {
+		  //  var elem = document.body; // Make the body go full screen.
+            // requestFullScreen(elem);
+            
+			gorilla.populate('#gorilla', 'request-fs', {})
+			gorilla.refreshLayout();
+			$('#fs-button').one('click', (event: JQueryEventObject) => {
+			    if(!utils.isFullscreen()){
+                    utils.launchIntoFullscreen(document.documentElement);
+                }
+				// machine.transition(State.Demographics);
+				machine.transition(State.Instructions);
+			}) // end on keypress
+			$(document).one('keypress', (event: JQueryEventObject) => {
+			    if(!utils.isFullscreen()){
+                    utils.launchIntoFullscreen(document.documentElement);
+                }
+				// machine.transition(State.Demographics);
+				machine.transition(State.Instructions);
+			}) // end on keypress
+		} // end onEnter
+	}) // end addState State.Consent
+	
+	SM.addState(State.Demographics, {
+		onEnter: (machine: stateMachine.Machine) => {
+		  //  var elem = document.body; // Make the body go full screen.
+            // requestFullScreen(elem);
+            
+			gorilla.populate('#gorilla', 'demographics', {})
+			gorilla.refreshLayout();
+			
+			// $('#dropdown').one('click', (event: JQueryEventObject) => {
+			// 	utils.toggleDropdown();
+			// }) // end on dropdown press
+			
+			$('#next-button').one('click', (event: JQueryEventObject) => {
+				machine.transition(State.Instructions);
+			}) // end on click
+		} // end onEnter
+	}) // end addState State.Consent
 
 	// In this state we will display our instructions for the task
 	SM.addState(State.Instructions, {
-		onEnter: (machine: stateMachine.Machine) => {
-// 			var text: string = "Hello and welcome to this experiment.  It is the love child of genius people."
-            var text: string = "Hello and welcome to this experiment."
-			var examples: string[] = constructURLArray(exampleTargets);
-			gorilla.populate('#gorilla', 'instructions', {
-			    introduction: text,
-			    e1: examples[0],
-			    e2: examples[1],
-			    e3: examples[2],
-			    imSize: exampleImSize
-			}); // end populate
-			gorilla.refreshLayout();
-			$('#start-button').one('click', (event: JQueryEventObject) => {
-				// transition to the practice trials
-				machine.transition(State.Block);
-				// machine.transition(State.Block);
-			}) // end on click start button
-		} // end onEnter
+	    onEnter: (machine: stateMachine.Machine) => {
+	// 			var text: string = "Hello and welcome to this experiment.  It is the love child of genius people."
+	        var text: string = "Hello and welcome to this experiment."
+	        var examples: string[] = constructURLArray(exampleTargets);
+	        // $('.instructions-content').hide();
+			$('#gorilla').hide();
+	        gorilla.populateAndLoad($('#gorilla'), 'instructions', {
+// 			gorilla.populate('#gorilla', 'instructions', {
+	            introduction: text,
+	            e1: examples[0],
+	            e2: examples[1],
+	            e3: examples[2],
+	            imSize: exampleImSize
+// 			}
+	        },
+// 			);
+	        // });
+	        (err) => {
+				$('#gorilla').show();
+		            // $('.instructions-content').show();
+		           // gorilla.refreshLayout();
+		        // }); // end populateAndLoad
+				// $('#gorilla').show();
+				$('#start-button').one('click', (event: JQueryEventObject) => {
+					// transition to the practice trials
+					machine.transition(State.PracticeInstructions);
+				// 	machine.transition(State.Block);
+				}) // end on click start button
+	        }); // end populate and load
+	    } // end onEnter
 	}) // end addState Instructions
 	
 	SM.addState(State.PracticeInstructions, {
 	    onEnter: (machine: stateMachine.Machine) => {
 			var examples: string[] = constructURLArray(exampleTargets);
-			gorilla.populate('#gorilla', 'practice-instructions', {
-			    example: gorilla.stimuliURL(utils.randVal(utils.generatePracticeArray())),
-			    imSize: exampleImSize
-			}); // end populate
-			gorilla.refreshLayout();
-			$('#start-button').one('click', (event: JQueryEventObject) => {
-				// transition to the practice trials
-				let practiceStruct = {
-					practiceTargets: utils.generatePracticeArray(),
-					practiceArrays: utils.constructPracticeArray(),
-					practiceTarget: '',
-					practiceTargetPositions: utils.constructTargetArray()
-				} as PracticeTrialStruct
-				machine.transition(State.PracticeTrial, practiceStruct);
-				// machine.transition(State.Block);
-			}) // end on click start button
+			// gorilla.populate('#gorilla', 'practice-instructions', {
+			//     example: gorilla.stimuliURL(utils.randVal(utils.generatePracticeArray())),
+			//     imSize: exampleImSize
+			// }); // end populate
+			$('#gorilla').hide();
+	        gorilla.populateAndLoad($('#gorilla'), 'practice-instructions', {
+				example: gorilla.stimuliURL(utils.randVal(utils.generatePracticeArray())),
+			   imSize: exampleImSize
+		   	}, (err) => {
+				$('#gorilla').show();
+				// gorilla.refreshLayout();
+				$('#start-button').one('click', (event: JQueryEventObject) => {
+					// transition to the practice trials
+					let practiceStruct = {
+						practiceTargets: utils.generatePracticeArray(),
+						practiceArrays: utils.constructPracticeArray(),
+						practiceTarget: '',
+						practiceTargetPositions: utils.constructTargetPositions()
+					} as PracticeTrialStruct
+					machine.transition(State.PracticeTrial, practiceStruct);
+				}) // end on click start button
+			}); // end populateAndLoad
 	    } // end onEnter
 	}) // end addState PracticeInstructions
 	
@@ -169,10 +267,10 @@ gorilla.ready(function(){
 				
 	            // stateMachine
 	            // hide so that all images are generated at the same time
-	            if (randTrial % utils.moduloVal == 0) {
+	            if (randTrial % utils.practiceModuloVal == 0) {
 	                // generate a list of 25 random distractors
 	                // Construct 25 random distractor urls
-	                const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid);
+	                const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid);
 	                const randomDistractorURLs: string[] = constructURLArray(randomDistractors);
 	                                
 	                // update metrics
@@ -181,7 +279,7 @@ gorilla.ready(function(){
 	            } else {
 	                // choose from list of targets and append to the 24 distractor images
 	                // Construct 24 random distractor urls
-	                const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid - 1);
+	                const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid - 1);
 	                const randomURLs: string[] = constructURLArray(randomDistractors);
 
 	                // choose a random image from the possible image set.  This image cannot be repeated
@@ -292,49 +390,6 @@ gorilla.ready(function(){
 	                    })
 	                } else {
 	                    // incorrect!
-	                    incorrectPracticeCounter++;
-	                    var incorrectMessage: string;
-	                    console.log(incorrectPracticeCounter);
-	                    console.log(incorrectMessage);
-	                    switch (incorrectPracticeCounter) {
-	                        case 1:
-	                            incorrectMessage = "Incorrect.";
-	                            break;
-	                        case 2:
-	                            incorrectMessage = "Incorrect again...";
-	                            break;
-	                        case 3:
-	                            incorrectMessage = "Are you even trying?";
-	                            break;
-	                        case 4:
-	                            incorrectMessage = "Seriously, are you joking with me?";
-	                            break;
-	                        case 5:
-	                            incorrectMessage = "Right, so you're not trying.";
-	                            break;
-	                        case 6:
-	                            incorrectMessage = "Children could do better than you.";
-	                            break;
-	                        case 7:
-	                            incorrectMessage = "You're wasting everybody's time.";
-	                            break;
-	                        case 8:
-	                            incorrectMessage = "Look at yourself, you look ridiculous.";
-	                            break;
-	                        case 9:
-	                            incorrectMessage = "[sigh]";
-	                            break;
-	                        case 10:
-	                            incorrectMessage = "This relationship isn't working out.";
-	                            break;
-	                        case 11:
-	                            incorrectMessage = "You're breaking my heart.";
-	                            break;
-	                        case 12:
-	                            incorrectMessage = "We are genuinely considering disqualifying you from this experiment";
-	                            break;
-	                    };
-	                    gorilla.populate('#gorilla', 'trial', {incorrectMessage: incorrectMessage}); // end populate
 	                    $('#gorilla')
 	                    .queue(function() {
 	                        $('.trial-array').hide();
@@ -365,6 +420,7 @@ gorilla.ready(function(){
 	        stateTimer = gorilla.addTimerSequence()
 	            .delay(presentationTime)
 	            .then(() => {
+	                keypressAllowed = false;
 	                $('.trial-array').hide();
 	                $('.instruction').hide();
 	                $('#gorilla')
@@ -411,13 +467,15 @@ gorilla.ready(function(){
 			if (stimConditions.length === 0) {
 				machine.transition(State.Finish)
 			} else {
+			    // increment block counter
+			    blockCounter++;
 				// choose a random stimulus condition
 		        const targetType: string = utils.takeRand(stimConditions);
 				// here we define arrays of values so that we can choose a certain value,
 			    // take it *from* the array, and that value is hence not repeating.
 				var blockArray: number[] = utils.constructBlockArray();
 				var possibleTrialTargets: number[] = utils.constructTargetArray();
-				var possibleTrialPositions: number[] = utils.constructTargetArray();
+				var possibleTrialPositions: number[] = utils.constructTargetPositions();
 		        
 				let blockStruct = {
 					targetType: targetType,
@@ -443,35 +501,52 @@ gorilla.ready(function(){
 				// }); // end populate
 				
 				// populate our trial screen
+				$('#gorilla').hide();
 				if ((targetType === 'LF') || (targetType === 'HF')) {
 					const examples: string[] = utils.shuffle(exampleImages[targetType]);
-					$('.pareidolia-block').show();
-					gorilla.populate('#gorilla', 'pareidolia-block-instructions', {
+					// $('.pareidolia-block').hide();
+					// gorilla.refreshLayout();
+					gorilla.populateAndLoad($('#gorilla'), 'pareidolia-block-instructions', {
+					// gorilla.populate('#gorilla', 'pareidolia-block-instructions', {
+					    blockCounter: blockCounter,
+					    nBlocks: nBlocks,
 						trialType: utils.encodeTargetTypeHR(targetType),
 						e1: gorilla.stimuliURL(examples[0]),
 						e2: gorilla.stimuliURL(examples[1]),
 						e3: gorilla.stimuliURL(examples[2]),
 						e4: gorilla.stimuliURL(examples[3]),
 						imSize: exampleImSize
-					}); // end populate
-					gorilla.refreshLayout();
-					$(document).one('keypress', (event: JQueryEventObject) => {
-						// $(document).off('keypress');
-						machine.transition(State.Trial, blockStruct);
-					}) // end on keypress
+					// }); // end populate
+					}, (err) => {
+						$('#gorilla').show();
+						// gorilla.refreshLayout();
+						// $(document).one('keypress', (event: JQueryEventObject) => {
+						$('#start-button').one('click', (event: JQueryEventObject) => {
+							// $(document).off('keypress');
+							machine.transition(State.Trial, blockStruct);
+						}) // end on keypress
+					}); // end populate and load
 				}
 				else {
-					$('.std-block').show();
-					gorilla.populate('#gorilla', 'std-block-instructions', {
+					// $('.std-block').hide();
+					// gorilla.refreshLayout();
+					gorilla.populateAndLoad($('#gorilla'), 'std-block-instructions', {
+					// gorilla.populate('#gorilla', 'std-block-instructions', {
+					    blockCounter: blockCounter,
+					    nBlocks: nBlocks,
 						trialType: utils.encodeTargetTypeHR(targetType),
     					example: gorilla.stimuliURL(exampleImages[targetType]),
     					imSize: exampleImSize
-					}); // end populate
-					gorilla.refreshLayout();
-					$(document).one('keypress', (event: JQueryEventObject) => {
-						// $(document).off('keypress');
-						machine.transition(State.Trial, blockStruct);
-					}) // end on keypress
+					// }); // end populate
+					}, (err) => {
+						$('#gorilla').show();
+						// gorilla.refreshLayout();
+						// $(document).one('keypress', (event: JQueryEventObject) => {
+						$('#start-button').one('click', (event: JQueryEventObject) => {
+							// $(document).off('keypress');
+							machine.transition(State.Trial, blockStruct);
+						}) // end on keypress
+					}); // end populateAndLoad
 				} // end if (target type checking for variable display)
 				
 				// gorilla.refreshLayout();
@@ -495,12 +570,16 @@ gorilla.ready(function(){
 	SM.addState(State.Trial, {
 		// the onEnter functions is executed when a state is entered
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
+			// ensure no keypress allowed
 			keypressAllowed = false;
 			
 			console.log(blockStruct.blockArray);
 			if (blockStruct.blockArray.length === 0) {
 				machine.transition(State.Block);
 			} else {
+				// increment trial number
+				trialNumber++;
+				
 				console.log("This is the trial type given to the state: " + blockStruct.targetType);
 			    
 				var trialArray: string[] = [];
@@ -527,10 +606,13 @@ gorilla.ready(function(){
 				} as TrialStruct;
 				// stateMachine
 				// hide so that all images are generated at the same time
+				
+				console.log("The random trial number is " + randTrial);
+				console.log("If this number is not zero mod " + utils.moduloVal + " then it should be a target")
 				if (randTrial % utils.moduloVal == 0) {
 					// generate a list of 25 random distractors
 					// Construct 25 random distractor urls
-					const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid);
+					const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid);
 					const randomDistractorURLs: string[] = constructURLArray(randomDistractors);
 
 					// update trialArray with array of distractors
@@ -543,7 +625,7 @@ gorilla.ready(function(){
 				} else {
 					// choose from list of targets and append to the 24 distractor images
 					// Construct 24 random distractor urls
-					const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid - 1);
+					const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid - 1);
 					const randomURLs: string[] = constructURLArray(randomDistractors);
 
 					// choose a random image from the possible image set.  This image cannot be repeated
@@ -565,6 +647,8 @@ gorilla.ready(function(){
 					trialStruct.isPresent = true;
 					trialStruct.isPresentString = 'present';
 					trialStruct.targetLocation = randPosition;
+					
+					console.log("Target image from trial struct is " + trialStruct.targetImg);
 				} // end if
 
 				let informationStruct = {
@@ -638,6 +722,8 @@ gorilla.ready(function(){
 					$(this).dequeue();
 				}) // end queue for '#gorilla'
 			
+			console.log("Target image from info struct is " + informationStruct.trialStruct.targetImg);
+			
 			$(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
 				// exit the keypress event if we are not allowed to
 				if (!keypressAllowed) return;
@@ -681,15 +767,12 @@ gorilla.ready(function(){
 						target_condition_coded:  informationStruct.trialStruct.targetConditionCoded,
 						target_img:  informationStruct.trialStruct.targetImg, // the name of the taget image (or null); previously "stim1"
 						target_location:  informationStruct.trialStruct.targetLocation,
-						key:  informationStruct.trialStruct.key, // the response key for this trial
+						key:  key, // the response key for this trial
 						correct:  informationStruct.trialStruct.correct, // boolean; whether correct or not
 						response_time:  informationStruct.trialStruct.responseTime, // response time
 						timed_out: informationStruct.trialStruct.timedOut,
 						trial_array: informationStruct.trialStruct.humanReadableTrialArray,
 					}); // end metric
-					
-					// increment trial number
-					trialNumber++;
 
 					// move on transition
 					$('#gorilla')
@@ -705,6 +788,7 @@ gorilla.ready(function(){
 			stateTimer = gorilla.addTimerSequence()
 				.delay(presentationTime)
 				.then(() => {
+					keypressAllowed = false;
 					$('.trial-array').hide();
 					$('.instruction').hide();
 					$('#gorilla')
@@ -731,6 +815,7 @@ gorilla.ready(function(){
 						correct: null, // no response
 						response_time: null, // response timeout
 						timed_out: true,
+						trial_array: informationStruct.trialStruct.humanReadableTrialArray,
 					});// end metric
 					
 					$('#gorilla')
@@ -742,6 +827,18 @@ gorilla.ready(function(){
 				.run();
 		} // end onEnter
 	}) // end addState ImageArray
+	
+	SM.addState(State.Debrief, {
+		onEnter: (machine: stateMachine.Machine) => {
+			gorilla.populate('#gorilla', 'debrief', {
+				debriefform: gorilla.resourceURL(debriefFilename)
+			})
+			gorilla.refreshLayout();
+			$('#start-button').one('click', (event: JQueryEventObject) => {
+				machine.transition(State.Finish);
+			}) // end on keypress
+		}
+	}) // end addState State.Consent
 
 	// this is the state we enter when we have finished the task
 	SM.addState(State.Finish, {
@@ -756,6 +853,7 @@ gorilla.ready(function(){
 
 	// calling this function starts gorilla and the task as a whole
 	gorilla.run(function () {
-		SM.start(State.Instructions);
+// 		SM.start(State.Instructions);
+        SM.start(State.RequestFullscreen);
 	}) // end gorilla run
 }) // end gorilla ready

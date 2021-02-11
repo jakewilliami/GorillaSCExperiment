@@ -1,7 +1,10 @@
 // define proportion of distractors (i.e., 50% of trials)
 // are distractor arrays, so prop. is 0.5
-const proportionOfDistractors: number = 0.5;
+const proportionOfDistractors: number = 1 / 3;
 const proportionOfTargets: number = 1 - proportionOfDistractors;
+
+const proportionOfPracticeDistractors: number = 0.5;
+const proportionOfPracticeTargets: number = 1 - proportionOfPracticeDistractors;
 
 // define where numbered distractors start and end
 const Dstart: number = 1;
@@ -12,6 +15,9 @@ const Tend: number = 25;
 // define how many practice trials you have
 const Pstart: number = 1;
 const Pend: number = 6;
+
+// define number of images in the grid
+export const nImagesInGrid: number = 25;
 
 // define distractor and target prefix
 const distractorPrefix: string = 'D';
@@ -61,11 +67,12 @@ This utils.ts file exports the following helper functions:
 /*--------------------------------------*/
 
 // set modulo value
-export const moduloVal: number = Math.floor(1 / proportionOfTargets);
+export const moduloVal: number = Math.floor(1 / proportionOfDistractors);
 const numberOfTrialImages: number = Tend - Tstart + 1;
 export const nTrialsPerBlock: number = Math.floor(numberOfTrialImages / proportionOfTargets);
-const numberOfPracticeImages: number = Pend - Tstart + 1;
-const nPracticeTrials: number = Math.floor(numberOfPracticeImages / proportionOfTargets);
+export const practiceModuloVal: number = Math.floor(1 / proportionOfPracticeDistractors);
+const numberOfPracticeImages: number = Pend - Pstart + 1;
+const nPracticeTrials: number = Math.floor(numberOfPracticeImages / proportionOfPracticeTargets);
 
 export function randInt(lower: number, upper: number) {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower;
@@ -132,6 +139,10 @@ export function constructBlockArray() {
 export function constructTargetArray() {
     return _constructNumberArray((Tstart - 1), (Tend - 1))
     // return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+}
+
+export function constructTargetPositions() {
+    return _constructNumberArray(0, (nImagesInGrid - 1))
 }
 
 export function constructPracticeArray() {
@@ -238,14 +249,39 @@ export function encodeTargetType(condition: string) {
 export function encodeTargetTypeHR(condition: string) {
     switch (condition) {
         case 'F':
-            return 'face';
+            return 'faces';
         case 'C':
-            return 'car';
+            return 'cars';
         case 'LF':
-            return 'object that looks like a face';
         case 'HF':
-            return 'object that looks like a face';
+            return 'objects that looks like faces';
     }
     // should never get here
     return 0;
 }
+
+// This function will test whether or not the participant is in fullscreen
+// As almost every browser has its own variable for checking this, we need to test them all
+export function isFullscreen(){
+    return (document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+}
+
+// This function will launch the participant into fullscreen
+// As above, we have to call a different function for every browser
+export function launchIntoFullscreen(element){
+    if(element.requestFullscreen) {
+    element.requestFullscreen();
+  } else if(element.mozRequestFullScreen) {
+    element.mozRequestFullScreen();
+  } else if(element.webkitRequestFullscreen) {
+    element.webkitRequestFullscreen();
+  } else if(element.msRequestFullscreen) {
+    element.msRequestFullscreen();
+  }
+}
+
+// /* When the user clicks on the button,
+// toggle between hiding and showing the dropdown content */
+// export function toggleDropdown() {
+//     document.getElementById("myDropdown").classList.toggle("show");
+// }

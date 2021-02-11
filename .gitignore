@@ -8,6 +8,7 @@ Lowface pareidolia
 px2abs.jl
 *.png
 *.zip
+versionnotes.md
 
 # Silly macOS stuff
 .DS_Store

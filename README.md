@@ -8,7 +8,7 @@
 
 All images are in a `Stimuli` directory.  Distractors have names `D<num>.jpg`; Faces, `F<num>.jpg`; etc. (for `C`, `HF`, and `LF` as well).  This is an important step in the randomisation process, because instead of randomly pulling an image from the directory, we randomly pull a number from a list of numbers, and then add (for example) `D` to the start, and `.jpg` to the end (you can change the file extension by changing the line at the top of `utils.ts`).
 
-Furthermore, we aim to keep this programme as flexible as possible.  That is, to change the number of targets in each trial you will need to change `Tend` in `utils.ts` (similarly with the number of distractors).  To change the types of target images, you will need to change the lines defining the different prefixes at the top of `utils.ts`, and change the `stimConditions` variable at the top of `main.ts`, as well as, of course, uploading said target images given the naming convention (see above).  There are also a couple of functions within `utils.ts` one would have to change, should they add different conditions.
+Furthermore, we aim to keep this programme as flexible as possible.  That is, to change the number of targets in each trial you will need to change `Tend` in `utils.ts` (similarly with the number of distractors).  To change the types of target images, you will need to change the lines defining the different prefixes at the top of `utils.ts`, and change the `stimConditions` variable at the top of `main.ts`, as well as, of course, uploading said target images given the naming convention (see above).  There are also a couple of functions within `utils.ts` one would have to change, should they add different conditions.  If you want to change the ratio of target-to-distractor trials in each block, simply change the `proportionOfDistractors` variable at the top of `utils.ts`, as we have done the maths to change everything else accordingly.
 
 There are limitations to the flexibility of this programme, however.  Currently the programme is implemented to take different target blocks *given each block have the same number of target images*.  Though it is experimentally questionable to want blocks with different number of target images, to implement such a feature you would probably need to define a function which handles the array construction for different targets.  This could probably be an extension of `constructTargetArray` using a `switch`/`case` statement, and then you could need to change the appropriate function calls in `main.ts`
 
@@ -67,7 +67,7 @@ $ tree -L 2
     ```typescript
     SM.addState(State.MyState, {
         onEnter: (machine: stateMachine.Machine, someParameter: string) => {
-        ....
+            ...
         }
     })
     ```
@@ -76,3 +76,30 @@ $ tree -L 2
     machine.transition(State.MyState, 'hello world')
     ```
     This works well `onEnter`, but as of time of writing (Feb., 2021), this functionality does not exist `onExit`.
+    
+    To see if you need to go to the next stage, usually I would want to check some condition `onExit` and proceed from there.  However, if this is condition needs to be passed as a parameter, by the note above, you cannot do this.  The workaround is to have this condition at the start of the `onEnter` block.  That is, instead of doing this:
+    ```typescript
+    SM.addState(State.MyState, {
+        onEnter: (machine: stateMachine.Machine, someParameter: type) => {
+            ... // code goes here
+        },
+        onExit: (machine: stateMachine.Machine, someParameter: type) => {
+            if (someParameter.someCondition) {
+                machine.transition(State.SomeOtherState)
+            }
+        }
+    })
+    ```
+    You will have to do this:
+    ```typescript
+    SM.addState(State.MyState, {
+        onEnter: (machine: stateMachine.Machine, someParameter: type) => {
+            if (someParameter.someCondition) {
+                machine.transition(State.SomeOtherState)
+            } else {
+                ... // code goes here
+            }
+        }
+    })
+    ```
+    It's not nice, but it is the only workaround if the condition must exist in `someParameter`.  If you can make the condition global, then that would be a cleaner workaround.
