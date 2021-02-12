@@ -108,6 +108,11 @@ var absentCount: number = 0;
 var blockCounter: number = 0;
 const nBlocks: number = stimConditions.length;
 
+// need demographics to be global
+var participantName: string;
+var participantGender: string;
+var participantAge: number;
+
 // // onclick for dropdown press
 // window.onclick = function(event) {
 // 	if (!event.target.matches('.dropbtn')) {
@@ -162,15 +167,15 @@ gorilla.ready(function(){
 			    if(!utils.isFullscreen()){
                     utils.launchIntoFullscreen(document.documentElement);
                 }
-				// machine.transition(State.Demographics);
-				machine.transition(State.Instructions);
+				machine.transition(State.Demographics);
+				// machine.transition(State.Instructions);
 			}) // end on keypress
 			$(document).one('keypress', (event: JQueryEventObject) => {
 			    if(!utils.isFullscreen()){
                     utils.launchIntoFullscreen(document.documentElement);
                 }
-				// machine.transition(State.Demographics);
-				machine.transition(State.Instructions);
+				machine.transition(State.Demographics);
+				// machine.transition(State.Instructions);
 			}) // end on keypress
 		} // end onEnter
 	}) // end addState State.Consent
@@ -180,17 +185,69 @@ gorilla.ready(function(){
 		  //  var elem = document.body; // Make the body go full screen.
             // requestFullScreen(elem);
             
-			gorilla.populate('#gorilla', 'demographics', {})
+			// gorilla.populate('#gorilla', 'demographics', {})
+			// gorilla.refreshLayout();
+			
+			$(document).off('keypress');
+			
+			$('.incomplete-message').hide();
+			$('.invalid-age').hide();
 			gorilla.refreshLayout();
+			gorilla.populate('#gorilla', 'demographics', {})
 			
-			// $('#dropdown').one('click', (event: JQueryEventObject) => {
-			// 	utils.toggleDropdown();
-			// }) // end on dropdown press
+			// gorilla.populateAndLoad($('#gorilla'), 'demographics', {}, (err) => {
 			
-			$('#next-button').one('click', (event: JQueryEventObject) => {
+				// $('#dropdown').one('click', (event: JQueryEventObject) => {
+				// 	utils.toggleDropdown();
+				// }) // end on dropdown press
+				
+				$('#next-button').on('click', (event: JQueryEventObject) => {
+					participantGender = (<HTMLInputElement>document.getElementById("gender")).value;
+					participantName = (<HTMLInputElement>document.getElementById("name")).value;
+					var rawAge = (<HTMLInputElement>document.getElementById("age")).value;
+					console.log(participantGender);
+					if (participantName == "" || rawAge == "" || participantGender === "undef") {
+						$('.invalid-age').hide();
+						$('.incomplete-message').show();
+					} else {
+						var intAge = parseInt(rawAge);
+						if (isNaN(intAge)) {
+							// tell them to enter a valid age
+							// machine.transition(State.Demographics);
+							$('.incomplete-message').hide();
+							$('.invalid-age').show();
+							// gorilla.refreshLayout();
+						} else {
+							// we have a valid integer and it's chill
+							$('.invalid-age').hide();
+							$('.incomplete-message').hide();
+							participantAge = intAge;
+							machine.transition(State.Instructions);
+						}
+					}
+					// participantAge = (<HTMLInputElement>document.getElementById("age")).value;
+					// machine.transition(State.Instructions);
+				}) // end on click
+			
+			// }); // end populateAndLoad
+		}, // end onEnter
+		
+		/*
+		onExit: (machine: stateMachine.Machine) => {
+		    participantGender = (<HTMLInputElement>document.getElementById("gender")).value;
+			participantName = (<HTMLInputElement>document.getElementById("name")).value;
+			intAge = parseInt((<HTMLInputElement>document.getElementById("age")).value);
+			if (isNaN(intAge)) {
+				// tell them to enter a valid age
+				machine.transition(State.Demographics);
+			} else {
+				// we have a valid integer and it's chill
+				participantAge = intAge;
 				machine.transition(State.Instructions);
-			}) // end on click
-		} // end onEnter
+			}
+			// participantAge = (<HTMLInputElement>document.getElementById("age")).value;
+		} // end onExit
+		*/
 	}) // end addState State.Consent
 
 	// In this state we will display our instructions for the task
@@ -778,6 +835,9 @@ gorilla.ready(function(){
 						response_time:  informationStruct.trialStruct.responseTime, // response time
 						timed_out: informationStruct.trialStruct.timedOut,
 						trial_array: informationStruct.trialStruct.humanReadableTrialArray,
+						age: participantAge,
+						name: participantName,
+						gender: participantGender,
 					}); // end metric
 
 					// move on transition
@@ -822,6 +882,9 @@ gorilla.ready(function(){
 						response_time: null, // response timeout
 						timed_out: true,
 						trial_array: informationStruct.trialStruct.humanReadableTrialArray,
+						age: participantAge,
+						name: participantName,
+						gender: participantGender,
 					});// end metric
 					
 					$('#gorilla')
