@@ -1,19 +1,38 @@
 <div class="fullheight fullsize" style="position:relative;">
-    <div class="content-container">
-        <h1>Demographics</h1>
-        <div class="dropdown">
-            <button class="dropbtn">Dropdown</button>
-            <div class="dropdown-content">
-                <!-- <a href="#">Link 1.0</a> -->
-                <!-- <a href="#">Link 1.1</a> -->
-                <!-- <a href="#">Link 1.2</a> -->
-                <p>Female</p>
-                <p>Male</p>
-                <p>Other</p>
-            </div>
-        </div>
+    <div class="content-container" align="center">
+        <h1>Participant details</h1>
+        <form name="demographics-form" action="#" align="left">
+            <p class="form-box">
+                <label for="name">Name</label>
+                <input id="name" name="name">
+            </p>
+            <p class="form-box">
+                <label for="age">Age</label>
+                <input id="age" name="age">
+            </p>
+            <p class="form-box">
+                <label for="gender" title="Gender">Gender</label>
+                <select id="gender" name="gender">
+                    <optgroup label="Genders">
+                        <option value="undef" style="color: grey">(undefined)</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </optgroup>
+                </select>
+            </p>
+        </form>
     </div>
     <div class="button-container">
+        <!-- <button class="btn btn-primary response-button" id="next-button" data-response="Next">Next</button> -->
         <button class="btn btn-primary" id="next-button">Next</button>
+    </div>
+    <div class="form-error">
+        <div class="incomplete-message" hidden>
+            <p>Please fill in everything before continuing.</p>
+        </div>
+        <div class="invalid-age" hidden>
+            <p>Please enter a valid age!</p>
+        </div>
     </div>
 </div>

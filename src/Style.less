@@ -22,12 +22,12 @@
 
 .content-container {
     position: absolute;
-    width: 80%;
+    width: 100%;
     top: 30%;
     // top: 30vh; // 30% of the view height
     left: 50%;
     // left: 50vw; // 50% of the view width
-    font-size: 14pt;
+    font-size: 12pt;
     -moz-transform: translateX(-50%) translateY(-30%);
     -webkit-transform: translateX(-50%) translateY(-30%);
     transform: translateX(-50%) translateY(-30%);
@@ -40,15 +40,17 @@
     // top: 30vh; // 30% of the view height
     left: 50%;
     // left: 50vw; // 50% of the view width
-    font-size: 14pt;
+    font-size: 12pt;
     -moz-transform: translateX(-50%) translateY(-50%);
     -webkit-transform: translateX(-50%) translateY(-50%);
     transform: translateX(-50%) translateY(-50%);
 }
 
 .button-container {
+    // position: relative;
     position: absolute;
-    bottom: 10%;
+    bottom: 5%; // 10% of vertical height
+    // bottom: 0;
     left: 50%;
     // margin: auto;
     // width: 50%;
@@ -99,44 +101,25 @@
     height: 1.8cm;
 }
 
-/* Dropdown Button */
-.dropbtn {
-    background-color: #4CAF50;
-    color: white;
-    padding: 16px;
-    font-size: 16px;
-    border: none;
-}
-
-/* The container <div> - needed to position the dropdown content */
-.dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-/* Dropdown Content (Hidden by Default) */
-.dropdown-content {
-    display: none;
+.form-error {
+    // position: relative;
     position: absolute;
-    background-color: #f1f1f1;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-    z-index: 1;
+    bottom: 20vh; // 10% of vertical height
+    // bottom: 0;
+    left: 50%;
+    // float: inherit;
+    // margin: auto;
+    // width: 50%;
+    // margin: 0 auto;
+    // z-index: 10;
+    color: red;
+    -moz-transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
 }
 
-/* Links inside the dropdown */
-.dropdown-content a {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
+.incomplete-message>form-error {
 }
 
-/* Change color of dropdown links on hover */
-.dropdown-content a:hover {background-color: #ddd;}
-
-/* Show the dropdown menu on hover */
-.dropdown:hover .dropdown-content {display: block;}
-
-/* Change the background color of the dropdown button when the dropdown content is shown */
-.dropdown:hover .dropbtn {background-color: #3e8e41;}
+.invalid-age>form-error {
+}
