@@ -9,6 +9,7 @@ px2abs.jl
 *.png
 *.zip
 versionnotes.md
+*.csv
 
 # Silly macOS stuff
 .DS_Store
