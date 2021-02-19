@@ -16,14 +16,28 @@ function get_root_and_files(dir::AbstractString)
     return allfiles
 end
 
+function check_uniqueness(list::AbstractVector)
+    processed = []
+    for i in list
+        i_parsed = split(i, '_')[1]
+        if i_parsed ∈ processed
+            println("We have a $(i_parsed) duplicate")
+            continue
+        end
+        push!(processed, i_parsed)
+    end
+end
+
+check_uniqueness(get_files("/Users/jakeireland/Desktop/New original/"))
+
 function main()
     # selected_images = []
     # selected_images = get_files("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_1/")
-    selected_images = vcat(get_files("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_1/"), get_files("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_2/"), get_files("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_3/"))
+    selected_images = vcat(get_files("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_1/"), get_files("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_2/"), get_files("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_3/"), get_files("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_4/"), get_files("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_5/"))
     allfiles = get_root_and_files("/Users/jakeireland/projects/GorillaSCExperiment/data/THINGS/")
 
     i = 0
-    while i < 200
+    while i < 10
         randimageindex = rand(1:size(allfiles, 1))
         randimageinfo = allfiles[randimageindex, :]
         randimage = randimageinfo[2];
@@ -33,7 +47,7 @@ function main()
                 # println("passed")
                 i += 1
                 push!(selected_images, randimage)
-                cp(joinpath(randimageinfo[1], randimage), joinpath("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_4", randimage))
+                cp(joinpath(randimageinfo[1], randimage), joinpath("/Users/jakeireland/projects/GorillaSCExperiment/data/chosen_object_images_6", randimage))
             end
         end
     end
