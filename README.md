@@ -14,7 +14,9 @@ There are limitations to the flexibility of this programme, however.  Currently 
 
 ## A Note on `utils/`
 
-These utilities were from prior to Gorilla work, where we considered pregenerating the arrays.  The main utility is `make_image_arr.py`, where we generate these image arrays.
+We have used SHINE toolbox, written in MATLAB, to standardise luminance of all images.  Simple tools such as bash, GIMP, and ImageMagick, to process images further (converting to certain formats, and cropping them, etc.).  Python has been used to get some sharpness metrics, and Julia to do some processing of files/randomisation.  Most (all?) distractors are taken from the [THINGS object concept and object image database](https://osf.io/jum2f/) dataset.
+
+Some of these utilities were from prior to Gorilla work, where we considered pregenerating the arrays.  The main utility is `make_image_arr.py`, where we generate these image arrays.
 
 Example:
 ```bash
