@@ -11,7 +11,7 @@ function parse_categories(datafile::String)
     df = DataFrame(CSV.File(datafile, header = true))
     
     # check that all categories are defined
-    for i in skipmissing(df.category)
+    for i in skipmissing(df.top_down)
         if i ∉ categories
             error("There is no category called \"$(i)\".")
         end
