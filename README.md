@@ -14,7 +14,38 @@ There are limitations to the flexibility of this programme, however.  Currently 
 
 ## A Note on `utils/`
 
-These utilities were from prior to Gorilla work, where we considered pregenerating the arrays.  The main utility is `make_image_arr.py`, where we generate these image arrays.
+#### `utils/` Contents
+
+Please note that a lot of these scripts and programmes were written quickly for some quick automisations, and as such may need changing given the computer you are running this on, and your system.  It will use either `bash`, R 4.0, Python 3.8, or Julia 1.5, and may have programme dependencies.
+
+  - `*.toml`:
+    - Julia project files for `utils/` dependencies;
+  - `assess_categories.jl`:
+    - A Julia script to create a bar chart of frequencies of categories from the `data/distractor_categories.csv` data file (see also `utils/get_categories.jl` for generating said data file);
+  - `get_categories.jl`:
+    - Given a directory of distractor images (named by the "THINGS object concept and object image database"), we pull from data the "THINGS object concept and object image database" and give each distractor one of 27 categories as determined by top down processing, bottom up processing, and manually;
+  - `get_image_sharpness.py`:
+    - Given an image file as a command line argument, prints the [estimated sharpness](www.mathworks.com/matlabcentral/fileexchange/32397-sharpness-estimation-from-image-gradients/content/estimate_sharpness_test.m) as defined by the average gradient;
+  - `get_rand_THINGS.jl`:
+    - Given a list of images (already chosen distractors), get distractor images from the "THINGS object concept and object image database" which have not been chosen yet;
+  - `getres.sh` [deprecated]:
+    - Briefly used to get the screen resolution of the present computer;
+  - `make_image_arr.py`:
+    - The script that started it all.  Given images, it chooses 24, and potentially a target image, and puts them into an image grid;
+  - `make_many.sh` [deprecated]:
+    - A shell-based wrapper script for `make_image_arr.py`;
+  - `make_practice.sh` [deprecated]:
+    - Another wrapper script to make practice image arrays from the `make_image_arr.py` script;
+  - `normalise_images.py`:
+    - An attempt at acutance normalisation by using the method described in `get_image_sharpness.py` to normalise acutance across a list of images.
+  - `parse_vec.R`:
+    - An R script to take a vector from a string (as is one of the metrics recorded in our experiment) and process it as a vector in R.
+
+#### More Notes
+
+We have used SHINE toolbox, written in MATLAB, to standardise luminance of all images.  Simple tools such as bash, GIMP, and ImageMagick, to process images further (converting to certain formats, and cropping them, etc.).  Python has been used to get some sharpness metrics, and Julia to do some processing of files/randomisation.  Most (all?) distractors are taken from the [THINGS object concept and object image database](https://osf.io/jum2f/) dataset.
+
+Some of these utilities were from prior to Gorilla work, where we considered pregenerating the arrays.  The main utility is `make_image_arr.py`, where we generate these image arrays.
 
 Example:
 ```bash

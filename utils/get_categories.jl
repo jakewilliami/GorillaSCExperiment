@@ -59,4 +59,4 @@ function main(distractor_dir::String, out_file::String)
     return distractor_categories
 end
 
-main("/Users/jakeireland/Desktop/New original/", "/Users/jakeireland/projects/GorillaSCExperiment/data/distractor_categories.csv")
+main("/Users/jakeireland/projects/GorillaSCExperiment/data/Original/", "/Users/jakeireland/projects/GorillaSCExperiment/data/distractor_categories.csv")

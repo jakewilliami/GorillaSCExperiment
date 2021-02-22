@@ -1,10 +1,20 @@
+/*--------------------------------------*/
+// This is the main programme file that
+// runs when the programme is started.
+/*--------------------------------------*/
+
+// API imports
 import gorilla = require('gorilla/gorilla');
 import stateMachine = require("gorilla/state_machine");
-
+// our imports
 import utils = require('utils');
 
+/*--------------------------------------*/
+
+// define some global variables
 var stimConditions: string[] = ['C', 'F', 'HF', 'LF'];
-const exampleTargets: string[] = ['EC.jpg', 'EF.jpg', 'EP.jpg'];
+const presentResponseKey: string = 'k'
+const absentResponseKey: string = 'l'
 const beforeFixationDelay: number = 500;
 const fixationLength: number = 500;
 const afterFixationDelay: number = 0;
@@ -13,19 +23,23 @@ const presentationTime: number = rawPresentationTime + beforeFixationDelay + fix
 // const presentationTime: number = rawPresentationTime;
 const timeoutMessageLength: number = 1000;
 const practiceFeedbackMessageLength: number = 1000;
-const exampleImSize: string = "3cm";
-const consentFilename: string = "PareidoliaVisualSearch_InfoSheet.pdf";
+const exampleImSize: string = "3cm"; // e.g., example images will be 3cm × 3cm
+const consentFilename: string = "PareidoliaVisualSearch_InfoSheet.pdf"; // these are in the Resources tab
 const debriefFilename: string = "PareidoliaVisualSearch_Debriefing.pdf";
 
 const exampleImages: Object = {
-    'C': 'EC.jpg',
-    'F': 'EF.jpg',
-    'P': ['P1.jpg', 'P2.jpg', 'P3.jpg', 'P4.jpg', 'P5.jpg', 'P6.jpg'], // practice
-    'HF': ['PE1.jpg', 'PE2.jpg', 'PE3.jpg', 'PE4.jpg'], // pareidolia example
-    'LF': ['PE1.jpg', 'PE2.jpg', 'PE3.jpg', 'PE4.jpg'],
+    'C': ['EC1.png', 'EC2.png', 'EC3.png'],
+    'F': ['EF1.png', 'EF2.png', 'EF3.png'],
+    'P': ['P1.png', 'P2.png', 'P3.png', 'P4.png', 'P5.png', 'P6.png'], // practice
+	'E': ['EC.png', 'EF.png', 'EP.png'], // example
+    'HF': ['EP1.png', 'EP2.png', 'EP3.png'], // pareidolia example
+    'LF': ['EP1.png', 'EP2.png', 'EP3.png']
 };
 
 /* ------------------------------------- */
+// There is not much that you should need
+// to change below this line!
+/*--------------------------------------*/
 
 // possible states in state machine
 enum State {
@@ -63,6 +77,7 @@ interface TrialStruct {
 	timedOut: boolean,
 }
 
+// As above, for different blocks
 interface BlockStruct {
     targetType: string,
     blockArray: number[],
@@ -70,6 +85,8 @@ interface BlockStruct {
     possibleTrialPositions: number[],
 }
 
+// An interface to contain the above two
+// interfaces
 interface InformationStruct {
 	trialStruct: TrialStruct,
 	blockStruct: BlockStruct
@@ -84,6 +101,8 @@ interface PracticeTrialStruct {
 	practiceArray: string[]
 }
 
+// Given an array of stimuli names, constructs an array
+// of stimuli URLs
 function constructURLArray(stimArr: string[]) {
     var URLs: string[] = [];
 	for (var i = 0; i < stimArr.length; i++) {
@@ -109,23 +128,13 @@ var blockCounter: number = 0;
 const nBlocks: number = stimConditions.length;
 
 // need demographics to be global
-var participantName: string;
+var participantID: string;
 var participantGender: string;
 var participantAge: number;
 
-// // onclick for dropdown press
-// window.onclick = function(event) {
-// 	if (!event.target.matches('.dropbtn')) {
-// 		var dropdowns = document.getElementsByClassName("dropdown-content");
-// 		var i;
-// 		for (i = 0; i < dropdowns.length; i++) {
-// 			var openDropdown = dropdowns[i];
-// 			if (openDropdown.classList.contains('show')) {
-// 				openDropdown.classList.remove('show');
-// 			}
-// 		}
-// 	}
-// }
+// get keycode for response keys
+const presentResponseKeyCode: number = presentResponseKey.toLowerCase().charCodeAt(0);
+const absentResponseKeyCode: number = absentResponseKey.toLowerCase().charCodeAt(0);
 
 // this is the main gorilla function call!
 gorilla.ready(function(){
@@ -136,13 +145,10 @@ gorilla.ready(function(){
 	var SM = new stateMachine.StateMachine();
 	
 	// start at trial one
-	var trial_number: number = gorilla.retrieve('trial_number', 1, true);
+	// var trial_number: number = gorilla.retrieve('trial_number', 1, true);
 
 	SM.addState(State.Consent, {
 		onEnter: (machine: stateMachine.Machine) => {
-		  //  var elem = document.body; // Make the body go full screen.
-            // requestFullScreen(elem);
-            
 			gorilla.populate('#gorilla', 'consent', {
 				consentform: gorilla.resourceURL(consentFilename)
 			})
@@ -158,9 +164,6 @@ gorilla.ready(function(){
 	
 	SM.addState(State.RequestFullscreen, {
 		onEnter: (machine: stateMachine.Machine) => {
-		  //  var elem = document.body; // Make the body go full screen.
-            // requestFullScreen(elem);
-            
 			gorilla.populate('#gorilla', 'request-fs', {})
 			gorilla.refreshLayout();
 			$('#fs-button').one('click', (event: JQueryEventObject) => {
@@ -168,117 +171,76 @@ gorilla.ready(function(){
                     utils.launchIntoFullscreen(document.documentElement);
                 }
 				machine.transition(State.Demographics);
-				// machine.transition(State.Instructions);
 			}) // end on keypress
 			$(document).one('keypress', (event: JQueryEventObject) => {
 			    if(!utils.isFullscreen()){
                     utils.launchIntoFullscreen(document.documentElement);
                 }
 				machine.transition(State.Demographics);
-				// machine.transition(State.Instructions);
 			}) // end on keypress
 		} // end onEnter
 	}) // end addState State.Consent
 	
 	SM.addState(State.Demographics, {
 		onEnter: (machine: stateMachine.Machine) => {
-		  //  var elem = document.body; // Make the body go full screen.
-            // requestFullScreen(elem);
-            
-			// gorilla.populate('#gorilla', 'demographics', {})
-			// gorilla.refreshLayout();
-			
+			// need to turn off keypress handler for the time being
+			// so that the demographics page doesn't unexpectedly
+			// update when we write out name &c.
 			$(document).off('keypress');
 			
 			$('.incomplete-message').hide();
 			$('.invalid-age').hide();
 			gorilla.refreshLayout();
 			gorilla.populate('#gorilla', 'demographics', {})
-			
-			// gorilla.populateAndLoad($('#gorilla'), 'demographics', {}, (err) => {
-			
-				// $('#dropdown').one('click', (event: JQueryEventObject) => {
-				// 	utils.toggleDropdown();
-				// }) // end on dropdown press
 				
-				$('#next-button').on('click', (event: JQueryEventObject) => {
-					participantGender = (<HTMLInputElement>document.getElementById("gender")).value;
-					participantName = (<HTMLInputElement>document.getElementById("name")).value;
-					var rawAge = (<HTMLInputElement>document.getElementById("age")).value;
-					console.log(participantGender);
-					if (participantName == "" || rawAge == "" || participantGender === "undef") {
-						$('.invalid-age').hide();
-						$('.incomplete-message').show();
+			$('#next-button').on('click', (event: JQueryEventObject) => {
+				participantGender = (<HTMLInputElement>document.getElementById("gender")).value;
+				participantID = (<HTMLInputElement>document.getElementById("PID")).value;
+				var rawAge = (<HTMLInputElement>document.getElementById("age")).value;
+				
+				if (participantID == "" || rawAge == "" || participantGender === "undef") {
+					$('.invalid-age').hide();
+					$('.incomplete-message').show();
+				} else {
+					var intAge = parseInt(rawAge);
+					if (isNaN(intAge)) {
+						// tell them to enter a valid age
+						$('.incomplete-message').hide();
+						$('.invalid-age').show();
 					} else {
-						var intAge = parseInt(rawAge);
-						if (isNaN(intAge)) {
-							// tell them to enter a valid age
-							// machine.transition(State.Demographics);
-							$('.incomplete-message').hide();
-							$('.invalid-age').show();
-							// gorilla.refreshLayout();
-						} else {
-							// we have a valid integer and it's chill
-							$('.invalid-age').hide();
-							$('.incomplete-message').hide();
-							participantAge = intAge;
-							machine.transition(State.Instructions);
-						}
+						// we have a valid integer and it's chill
+						$('.invalid-age').hide();
+						$('.incomplete-message').hide();
+						participantAge = intAge;
+						machine.transition(State.Instructions);
 					}
-					// participantAge = (<HTMLInputElement>document.getElementById("age")).value;
-					// machine.transition(State.Instructions);
-				}) // end on click
-			
-			// }); // end populateAndLoad
-		}, // end onEnter
-		
-		/*
-		onExit: (machine: stateMachine.Machine) => {
-		    participantGender = (<HTMLInputElement>document.getElementById("gender")).value;
-			participantName = (<HTMLInputElement>document.getElementById("name")).value;
-			intAge = parseInt((<HTMLInputElement>document.getElementById("age")).value);
-			if (isNaN(intAge)) {
-				// tell them to enter a valid age
-				machine.transition(State.Demographics);
-			} else {
-				// we have a valid integer and it's chill
-				participantAge = intAge;
-				machine.transition(State.Instructions);
-			}
-			// participantAge = (<HTMLInputElement>document.getElementById("age")).value;
-		} // end onExit
-		*/
+				}
+			}) // end on click
+		} // end onEnter
 	}) // end addState State.Consent
 
 	// In this state we will display our instructions for the task
 	SM.addState(State.Instructions, {
 	    onEnter: (machine: stateMachine.Machine) => {
-	// 			var text: string = "Hello and welcome to this experiment.  It is the love child of genius people."
-	        var text: string = "Hello and welcome to this experiment."
-	        var examples: string[] = constructURLArray(exampleTargets);
-	        // $('.instructions-content').hide();
+			const randExampleFace: string = utils.randVal(exampleImages['F']);
+			const randExamplePareidolia: string = utils.randVal(exampleImages['HF']);
+	        const randExampleCar: string = utils.randVal(exampleImages['C']);
+            const randExampleImages: string[] = [randExampleFace, randExamplePareidolia, randExampleCar];
+	        const examples: string[] = constructURLArray(randExampleImages);
 			$('#gorilla').hide();
 	        gorilla.populateAndLoad($('#gorilla'), 'instructions', {
-// 			gorilla.populate('#gorilla', 'instructions', {
-	            introduction: text,
 	            e1: examples[0],
 	            e2: examples[1],
 	            e3: examples[2],
-	            imSize: exampleImSize
-// 			}
+	            imSize: exampleImSize,
+				responsePresent: presentResponseKey.toUpperCase(),
+				responseAbsent: absentResponseKey.toUpperCase(),
 	        },
-// 			);
-	        // });
 	        (err) => {
 				$('#gorilla').show();
-		            // $('.instructions-content').show();
-		           // gorilla.refreshLayout();
-		        // }); // end populateAndLoad
-				// $('#gorilla').show();
 				$('#start-button').one('click', (event: JQueryEventObject) => {
 					// transition to the practice trials
 					machine.transition(State.PracticeInstructions);
-				// 	machine.transition(State.Block);
 				}) // end on click start button
 	        }); // end populate and load
 	    } // end onEnter
@@ -286,18 +248,13 @@ gorilla.ready(function(){
 	
 	SM.addState(State.PracticeInstructions, {
 	    onEnter: (machine: stateMachine.Machine) => {
-			var examples: string[] = constructURLArray(exampleTargets);
-			// gorilla.populate('#gorilla', 'practice-instructions', {
-			//     example: gorilla.stimuliURL(utils.randVal(utils.generatePracticeArray())),
-			//     imSize: exampleImSize
-			// }); // end populate
+			var examples: string[] = constructURLArray(exampleImages['P']);
 			$('#gorilla').hide();
 	        gorilla.populateAndLoad($('#gorilla'), 'practice-instructions', {
 				example: gorilla.stimuliURL(utils.randVal(utils.generatePracticeArray())),
-			   imSize: exampleImSize
+				imSize: exampleImSize
 		   	}, (err) => {
 				$('#gorilla').show();
-				// gorilla.refreshLayout();
 				$('#start-button').one('click', (event: JQueryEventObject) => {
 					// transition to the practice trials
 					let practiceStruct = {
@@ -317,22 +274,20 @@ gorilla.ready(function(){
 			practiceStruct.practiceArray = [];
 	        keypressAllowed = false;
 	        
-	        console.log(practiceStruct.practiceArrays);
-	        
+			// if the practice trials are over, transition to post-practice instructions
 	        if (practiceStruct.practiceArrays.length === 0) {
 	            machine.transition(State.AfterPracticeInstructions);
 	        } else {
 	            var trialArray: string[] = [];
 	            const randTrial: number = utils.takeRand(practiceStruct.practiceArrays);
 				
-	            // stateMachine
 	            // hide so that all images are generated at the same time
 	            if (randTrial % utils.practiceModuloVal == 0) {
 	                // generate a list of 25 random distractors
 	                // Construct 25 random distractor urls
 	                const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid);
 	                const randomDistractorURLs: string[] = constructURLArray(randomDistractors);
-	                                
+	                
 	                // update metrics
 	                practiceStruct.isPresent = false;
 	                practiceStruct.practiceArray = randomDistractorURLs;
@@ -350,6 +305,7 @@ gorilla.ready(function(){
 	                const randPosition: number = utils.takeRand(practiceStruct.practiceTargetPositions);
 	                utils.insert(randomURLs, randPosition, conditionImageURL)
 	                
+					// update metrics
 	                practiceStruct.isPresent = true;
 	                practiceStruct.practiceArray = randomURLs;
 	            } // end if
@@ -362,10 +318,13 @@ gorilla.ready(function(){
 	            $('.practice-feedback-incorrect').hide();
 	            
 	            // populate our trial screen
-	            gorilla.populateAndLoad($('#gorilla'), 'trial', { trials: practiceStruct.practiceArray }, (err) => {
+	            gorilla.populateAndLoad($('#gorilla'), 'trial', {
+					trials: practiceStruct.practiceArray,
+					responsePresent: presentResponseKey.toUpperCase(),
+					responseAbsent: absentResponseKey.toUpperCase(),
+				}, (err) => {
 	                machine.transition(State.PracticeFixationCross, practiceStruct);
 	            }) // end populate and load
-	            console.log('----------------------------------------------------------');
 	        } // end if-else
 	    }, // end onEnter
 	}) // end addState PracticeTrial
@@ -392,7 +351,7 @@ gorilla.ready(function(){
 	                $(this).dequeue();
 	            }) // end queue for '#gorilla'
 	            .delay(afterFixationDelay);
-	        //
+			
 	        machine.transition(State.PracticeImageArray, practiceStruct);
 	    }, // end onEnter
 	}) // end addState for FixationCross
@@ -400,11 +359,8 @@ gorilla.ready(function(){
 	SM.addState(State.PracticeImageArray, {
 	    onEnter: (machine: stateMachine.Machine, practiceStruct: PracticeTrialStruct) => {
 	        // initialise sequence for timeout
-	        // potentially put this in a queue
-	        // possibly the queue below
-	        var stateTimer: any = null;
+			var stateTimer: gorilla.GorillaTimerSequence;
 	        
-	        // console.log("This is the trial structure given to the state: " + informationStruct.trialStruct);
 	        $('#gorilla')
 	            .queue(function () {
 	                $('.trial-array').show();
@@ -416,24 +372,23 @@ gorilla.ready(function(){
 	            }) // end queue for '#gorilla'
 	        
 	        $(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
-	            // exit the keypress event if we are not allowed to
+	            // exit the keypress event if we are not allowed to!
 	            if (!keypressAllowed) return;
 	            
 	            // get the key that was pressed
 	            const e = event.which;
 	            
 	            // enter state where it can't enter any more keys
-	            if (e === 107 || e === 108) {
-	                // stop timout timer
+	            if (e === presentResponseKeyCode || e === absentResponseKeyCode) {
+	                // stop timout timer!
 	                stateTimer.cancel();
 	                
 	                // update keypress as we have just pressed the key!
 	                keypressAllowed = false;
 	                
 	                // check if key press was correct
-	                if ((practiceStruct.isPresent && e === 107) || (!practiceStruct.isPresent && e === 108)) {
-	                    console.log()
-	                    // correct
+	                if ((practiceStruct.isPresent && e === presentResponseKeyCode) || (!practiceStruct.isPresent && e === absentResponseKeyCode)) {
+	                   // correct!
 	                   $('#gorilla')
 	                    .queue(function() {
 	                        $('.trial-array').hide();
@@ -449,7 +404,7 @@ gorilla.ready(function(){
 	                        $(this).dequeue();
 	                    })
 	                } else {
-	                    // incorrect!
+	                    // incorrect response
 	                    $('#gorilla')
 	                    .queue(function() {
 	                        $('.trial-array').hide();
@@ -472,11 +427,10 @@ gorilla.ready(function(){
 	                        machine.transition(State.PracticeTrial, practiceStruct);
 	                        $(this).dequeue();
 	                    }); // end queue for '#gorilla'
-	            } // end checking if key pressed is 75:76 (K or L)
-	        }) // end response keypress (event: JQueryEventObject)
+	            } // end checking if key pressed is K or L
+	        }) // end response keypress
 	        
-	        console.log('----------------------------------------------------------');
-	        // var stateTimer: gorilla.GorillaTimerSequence = gorilla.addTimerSequence()
+			// Timeout if took too long!
 	        stateTimer = gorilla.addTimerSequence()
 	            .delay(presentationTime)
 	            .then(() => {
@@ -521,9 +475,8 @@ gorilla.ready(function(){
 	SM.addState(State.Block, {
 	    onEnter: (machine: stateMachine.Machine) => {
 			// upon entering the block after the final trial condition
-			// we are duly finished and we need to immediately
-			// transition to the finish state
-			console.log(stimConditions);
+			// we are duly finished and we need to immediately transition
+			// to the finish state
 			if (stimConditions.length === 0) {
 				machine.transition(State.Finish)
 			} else {
@@ -544,85 +497,25 @@ gorilla.ready(function(){
 					possibleTrialPositions: possibleTrialPositions
 				} as BlockStruct;
 				
-				// $('.std-block').hide();
-				// $('.pareidolia-block').hide();
-				
-				// const examples: string[] = exampleImages[targetType];
-				// const possibleExamples: number[] = utils._constructNumberArray(1, examples.length);
-				
-				// gorilla.populate('#gorilla', 'block-instructions', {
-				// 	trialType: utils.encodeTargetTypeHR(targetType),
-				// 	example: gorilla.stimuliURL(exampleImages['C']),
-				// 	e1: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
-				// 	e2: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
-				// 	e3: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
-				// 	e4: gorilla.stimuliURL(examples[utils.takeRand(possibleExamples)]),
-				// 	imSize: exampleImSize
-				// }); // end populate
-				
 				// populate our trial screen
 				$('#gorilla').hide();
-				if ((targetType === 'LF') || (targetType === 'HF')) {
-					const examples: string[] = utils.shuffle(exampleImages[targetType]);
-					// $('.pareidolia-block').hide();
-					// gorilla.refreshLayout();
-					gorilla.populateAndLoad($('#gorilla'), 'pareidolia-block-instructions', {
-					// gorilla.populate('#gorilla', 'pareidolia-block-instructions', {
-					    blockCounter: blockCounter,
-					    nBlocks: nBlocks,
-						trialType: utils.encodeTargetTypeHR(targetType),
-						e1: gorilla.stimuliURL(examples[0]),
-						e2: gorilla.stimuliURL(examples[1]),
-						e3: gorilla.stimuliURL(examples[2]),
-						e4: gorilla.stimuliURL(examples[3]),
-						imSize: exampleImSize
-					// }); // end populate
-					}, (err) => {
-						$('#gorilla').show();
-						// gorilla.refreshLayout();
-						// $(document).one('keypress', (event: JQueryEventObject) => {
-						$('#start-button').one('click', (event: JQueryEventObject) => {
-							// $(document).off('keypress');
-							machine.transition(State.Trial, blockStruct);
-						}) // end on keypress
-					}); // end populate and load
-				}
-				else {
-					// $('.std-block').hide();
-					// gorilla.refreshLayout();
-					gorilla.populateAndLoad($('#gorilla'), 'std-block-instructions', {
-					// gorilla.populate('#gorilla', 'std-block-instructions', {
-					    blockCounter: blockCounter,
-					    nBlocks: nBlocks,
-						trialType: utils.encodeTargetTypeHR(targetType),
-    					example: gorilla.stimuliURL(exampleImages[targetType]),
-    					imSize: exampleImSize
-					// }); // end populate
-					}, (err) => {
-						$('#gorilla').show();
-						// gorilla.refreshLayout();
-						// $(document).one('keypress', (event: JQueryEventObject) => {
-						$('#start-button').one('click', (event: JQueryEventObject) => {
-							// $(document).off('keypress');
-							machine.transition(State.Trial, blockStruct);
-						}) // end on keypress
-					}); // end populateAndLoad
-				} // end if (target type checking for variable display)
-				
-				// gorilla.refreshLayout();
-				
-				// $(document).one('keypress', (event: JQueryEventObject) => {
-					// $(document).off('keypress');
-					// machine.transition(State.Trial, blockStruct);
-				// }) // end on keypress
+				const examples: string[] = utils.shuffle(exampleImages[targetType]);
+				gorilla.populateAndLoad($('#gorilla'), 'block-instructions', {
+				    blockCounter: blockCounter,
+				    nBlocks: nBlocks,
+					trialType: utils.encodeTargetTypeHR(targetType),
+					e1: gorilla.stimuliURL(examples[0]),
+					e2: gorilla.stimuliURL(examples[1]),
+					e3: gorilla.stimuliURL(examples[2]),
+					imSize: exampleImSize
+				}, (err) => {
+					$('#gorilla').show();
+					$('#start-button').one('click', (event: JQueryEventObject) => {
+						machine.transition(State.Trial, blockStruct);
+					}) // end on keypress
+				}); // end populate and load
 			} // end if
-	    }, // end onEnter
-	    
-	    // onExit: (machine: stateMachine.Machine) => {
-		// 	if (stimConditions.length === 0) {
-		// 		machine.transition(State.Finish)
-		// 	}
-		// }// end onExit
+	    } // end onEnter
 	}); // end add state Block
 	
 	// in this state, an array of images will be displayed and a response button
@@ -633,23 +526,21 @@ gorilla.ready(function(){
 			// ensure no keypress allowed
 			keypressAllowed = false;
 			
-			console.log(blockStruct.blockArray);
+			// stop trial if we have finished all blocks!
 			if (blockStruct.blockArray.length === 0) {
 				machine.transition(State.Block);
 			} else {
 				// increment trial number
 				trialNumber++;
 				
-				console.log("This is the trial type given to the state: " + blockStruct.targetType);
-			    
 				var trialArray: string[] = [];
 				const randTrial: number = utils.takeRand(blockStruct.blockArray);
-				console.log('The random trial number chosen is ' + randTrial);
 				
 				// some metrics for later
 				const condType = utils.encodeTargetType(blockStruct.targetType);
 				const blockCode: number = utils.getCondCode(blockStruct.targetType);
-
+				
+				// initialise trialStruct for this trial
 				let trialStruct = {
 					trialArray: [],
 					trialCondition: blockStruct.targetType,
@@ -662,17 +553,14 @@ gorilla.ready(function(){
 					correct: null,
 					responseTime: null,
 					timedOut: false,
-					// keypressAllowed: keypressAllowed,
 				} as TrialStruct;
-				// stateMachine
-				// hide so that all images are generated at the same time
 				
-				console.log("The random trial number is " + randTrial);
-				console.log("If this number is not zero mod " + utils.moduloVal + " then it should be a target")
+				// if the random trial number is zero modulo some value,
+				// then it should be a distractor.  This modulo value is defined
+				// in utils, based on the proportion of trials you need
 				if (randTrial % utils.moduloVal == 0) {
 				    // increment absent counter
 				    absentCount++;
-					// generate a list of 25 random distractors
 					// Construct 25 random distractor urls
 					const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid);
 					const randomDistractorURLs: string[] = constructURLArray(randomDistractors);
@@ -686,22 +574,18 @@ gorilla.ready(function(){
 					trialStruct.isPresentString = 'absent';
 					trialStruct.targetImg = 'absent' + absentCount;
 				} else {
-					// choose from list of targets and append to the 24 distractor images
 					// Construct 24 random distractor urls
 					const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid - 1);
 					const randomURLs: string[] = constructURLArray(randomDistractors);
 
 					// choose a random image from the possible image set.  This image cannot be repeated
 					const randomImageNumber: number = utils.takeRand(blockStruct.possibleTrialTargets) + 1; // add one because array is from 0:24
-					const conditionImage: string = utils.constructImageName(blockStruct.targetType, randomImageNumber);
+					const conditionImage: string = utils.constructStimName(blockStruct.targetType, randomImageNumber);
 					const conditionImageURL: string = gorilla.stimuliURL(conditionImage);
 					
 					// insert image at random position.  This position cannot be repeated
 					const randPosition: number = utils.takeRand(blockStruct.possibleTrialPositions);
 					utils.insert(randomURLs, randPosition, conditionImageURL)
-					
-					console.log('The target image is a ' + utils.encodeTargetType(blockStruct.targetType) + ' and is named ' + conditionImage);
-					console.log('The target ' + utils.encodeTargetType(blockStruct.targetType) + ' is inserted at position ' + randPosition);
 					
 					// update metrics
 					trialStruct.trialArray = randomURLs;
@@ -710,10 +594,11 @@ gorilla.ready(function(){
 					trialStruct.isPresent = true;
 					trialStruct.isPresentString = 'present';
 					trialStruct.targetLocation = randPosition;
-					
-					console.log("Target image from trial struct is " + trialStruct.targetImg);
 				} // end if
 
+				// package all needed data into an information struct
+				// for passing to different states.  Wrap this interface
+				// in wrapping paper and put a bow on it
 				let informationStruct = {
 					blockStruct: blockStruct,
 					trialStruct: trialStruct
@@ -727,10 +612,13 @@ gorilla.ready(function(){
 	            $('.practice-feedback-incorrect').hide();
 				
 				// populate our trial screen
-				gorilla.populateAndLoad($('#gorilla'), 'trial', { trials: trialStruct.trialArray }, (err) => {
+				gorilla.populateAndLoad($('#gorilla'), 'trial', {
+					trials: trialStruct.trialArray,
+					responsePresent: presentResponseKey.toUpperCase(),
+					responseAbsent: absentResponseKey.toUpperCase(),
+				}, (err) => {
 					machine.transition(State.FixationCross, informationStruct);
 				}) // end populate and load
-				console.log('----------------------------------------------------------');
 			} // end if-else
 		} // end onEnter
 	}); // end addState Trial
@@ -757,24 +645,15 @@ gorilla.ready(function(){
 					$(this).dequeue();
 				}) // end queue for '#gorilla'
 				.delay(afterFixationDelay);
-			//
 			machine.transition(State.ImageArray, informationStruct);
-		}, // end onEnter
-		
-		// onExit: (machine: stateMachine.Machine, trialStruct: TrialStruct) => {
-		// 	machine.transition(State.ImageArray, trialStruct);
-		// } // end onExit
+		} // end onEnter
 	}) // end addState for FixationCross
 	
 	SM.addState(State.ImageArray, {
 		onEnter: (machine: stateMachine.Machine, informationStruct: InformationStruct) => {
 			// initialise sequence for timeout
-		    // var stateTimer: gorilla.GorillaTimerSequence;
-			// potentially put this in a queue
-			// possibly the queue below
-			var stateTimer: any = null;
+			var stateTimer: gorilla.GorillaTimerSequence;
 			
-			// console.log("This is the trial structure given to the state: " + informationStruct.trialStruct);
 			$('#gorilla')
 				.queue(function () {
 					$('.trial-array').show();
@@ -785,8 +664,6 @@ gorilla.ready(function(){
 					$(this).dequeue();
 				}) // end queue for '#gorilla'
 			
-			console.log("Target image from info struct is " + informationStruct.trialStruct.targetImg);
-			
 			$(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
 				// exit the keypress event if we are not allowed to
 				if (!keypressAllowed) return;
@@ -795,10 +672,11 @@ gorilla.ready(function(){
 				const e = event.which;
 				
 				// enter state where it can't enter any more keys
-				if (e === 107 || e === 108) {
+				if (e === presentResponseKeyCode || e === absentResponseKeyCode) {
 					gorilla.stopStopwatch();
 					
-					// GET RESPONSE TIME
+					// IMPORTANT: get response time!
+					// This is the main metric!
 					informationStruct.trialStruct.responseTime = gorilla.getStopwatch();
 					
 					// stop timout timer
@@ -811,7 +689,7 @@ gorilla.ready(function(){
 					var key = String.fromCharCode(e);
 					
 					// check if key press was correct
-					if ((informationStruct.trialStruct.isPresent && e === 107) || (!informationStruct.trialStruct.isPresent && e === 108)) {
+					if ((informationStruct.trialStruct.isPresent && e === presentResponseKeyCode) || (!informationStruct.trialStruct.isPresent && e === absentResponseKeyCode)) {
 						informationStruct.trialStruct.correct = 1;
 					} else {
 						// We shouldn't have to use this else statement because
@@ -836,7 +714,7 @@ gorilla.ready(function(){
 						timed_out: informationStruct.trialStruct.timedOut,
 						trial_array: informationStruct.trialStruct.humanReadableTrialArray,
 						age: participantAge,
-						name: participantName,
+						id: participantID,
 						gender: participantGender,
 					}); // end metric
 
@@ -847,10 +725,9 @@ gorilla.ready(function(){
 							$(this).dequeue();
 						}); // end queue for '#gorilla'
 				} // end checking if key pressed is 75:76 (K or L)
-			}) // end response keypress (event: JQueryEventObject)
+			}) // end response keypress
 			
-			console.log('----------------------------------------------------------');
-			// var stateTimer: gorilla.GorillaTimerSequence = gorilla.addTimerSequence()
+			// timeout!
 			stateTimer = gorilla.addTimerSequence()
 				.delay(presentationTime)
 				.then(() => {
@@ -883,7 +760,7 @@ gorilla.ready(function(){
 						timed_out: true,
 						trial_array: informationStruct.trialStruct.humanReadableTrialArray,
 						age: participantAge,
-						name: participantName,
+						id: participantID,
 						gender: participantGender,
 					});// end metric
 					
@@ -901,7 +778,7 @@ gorilla.ready(function(){
 		onEnter: (machine: stateMachine.Machine) => {
 			gorilla.populate('#gorilla', 'debrief', {
 				debriefform: gorilla.resourceURL(debriefFilename)
-			})
+			});
 			gorilla.refreshLayout();
 			$('#start-button').one('click', (event: JQueryEventObject) => {
 				machine.transition(State.Finish);
@@ -922,7 +799,6 @@ gorilla.ready(function(){
 
 	// calling this function starts gorilla and the task as a whole
 	gorilla.run(function () {
-// 		SM.start(State.Instructions);
         SM.start(State.RequestFullscreen);
 	}) // end gorilla run
 }) // end gorilla ready
