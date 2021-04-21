@@ -1,10 +1,14 @@
 <h1 align="center">
-    A Simple Search Task using Gorilla Experiment Builder
+    Experiments using Gorilla Experiment Builder
 </h1>
+
+<h2>Contents</h2>
+<h3>A Simple Visual Search Tast</h3>
+<h3>An Attentional Blink Task</h3>
 
 <p align="center"><i>Developed by Lizzie Collyer and Jake Ireland, early Feb., 2021, using <a href="https://gorilla.sc/">Gorilla Experiment Builder's</a> code editor.</i></p>
 
-## Policy Decision
+## Policy Decision for the Visual Search Task
 
 All images are in a `Stimuli` directory.  Distractors have names `D<num>.jpg`; Faces, `F<num>.jpg`; etc. (for `C`, `HF`, and `LF` as well).  This is an important step in the randomisation process, because instead of randomly pulling an image from the directory, we randomly pull a number from a list of numbers, and then add (for example) `D` to the start, and `.jpg` to the end (you can change the file extension by changing the line at the top of `utils.ts`).
 
