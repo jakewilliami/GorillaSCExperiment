@@ -2,11 +2,13 @@
     Experiments using Gorilla Experiment Builder
 </h1>
 
+<p align="center"><i>Developed by Lizzie Collyer and Jake Ireland, early Feb., 2021, using <a href="https://gorilla.sc/">Gorilla Experiment Builder's</a> code editor.</i></p>
+
+---
+
 <h2>Contents</h2>
 <h3>A Simple Visual Search Tast</h3>
 <h3>An Attentional Blink Task</h3>
-
-<p align="center"><i>Developed by Lizzie Collyer and Jake Ireland, early Feb., 2021, using <a href="https://gorilla.sc/">Gorilla Experiment Builder's</a> code editor.</i></p>
 
 ## Policy Decision for the Visual Search Task
 
