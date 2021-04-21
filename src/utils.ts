@@ -15,8 +15,8 @@ const proportionOfPracticeTargets: number = 1 - proportionOfPracticeDistractors;
 
 // define where numbered distractors start and end
 const dStart: number = 1;
-const dEnd: number = 200;
-// define where numbered targets start and end
+const dEnd: number = 400;
+// define where numbered targets (per block) start and end
 const tStart: number = 1;
 const tEnd: number = 25;
 // define how many practice trials you have

@@ -18,7 +18,7 @@ const absentResponseKey: string = 'l'
 const beforeFixationDelay: number = 500;
 const fixationLength: number = 500;
 const afterFixationDelay: number = 0;
-const rawPresentationTime: number = 5000;
+const rawPresentationTime: number = 8000; // previously 5000
 const presentationTime: number = rawPresentationTime + beforeFixationDelay + fixationLength + afterFixationDelay;
 // const presentationTime: number = rawPresentationTime;
 const timeoutMessageLength: number = 1000;
@@ -232,6 +232,7 @@ gorilla.ready(function(){
 	            e1: examples[0],
 	            e2: examples[1],
 	            e3: examples[2],
+				responseTimeAllowed: rawPresentationTime/1000,
 	            imSize: exampleImSize,
 				responsePresent: presentResponseKey.toUpperCase(),
 				responseAbsent: absentResponseKey.toUpperCase(),
