@@ -1,0 +1,49 @@
+% !TEX TS-program = pdflatex
+\documentclass{arteacle}
+%use the option bib-apa to use apa-style referencing
+
+% To change any options that are being overwritten by the class,
+% You will have to put this in an \AtEndPreamble statement
+
+\title{Non-mutating algorithms to choose $n$ unique elements at random from an array}
+\author{Jake W. Ireland}
+
+\algdef{SE}[SUBALG]{Indent}{EndIndent}{}{\algorithmicend\ }%
+\algtext*{Indent}
+\algtext*{EndIndent}
+
+
+\begin{document}
+		
+%%%%%%%% QUESTION 1
+\begin{algorithm}[h!]
+		\begin{algorithmic}
+			\caption{Takes parameters \texttt{inArr} and \texttt{n} (potentially high run time)}
+			\State initialise \texttt{outArr} as empty array
+			\While{$\texttt{outArr.length}\leq \texttt{n}$}
+				\State \textbf{choose} random \texttt{elem} from \texttt{inArr}
+				\If{\texttt{elem} not in \texttt{outArr}}
+					\State \textbf{push} \texttt{elem} to \texttt{outArr}
+				\EndIf
+			\EndWhile
+			\State \textbf{return} \texttt{outArr}
+		\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[h!]
+		\begin{algorithmic}
+		\caption{Takes parameters \texttt{inArr} and \texttt{n} (potentially high memory usage/allocations)}
+			\State initialise \texttt{outArr} as empty array
+			\State \textbf{copy} \texttt{inArr} as \texttt{tempArr}
+        	\State\textbf{do }\texttt{n}\textbf{ times}
+        		\Indent
+        			\State \textbf{take} random \texttt{elem} from \texttt{tempArr}
+					\State \textbf{push} \texttt{elem} to \texttt{outArr}
+        		\EndIndent
+			\State \textbf{return} \texttt{outArr}
+		\end{algorithmic}
+\end{algorithm}
+		
+			
+	
+\end{document}
