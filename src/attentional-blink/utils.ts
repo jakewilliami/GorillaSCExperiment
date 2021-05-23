@@ -84,6 +84,14 @@ export function takeRand<T>(arr: T[]) {
     return randVal;
 }
 
+// Similar to above, but takes the first element from the array.
+// This is a mutating function
+export function takeFirst<T>(arr: T[]) {
+    const firstVal: T = arr[0];
+    arr.splice(0, 1);
+    return firstVal;
+}
+
 // Chooses n-many unique random numbers between lower and upper inclusive
 function chooseNUniqueRandomWithinRange(n: number, lower: number, upper: number) {
     var arr: number[] = [];
