@@ -19,7 +19,7 @@ const nDistractors: number = 100; // 400
 const beforeFixationDelay: number = 500;
 const fixationLength: number = 500;
 const afterFixationDelay: number = 0;
-const imageDisplayLength: number = 70;
+const imageDisplayLength: number = 2000; // 70
 var trialCounter: number = 0;
 
 /* ------------------------------------- */
@@ -342,25 +342,26 @@ gorilla.ready(function(){
 				// choose the first, or next, image from the trial array
 				const thistrial: string = utils.takeFirst(blockStruct.trialArrayURLs);
 				
-				gorilla.populateAndLoad('#gorilla', 'subtrial', {thistrial: thistrial},()=>{
-                    $('#gorilla')
-					.queue(function (next) {
-						$('.trial-image').css('visibility','visible');
-						next();
+				gorilla.populate('#gorilla', 'subtrial', {thistrial: thistrial});
+				$('#gorilla')
+					.queue(function () {
+						$('.trial-image').show();
+						gorilla.refreshLayout();
+						$(this).dequeue();
 					}) // end queue for '#gorilla'
 					.delay(imageDisplayLength)
-					.queue(function (next) {
+					.queue(function () {
 						// this queue isn't strictly necessary, as we loop through the SubTrial state, replacing the trial image
-						$('.trial-image').css('visibility','hidden');
-						next();
+						$('.trial-image').hide();
+						gorilla.refreshLayout();
+						$(this).dequeue();
 					}) // end queue for '#gorilla'
-					.queue(function (next) {
+					.queue(function () {
 						// once again, must be inside the queue or it will not display
 						machine.transition(State.SubTrial, blockStruct);
-						next();
+						$(this).dequeue();
 					}) // end queue for '#gorilla'
-                });
-            } // end if
+				} // end if
 			
 			// if (blockStruct.trialArrayURLs.length === 0) {
 			// 	// then we need to initialise another trial!
