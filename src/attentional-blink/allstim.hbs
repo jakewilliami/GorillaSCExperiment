@@ -1,0 +1,8 @@
+<div class="trial-container">
+	{{#each stimulusarray}}
+		{{#with this}}
+			<img id="trial-image-{{globalIndex}}" class="trial-image" src="{{stimURL}}" hidden>
+			<!-- <img id="trial-image-{{@index}}" class="trial-image" src="{{this}}" style="display: none;"> -->
+		{{/with}}
+	{{/each}}
+</div>

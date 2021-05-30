@@ -11,6 +11,8 @@ px2abs.jl
 *.zip
 versionnotes.md
 *.csv
+help.txt
+helpmepls.txt
 
 # Silly macOS stuff
 .DS_Store

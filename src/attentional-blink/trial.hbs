@@ -1,0 +1,10 @@
+<!-- <div class="trial-container"> -->
+	<!-- <img class="trial-image" src="{{thistrial}}" style="visibility: hidden;"> -->
+<!-- </div> -->
+<div class="trial-container">
+	{{#each trialarray}}
+		<img id="trial-image-{{@index}}" class="trial-image" src="{{this}}" style="visibility: hidden;">
+		<!-- <img id="trial-image-{{@index}}" class="trial-image" src="{{this}}" style="display: none;"> -->
+	{{/each}}
+	<span class="fixation-cross" style="font-size: 30pt;" hidden>+</span> <!-- approx 63pt -->
+</div>

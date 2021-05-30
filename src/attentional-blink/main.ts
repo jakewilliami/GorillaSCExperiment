@@ -56,12 +56,13 @@ var allDistractorURLs: string[];
 
 // possible states in state machine
 enum State {
+	PreloadStimuli,
 	Instructions,
 	BlockInitialiser,
 	Block,
-	Trial,
+	PreTrial,
 	FixationCross,
-	SubTrial,
+	Trial,
 	Response,
 	Finish,
 }
@@ -74,6 +75,11 @@ interface BlockStruct {
 	t2DisplayGapOptions: number[],
 	t2TargetURLsArray: string[],
 	trialArrayURLs: string[],
+}
+
+interface StimulusContainer {
+	stimURL: string,
+	globalIndex: number,
 }
 
 // need demographics to be global
@@ -102,13 +108,55 @@ gorilla.ready(function(){
 	const allDistractorNames: string[] = utils.constructNameArray(allDistractorNumbers, 'D', '.' + stimExt)
 	allDistractorURLs = constructURLArray(allDistractorNames);
 	
-	// console.log(allDistractorNames);
+	// initialise stimulus container arrays for each type of image
+	var allFaceContainers: StimulusContainer[] = [];
+	var allObjectContainers: StimulusContainer[] = [];
+	var allPareidoliaContainers: StimulusContainer[] = [];
+	var allDistractorContainers: StimulusContainer[] = [];
 	
+	// construct object for iterating over all image types
+	let allImageURLsAndContainers: {URLs: string[], container: StimulusContainer[]}[] = [
+		{URLs: allFaceURLs, container: allFaceContainers},
+		{URLs: allObjectURLs, container: allObjectContainers},
+		{URLs: allPareidoliaURLs, container: allPareidoliaContainers},
+		{URLs: allDistractorURLs, container: allDistractorContainers},
+	];
+	
+	var allImageContainers: StimulusContainer[] = [];
+	
+	var globalImageIndex = 0;
+	for (var i: number; i < (allImageURLsAndContainers.length - 1); i++) {
+		let URLs: string[] = allImageURLsAndContainers[i].URLs;
+		let container: StimulusContainer[] = allImageURLsAndContainers[i].container;
+		
+		for (var j: number; j < (URLs.length - 1); j++) {
+			let thisStimContainer = {
+				stimURL: URLs[j],
+				globalIndex: globalImageIndex,
+			} as StimulusContainer
+			
+			container.push(thisStimContainer);
+			allImageContainers.push(thisStimContainer)
+			globalImageIndex++;
+		}
+	}
+	
+	console.log(allImageContainers);
+		
 	// initialise stopwatch
     gorilla.initialiseTimer();
 	
 	// initialise state machine
 	var SM = new stateMachine.StateMachine();
+	
+	SM.addState(State.PreloadStimuli, {
+		onEnter: (machine: stateMachine.Machine) => {
+			gorilla.populateAndLoad('#gorilla', 'allstim', {stimulusarray: allImageContainers},() => {
+				machine.transition(State.Instructions);
+				// $().show();
+			})
+		} // end onEnter
+	}) // end addState PreloadStimuli
 	
 	// In this state we will display our instructions for the task
 	SM.addState(State.Instructions, {
@@ -179,14 +227,14 @@ gorilla.ready(function(){
 				}
 			} else {
 				// if our trial is not over yet, continue
-				machine.transition(State.Trial, blockStruct)
+				machine.transition(State.PreTrial, blockStruct)
 				
 			}
 		}, // end onEnter State.Block
 		// onExit: () => {}
 	}) // end addState State.Block
 	
-	SM.addState(State.Trial, {
+	SM.addState(State.PreTrial, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
 			// initialise distractor array
 			var trialArrayURLs: string[] = [];
@@ -262,10 +310,11 @@ gorilla.ready(function(){
 			// gorilla.populateAndLoad($('#gorilla'), 'trial')
 			// $('.fixation-cross').hide();
 			// $('.trial-image').hide();
-			// gorilla.populateAndLoad($('#gorilla'), 'subtrial', {
+			// gorilla.populateAndLoad($('#gorilla'), 'trial', {
 			// 	thistrial: '', // hbs file expects some input but we don't have the exact image yet
 			// }, () => {
-			machine.transition(State.FixationCross, blockStruct);
+			// machine.transition(State.FixationCross, blockStruct);
+			machine.transition(State.Trial, blockStruct);
 			// }); // end populateAndLoad
 			// machine.transition(State.FixationCross, blockStruct);
 			// }) // end populate and load
@@ -286,11 +335,11 @@ gorilla.ready(function(){
 			// }, (err) => {
 			// 	machine.transition(State.Block, blockStruct);
 			// }) // end populate and load
-		}, // end onEnter State.Trial
+		}, // end onEnter State.PreTrial
 		// onExit: () => {
 		// 	machine.transition(State.Block, blockStruct);
-		// } // end onExit State.Trial
-	}) // end addState State.Trial
+		// } // end onExit State.PreTrial
+	}) // end addState State.PreTrial
 	
 	SM.addState(State.FixationCross, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
@@ -321,46 +370,176 @@ gorilla.ready(function(){
 				}) // end queue for '#gorilla'
 				.delay(afterFixationDelay)
 				.queue(function () {
-					machine.transition(State.SubTrial, blockStruct);
+					machine.transition(State.Trial, blockStruct);
 					$(this).dequeue();
 				});
-			// machine.transition(State.SubTrial, blockStruct);
+			// machine.transition(State.Trial, blockStruct);
 		// }) // end populateAndLoad
 		} // end onEnter
 	}) // end addState State.FixationCross
 	
-	SM.addState(State.SubTrial, {
+	SM.addState(State.Trial, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
 			console.log("We are in the sub-trial state, and we are now going to display the trial array: " + blockStruct.trialArrayURLs)
 			
-			if (blockStruct.trialArrayURLs.length === 0) {
-				// then we need to initialise another trial!
-				machine.transition(State.Response, blockStruct);
-			} else {
+			// if (blockStruct.trialArrayURLs.length === 0) {
+			// 	// then we need to initialise another trial!
+			// 	machine.transition(State.Response, blockStruct);
+			// } else {
 				// then we need to start, or are still, looping through the trial array
 				
 				// choose the first, or next, image from the trial array
-				const thistrial: string = utils.takeFirst(blockStruct.trialArrayURLs);
+				// const thistrial: string = utils.takeFirst(blockStruct.trialArrayURLs);
 				
-				gorilla.populateAndLoad('#gorilla', 'subtrial', {thistrial: thistrial},()=>{
-                    $('#gorilla')
+				function showTrial(i: number) {
+					$('#gorilla')
 					.queue(function (next) {
-						$('.trial-image').css('visibility','visible');
+						$('#trial-image-' + i).css('visibility','visible');
 						next();
 					}) // end queue for '#gorilla'
 					.delay(imageDisplayLength)
 					.queue(function (next) {
-						// this queue isn't strictly necessary, as we loop through the SubTrial state, replacing the trial image
-						$('.trial-image').css('visibility','hidden');
+						// this queue isn't strictly necessary, as we loop through the trial state, replacing the trial image
+						$('#trial-image-' + i).css('visibility','hidden');
+						if ((i + 1) == 20) {
+							machine.transition(State.Response, blockStruct);
+						} else {
+							showTrial(i + 1);
+						}
 						next();
 					}) // end queue for '#gorilla'
-					.queue(function (next) {
-						// once again, must be inside the queue or it will not display
-						machine.transition(State.SubTrial, blockStruct);
-						next();
-					}) // end queue for '#gorilla'
+				}
+				
+				
+				// gorilla.populate('#gorilla', 'fixation', {});
+				// // $('.fixation-cross').hide();
+				// // gorilla.refreshLayout();
+				// console.log("Showing fixation cross for " + fixationLength / 1000 + " seconds");
+				// $('#gorilla')
+				// 	.delay(beforeFixationDelay)
+				// 	.queue(function (next) {
+				// 		$('.fixation-cross').show();
+				// 		gorilla.refreshLayout();
+				// 		// $(this).dequeue();
+				// 		next();
+				// 	})// end queue for '#gorilla'
+				// 	.delay(fixationLength)
+				// 	.queue(function (next) {
+				// 		$('.fixation-cross').hide();
+				// 		gorilla.refreshLayout();
+				// 		// $(this).dequeue();
+				// 		next();
+				// 	}) // end queue for '#gorilla'
+				// 	.delay(afterFixationDelay)
+				// 	.queue(function (next) {
+				// 		// machine.transition(State.Trial, blockStruct);
+				// 		// $(this).dequeue();
+				// 		next();
+				// 	});
+				gorilla.populateAndLoad('#gorilla', 'trial', {trialarray: blockStruct.trialArrayURLs},() => {
+					$('#gorilla')
+						.delay(beforeFixationDelay)
+						.queue(function (next) {
+							$('.fixation-cross').show();
+							gorilla.refreshLayout();
+							// $(this).dequeue();
+							next();
+						})// end queue for '#gorilla'
+						.delay(fixationLength)
+						.queue(function (next) {
+							$('.fixation-cross').hide();
+							gorilla.refreshLayout();
+							// $(this).dequeue();
+							next();
+						}) // end queue for '#gorilla'
+						.delay(afterFixationDelay)
+						.queue(function (next) {
+							// machine.transition(State.Trial, blockStruct);
+							// $(this).dequeue();
+							showTrial(0);
+							next();
+						});
+					// showTrial(0);
+					// var i: number = 0;
+					// while (true) {
+					// 	$('#gorilla')
+					// 	.queue(function (next) {
+					// 		$('#trial-image-' + i).css('visibility','visible');
+					// 		next();
+					// 	}) // end queue for '#gorilla'
+					// 	.delay(imageDisplayLength)
+					// 	.queue(function (next) {
+					// 		// this queue isn't strictly necessary, as we loop through the trial state, replacing the trial image
+					// 		$('#trial-image-' + i).css('visibility','hidden');
+					// 		if ((i + 1) == 20) {
+					// 			machine.transition(State.Response, blockStruct);
+					// 		} else {
+					// 			i++;
+					// 		}
+					// 		next();
+					// 	}) // end queue for '#gorilla'
+					// }
+					
+					/*
+					for (var i: number = 0; i < 20; i++) {
+					
+					
+					// var i: number = 0;
+					// while (true) {
+						// if (blockStruct.trialArrayURLs.length === 0) {
+						// if (i == 20) {
+						// 	// then we need to initialise another trial!
+						// 	machine.transition(State.Response, blockStruct);
+						// } else {
+							// const thistrial: string = utils.takeFirst(blockStruct.trialArrayURLs);
+							// const thisid: string =
+							$('#gorilla')
+							.queue(function (next) {
+								// $('.trial-image').$('#' + i).css('visibility','visible');
+								$('#trial-image-' + i).css('visibility','visible');
+								// $('#trial-image-' + i).show();
+								next();
+							}) // end queue for '#gorilla'
+							.delay(imageDisplayLength)
+							.queue(function (next) {
+								// this queue isn't strictly necessary, as we loop through the trial state, replacing the trial image
+								// $('.trial-image').css('visibility','hidden');
+								$('#trial-image-' + i).css('visibility','hidden');
+								// $('#trial-image-' + i).hide();
+								// i++;
+								if (i == (20 - 1)) {
+									// then we need to initialise another trial!
+									machine.transition(State.Response, blockStruct);
+								}
+								next();
+							}) // end queue for '#gorilla'
+						// }
+						// if (i == 20 - 1) {
+						// 	// then we need to initialise another trial!
+							// machine.transition(State.Response, blockStruct);
+						// }
+					}*/
+					
+					// showTrial(blockStruct.trialArrayURLs);
+					
+                    // $('#gorilla')
+					// .queue(function (next) {
+					// 	$('.trial-image').css('visibility','visible');
+					// 	next();
+					// }) // end queue for '#gorilla'
+					// .delay(imageDisplayLength)
+					// .queue(function (next) {
+					// 	// this queue isn't strictly necessary, as we loop through the trial state, replacing the trial image
+					// 	$('.trial-image').css('visibility','hidden');
+					// 	next();
+					// }) // end queue for '#gorilla'
+					// .queue(function (next) {
+					// 	// once again, must be inside the queue or it will not display
+					// 	machine.transition(State.Trial, blockStruct);
+					// 	next();
+					// }) // end queue for '#gorilla'
                 });
-            } // end if
+            // } // end if
 			
 			// if (blockStruct.trialArrayURLs.length === 0) {
 			// 	// then we need to initialise another trial!
@@ -376,10 +555,10 @@ gorilla.ready(function(){
 				// $('.trial-image').hide();
 				// trialCounter++;
 				
-				// gorilla.populateAndLoad($('#gorilla'), 'subtrial', {
+				// gorilla.populateAndLoad($('#gorilla'), 'trial', {
 					// thistrial: thistrial,
 				// }, () => {
-				// gorilla.populateAndLoad('#gorilla', 'subtrial', {
+				// gorilla.populateAndLoad('#gorilla', 'trial', {
 				// 	thistrial: thistrial,
 				// }, () => {}); // end populate
 				// while (true) {
@@ -391,7 +570,7 @@ gorilla.ready(function(){
 				// 			// const thistrial: string = utils.takeFirst(blockStruct.trialArrayURLs);
 				// 			console.log("We are at trial " + (i + 1))
 				// 			const thistrial: string = blockStruct.trialArrayURLs[i];
-				// 			gorilla.populate('#gorilla', 'subtrial', {thistrial: thistrial});
+				// 			gorilla.populate('#gorilla', 'trial', {thistrial: thistrial});
 				// 			// gorilla.refreshLayout();
 				// 			$('#gorilla')
 				// 				.queue(function () {
@@ -403,7 +582,7 @@ gorilla.ready(function(){
 				//
 				// 				// .queue(function () {
 				// 				// 	if (blockStruct.trialArrayURLs.length === 0) {
-				// 				// 		machine.transition(State.SubTrial, blockStruct);
+				// 				// 		machine.transition(State.Trial, blockStruct);
 				// 				// 		// break;
 				// 				// 	}
 				// 				// 	$(this).dequeue();
@@ -433,16 +612,16 @@ gorilla.ready(function(){
 				// 	// 	$(this).dequeue();
 				// 	// }) // end queue for '#gorilla'
 				// 	.queue(function () {
-				// 		machine.transition(State.SubTrial, blockStruct);
+				// 		machine.transition(State.Trial, blockStruct);
 				// 		$(this).dequeue();
 				// 	})
-				// // machine.transition(State.SubTrial, blockStruct);
+				// // machine.transition(State.Trial, blockStruct);
 				
 						
 				// }) // end populateAndLoad
 			// } // end if
 		} // end onEnter
-	}) // end addState State.SubTrial
+	}) // end addState State.Trial
 	
 	SM.addState(State.Response, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
@@ -476,6 +655,6 @@ gorilla.ready(function(){
 
 	// calling this function starts gorilla and the task as a whole
 	gorilla.run(function () {
-        SM.start(State.Instructions);
+        SM.start(State.PreloadStimuli);
 	}) // end gorilla run
 }) // end gorilla ready
