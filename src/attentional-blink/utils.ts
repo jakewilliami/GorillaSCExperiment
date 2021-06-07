@@ -131,6 +131,16 @@ export function chooseNUniqueRand<T>(arr: T[], n: number) {
     return outArr
 }
 
+export function chooseNRand<T>(arr: T[], n: number) {
+    var outArr: T[] = [];
+    
+    for (var i: number = 0; i < n; i++) {
+        outArr.push(randVal(arr));
+    }
+    
+    return outArr;
+}
+
 // Fisher-Yates (aka Knuth) Shuffle; see https://www.wikiwand.com/en/Fisher%E2%80%93Yates_shuffle
 // This shuffles the given array using the above mentioned algorithm
 // This is a mutating function
