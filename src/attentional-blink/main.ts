@@ -95,7 +95,52 @@ enum State {
 	Finish,
 }
 
-// As above, for different blocks
+interface TrialStruct {
+	t1ResponseKey: String,
+	t2ResponseKey: String,
+	t1ResponseTime: number,
+	t2ResponseTime: number,
+	t1ConditionType: string,
+	t2Present: boolean,
+	t1ResponseCorrect: boolean,
+	t2ResponseCorrect: boolean,
+	// trialArray: string[],
+	// humanReadableTrialArray: string[],
+	// trialCondition: string,
+	// isPresent: boolean,
+	// isPresentString: string,
+	// targetConditionCoded: number,
+	// targetImg: string,
+	// targetLocation: number,
+	// key: string,
+	// correct: number,
+	// responseTime: number,
+	// timedOut: boolean,
+}
+
+interface T1Struct {
+	t1ResponseKey: String,
+	// t2ResponseKey: String,
+	t1ResponseTime: number,
+	// t2ResponseTime: number,
+	t1ConditionType: string,
+	// t2Present: boolean,
+	t1ResponseCorrect: boolean,
+	// t2ResponseCorrect: boolean,
+	// trialArray: string[],
+	// humanReadableTrialArray: string[],
+	// trialCondition: string,
+	// isPresent: boolean,
+	// isPresentString: string,
+	// targetConditionCoded: number,
+	// targetImg: string,
+	// targetLocation: number,
+	// key: string,
+	// correct: number,
+	// responseTime: number,
+	// timedOut: boolean,
+}
+
 interface BlockStruct {
 	blockType: string,
 	// t1TargetURLsArray: string[],
@@ -110,6 +155,7 @@ interface BlockStruct {
 	// watchType: number,
 	isDigital: boolean,
 	isAnalogue: boolean,
+	thisTrialStruct: T1Struct,
 }
 
 interface StimulusContainer {
@@ -124,6 +170,9 @@ var participantAge: number;
 
 // this is the main gorilla function call!
 gorilla.ready(function(){
+	// initialise stopwatch
+    gorilla.initialiseTimer();
+	
 	//// INITIALISE URL LISTS BEFORE TASK BEGINS
 	// set number array for main target variables
 	const allFacesAsNumbers: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock);
@@ -758,8 +807,11 @@ gorilla.ready(function(){
 			            
 			            // enter state where it can't enter any more keys
 			            if (e === digitalResponseKeyCode || e === analogueResponseKeyCode) {
-			                // stop timout timer!
-			                // stateTimer.cancel();
+							gorilla.stopStopwatch();
+
+							// IMPORTANT: get response time!
+							// This is the main metric!
+							const responseTime: number = gorilla.getStopwatch();
 			                
 			                // update keypress as we have just pressed the key!
 			                keypressAllowed = false;
@@ -773,11 +825,31 @@ gorilla.ready(function(){
 			                	// incorrect response
 			                }
 							
+							var t1Condition: string = ""
+							if (blockStruct.isDigital) {
+								t1Condition = "Digital"
+							} else if (blockStruct.isAnalogue) {
+								t1Condition = "Analogue"
+							}
 							
+							const t1ResponseAsString: string = String.fromCharCode(e)
+                            
+							// construct a trial struct to put into the BlockStruct for metrics
+							let thisT1Struct = {
+								t1ConditionType: t1Condition,
+								t1ResponseCorrect: watchTypeIsCorrect,
+								t1ResponseKey: t1ResponseAsString,
+								t1ResponseTime:  responseTime,
+							} as T1Struct
+							
+							// Add the trial struct to the block struct so that we can add metrics in one function call
+							blockStruct.thisTrialStruct = thisTrialStruct;
 			                
 			                // move on transition
 			                $('#gorilla')
 			                    .queue(function () {
+									// initialise stopwatch again (reset)
+								    // gorilla.initialiseTimer();
 			                        machine.transition(State.T2SeenResponse, blockStruct);
 			                        $(this).dequeue();
 			                    }); // end queue for '#gorilla'
@@ -836,8 +908,11 @@ gorilla.ready(function(){
 			            
 			            // enter state where it can't enter any more keys
 			            if (e === presentResponseKeyCode || e === absentResponseKeyCode) {
-			                // stop timout timer!
-			                // stateTimer.cancel();
+							gorilla.stopStopwatch();
+
+							// IMPORTANT: get response time!
+							// This is the main metric!
+							const responseTime: number = gorilla.getStopwatch();
 			                
 			                // update keypress as we have just pressed the key!
 			                keypressAllowed = false;
@@ -851,7 +926,34 @@ gorilla.ready(function(){
 			                	// incorrect response
 			                }
 							
-							
+							const t2ResponseAsString: string = String.fromCharCode(e)
+                            
+                            
+							// Actually *store* the data!
+							// IMPORTANT: these keys had to be imported into the `Metircs` tab!
+							gorilla.metric({
+								t1_response_key: blockStruct.thisTrialStruct.t1ResponseKey,
+								t1_condition_type: blockStruct.thisTrialStruct.t1ConditionType,
+								t1_response_correct: blockStruct.thisTrialStruct.t1ResponseCorrect,
+								t1_response_time: blockStruct.thisTrialStruct.t1ResponseTime,
+								t2_present: blockStruct.t2Displayed,
+								t2_response_correct: correctResponse,
+								t2_response_key: t2ResponseAsString,
+								// trial_number: trialNumber,
+								// trial_condition: informationStruct.trialStruct.isPresentString, // present or absent trial; previously "condition1"
+								// target_condition:  informationStruct.trialStruct.trialCondition, // type of condition; previously "condition2"
+								// target_condition_coded:  informationStruct.trialStruct.targetConditionCoded,
+								// target_img:  informationStruct.trialStruct.targetImg, // the name of the taget image (or null); previously "stim1"
+								// target_location:  informationStruct.trialStruct.targetLocation,
+								// key:  key, // the response key for this trial
+								// correct:  informationStruct.trialStruct.correct, // boolean; whether correct or not
+								t2_response_time:  responseTime,
+								// timed_out: informationStruct.trialStruct.timedOut,
+								// trial_array: informationStruct.trialStruct.humanReadableTrialArray,
+								// age: participantAge,
+								// id: participantID,
+								// gender: participantGender,
+							}); // end metric
 			                
 			                // move on transition
 			                $('#gorilla')
