@@ -36,14 +36,8 @@ const analogueResponseKey: string = 'l';
 
 const nTrials: number = nT2ImagesPerBlock * 3 * 2; // 100 T2 images per block * 3 blocks * 2 trial types = 600
 const nT2Displayed: number = Math.floor(nT2ImagesPerBlock / blockTypes.length);
-// const nT1ImagesPerBlock: number = Math.floor((2 / 3) * nT2ImagesPerBlock); // e.g., 72 = (2/3) * 108
-// const nT1ImagesPerBlock: number = nT2ImagesPerBlock * 3 * 2;
 const nT1ImagesPerBlock: number = nT2ImagesPerBlock * 2; // 100 T2 images per block * 2 trial types = 200
-// const nT2Images: number = Math.floor((1 / 3) * nT2ImagesPerBlock);
-// const nT2Images: number = nT2ImagesPerBlock - nT1ImagesPerBlock; // e.g., 36 = (1/3) * 108 = 108 - 72
 const constBlockTypes: string[] = [...blockTypes];
-// const nT2ImagesInSubBlock: number = Math.floor(nT2Images / 3); // e.g., 12 = ((1/3) * 108) / 3
-// const nSpecificWatches: number = Math.floor(nWatchImages / 2); // half of the watches are digital, the other half are analogue
 const nSpecificWatches: number = Math.floor(nWatchImages / 2); // half of the watches are digital, the other half are analogue
 const nSpecificWatchesPerBlock: number = nT2ImagesPerBlock * 2;
 
@@ -104,46 +98,17 @@ interface TrialStruct {
 	t2Present: boolean,
 	t1ResponseCorrect: boolean,
 	t2ResponseCorrect: boolean,
-	// trialArray: string[],
-	// humanReadableTrialArray: string[],
-	// trialCondition: string,
-	// isPresent: boolean,
-	// isPresentString: string,
-	// targetConditionCoded: number,
-	// targetImg: string,
-	// targetLocation: number,
-	// key: string,
-	// correct: number,
-	// responseTime: number,
-	// timedOut: boolean,
 }
 
 interface T1Struct {
 	t1ResponseKey: String,
-	// t2ResponseKey: String,
 	t1ResponseTime: number,
-	// t2ResponseTime: number,
 	t1ConditionType: string,
-	// t2Present: boolean,
 	t1ResponseCorrect: boolean,
-	// t2ResponseCorrect: boolean,
-	// trialArray: string[],
-	// humanReadableTrialArray: string[],
-	// trialCondition: string,
-	// isPresent: boolean,
-	// isPresentString: string,
-	// targetConditionCoded: number,
-	// targetImg: string,
-	// targetLocation: number,
-	// key: string,
-	// correct: number,
-	// responseTime: number,
-	// timedOut: boolean,
 }
 
 interface BlockStruct {
 	blockType: string,
-	// t1TargetURLsArray: string[],
 	digitalWatchURLsArray: string[],
 	analogueWatchURLsArray: string[],
 	t2DisplayPotentialArray: number[],
@@ -152,7 +117,6 @@ interface BlockStruct {
 	trialArrayURLs: string[],
 	t2PosGap: number,
 	t2Condition: string,
-	// watchType: number,
 	isDigital: boolean,
 	isAnalogue: boolean,
 	thisTrialStruct: T1Struct,
@@ -283,8 +247,6 @@ gorilla.ready(function(){
 			// construct (potentially repeating; i.e., not unique) array of suffled digital/analogue watches
 			const digitalWatchURLsArray: string[] = utils.chooseNRand(allDigitalWatchURLs, nSpecificWatchesPerBlock);
 			const analogueWatchURLsArray: string[] = utils.chooseNRand(allAnalogueWatchURLs, nSpecificWatchesPerBlock);
-			// var t1TargetURLsArray: string[] = [...digitalWatchURLsArray, ...analogueWatchURLsArray];
-			// utils.shuffle(t1TargetURLsArray);
 
 			// construct tT array
 			var t2TargetURLsArray: string[] = [];
@@ -299,15 +261,6 @@ gorilla.ready(function(){
 
 			var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock); // whether or not T2 is displayed
 			var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock);
-
-			/*
-			// construct array of T2 images
-			const t2SubBlock1URLs: string[] = utils.takeNRand(allFaceURLs, nT2ImagesInSubBlock);
-			const t2SubBlock2URLs: string[] = utils.takeNRand(allObjectURLs, nT2ImagesInSubBlock);
-			const t2SubBlock3URLs: string[] = utils.takeNRand(allPareidoliaURLs, nT2ImagesInSubBlock);
-
-			const t2TargetURLsArray: string[] = [...t2SubBlock1URLs, ...t2SubBlock2URLs, ...t2SubBlock3URLs];
-			*/
 
 			let blockStruct = {
 				blockType: blockType,
@@ -325,7 +278,6 @@ gorilla.ready(function(){
 
 			machine.transition(State.Block, blockStruct);
 		}, // end onEnter State.BlockInitialiser
-		// onExit: () => {}
 	}) // end addState State.BlockInitialiser
 
 	SM.addState(State.Block, {
@@ -346,7 +298,6 @@ gorilla.ready(function(){
 
 			}
 		}, // end onEnter State.Block
-		// onExit: () => {}
 	}) // end addState State.Block
 
 	SM.addState(State.PreTrial, {
@@ -354,8 +305,6 @@ gorilla.ready(function(){
 			// initialise distractor array
 			var trialArrayURLs: string[] = [];
 
-			// choose T1 URL
-			// const t1ImageURL: string = utils.takeRand(blockStruct.t1TargetURLsArray);
 			var t1ImageURL: string = '';
 			const watchTypeDeterministicNumber: number = utils.takeRand(watchDisplayTypes);
 			var watchType: number = watchTypeDeterministicNumber % 2;
@@ -396,7 +345,6 @@ gorilla.ready(function(){
 				trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 2);
 
 				// choose T2 image gap
-				// const t2ImageTypeNumber: number = utils.takeRand(blockStruct.t2DisplayPotentialArray);
 				const t2ImageTypeNumber: number = utils.takeRand(blockStruct.t2DisplayGapOptions);
 				var t2PosGap: number;
 				console.log('Image number type is' + (t2ImageTypeNumber % 3));
@@ -431,68 +379,13 @@ gorilla.ready(function(){
 			// update blockStruct to have correct trial array
 			blockStruct.trialArrayURLs = trialArrayURLs;
 
-
-			// hide the display till the images are loaded
-			// $('.trial-image').hide();
-			// $('.instruction').hide();
-			// $('.timeout-feedback').hide();
-			// $('.practice-feedback-correct').hide();
-            // $('.practice-feedback-incorrect').hide();
-
-			// populate our trial screen
-			// gorilla.populateAndLoad($('#gorilla'), 'trial', {
-			// 	thistrial: trialStruct.trialArray,
-			// 	// responsePresent: presentResponseKey.toUpperCase(),
-			// 	// responseAbsent: absentResponseKey.toUpperCase(),
-			// }, (err) => {
-			// $('.trial-image').hide();
-			// gorilla.populateAndLoad($('#gorilla'), 'trial')
-			// $('.fixation-cross').hide();
-			// $('.trial-image').hide();
-			// gorilla.populateAndLoad($('#gorilla'), 'trial', {
-			// 	thistrial: '', // hbs file expects some input but we don't have the exact image yet
-			// }, () => {
-			// machine.transition(State.FixationCross, blockStruct);
 			machine.transition(State.Trial, blockStruct);
-			// }); // end populateAndLoad
-			// machine.transition(State.FixationCross, blockStruct);
-			// }) // end populate and load
-
-			// populate our trial screen
-			// gorilla.populate('#gorilla', 'trial', {
-			// 	trials: trialArrayURLs,
-			// });
-			// $('.trial-array').show()
-			// gorilla.refreshLayout();
-			// $('#next-button').one('click', (event: JQueryEventObject) => {
-			// 	machine.transition(State.Block, blockStruct);
-			// })
-
-
-			// gorilla.populateAndLoad($('#gorilla'), 'trial', {
-			// 	trials: trialArrayURLs,
-			// }, (err) => {
-			// 	machine.transition(State.Block, blockStruct);
-			// }) // end populate and load
 		}, // end onEnter State.PreTrial
-		// onExit: () => {
-		// 	machine.transition(State.Block, blockStruct);
-		// } // end onExit State.PreTrial
 	}) // end addState State.PreTrial
 
 	SM.addState(State.FixationCross, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-			// $('.fixation-cross').hide();
-			// $('.trial-image').hide();
- 			// $('.instruction').hide();
- 			// $('.timeout-feedback').hide();
- 			// $('.practice-feedback-correct').hide();
-	        // $('.practice-feedback-incorrect').hide();
-			// gorilla.populateAndLoad($('#gorilla'), 'fixation', {}, () => {
-			// gorilla.populateAndLoad('#gorilla', 'fixation', {}, () => {});
 			gorilla.populate('#gorilla', 'fixation', {});
-			// $('.fixation-cross').hide();
-			// gorilla.refreshLayout();
 			console.log("Showing fixation cross for " + fixationLength / 1000 + " seconds");
 			$('#gorilla')
 				.delay(beforeFixationDelay)
@@ -512,23 +405,12 @@ gorilla.ready(function(){
 					machine.transition(State.Trial, blockStruct);
 					$(this).dequeue();
 				});
-			// machine.transition(State.Trial, blockStruct);
-		// }) // end populateAndLoad
 		} // end onEnter
 	}) // end addState State.FixationCross
 
 	SM.addState(State.Trial, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
 			console.log("We are in the sub-trial state, and we are now going to display the trial array: " + blockStruct.trialArrayURLs)
-
-			// if (blockStruct.trialArrayURLs.length === 0) {
-			// 	// then we need to initialise another trial!
-			// 	machine.transition(State.Response, blockStruct);
-			// } else {
-				// then we need to start, or are still, looping through the trial array
-
-				// choose the first, or next, image from the trial array
-				// const thistrial: string = utils.takeFirst(blockStruct.trialArrayURLs);
 
 				function showTrial(i: number) {
 					$('#gorilla')
@@ -549,32 +431,6 @@ gorilla.ready(function(){
 					}) // end queue for '#gorilla'
 				}
 
-
-				// gorilla.populate('#gorilla', 'fixation', {});
-				// // $('.fixation-cross').hide();
-				// // gorilla.refreshLayout();
-				// console.log("Showing fixation cross for " + fixationLength / 1000 + " seconds");
-				// $('#gorilla')
-				// 	.delay(beforeFixationDelay)
-				// 	.queue(function (next) {
-				// 		$('.fixation-cross').show();
-				// 		gorilla.refreshLayout();
-				// 		// $(this).dequeue();
-				// 		next();
-				// 	})// end queue for '#gorilla'
-				// 	.delay(fixationLength)
-				// 	.queue(function (next) {
-				// 		$('.fixation-cross').hide();
-				// 		gorilla.refreshLayout();
-				// 		// $(this).dequeue();
-				// 		next();
-				// 	}) // end queue for '#gorilla'
-				// 	.delay(afterFixationDelay)
-				// 	.queue(function (next) {
-				// 		// machine.transition(State.Trial, blockStruct);
-				// 		// $(this).dequeue();
-				// 		next();
-				// 	});
 				gorilla.populateAndLoad('#gorilla', 'trial', {trialarray: blockStruct.trialArrayURLs},() => {
 					$('#gorilla')
 						.delay(beforeFixationDelay)
@@ -598,206 +454,24 @@ gorilla.ready(function(){
 							showTrial(0);
 							next();
 						});
-					// showTrial(0);
-					// var i: number = 0;
-					// while (true) {
-					// 	$('#gorilla')
-					// 	.queue(function (next) {
-					// 		$('#trial-image-' + i).css('visibility','visible');
-					// 		next();
-					// 	}) // end queue for '#gorilla'
-					// 	.delay(imageDisplayLength)
-					// 	.queue(function (next) {
-					// 		// this queue isn't strictly necessary, as we loop through the trial state, replacing the trial image
-					// 		$('#trial-image-' + i).css('visibility','hidden');
-					// 		if ((i + 1) == 20) {
-					// 			machine.transition(State.Response, blockStruct);
-					// 		} else {
-					// 			i++;
-					// 		}
-					// 		next();
-					// 	}) // end queue for '#gorilla'
-					// }
-
-					/*
-					for (var i: number = 0; i < 20; i++) {
-
-
-					// var i: number = 0;
-					// while (true) {
-						// if (blockStruct.trialArrayURLs.length === 0) {
-						// if (i == 20) {
-						// 	// then we need to initialise another trial!
-						// 	machine.transition(State.Response, blockStruct);
-						// } else {
-							// const thistrial: string = utils.takeFirst(blockStruct.trialArrayURLs);
-							// const thisid: string =
-							$('#gorilla')
-							.queue(function (next) {
-								// $('.trial-image').$('#' + i).css('visibility','visible');
-								$('#trial-image-' + i).css('visibility','visible');
-								// $('#trial-image-' + i).show();
-								next();
-							}) // end queue for '#gorilla'
-							.delay(imageDisplayLength)
-							.queue(function (next) {
-								// this queue isn't strictly necessary, as we loop through the trial state, replacing the trial image
-								// $('.trial-image').css('visibility','hidden');
-								$('#trial-image-' + i).css('visibility','hidden');
-								// $('#trial-image-' + i).hide();
-								// i++;
-								if (i == (20 - 1)) {
-									// then we need to initialise another trial!
-									machine.transition(State.Response, blockStruct);
-								}
-								next();
-							}) // end queue for '#gorilla'
-						// }
-						// if (i == 20 - 1) {
-						// 	// then we need to initialise another trial!
-							// machine.transition(State.Response, blockStruct);
-						// }
-					}*/
-
-					// showTrial(blockStruct.trialArrayURLs);
-
-                    // $('#gorilla')
-					// .queue(function (next) {
-					// 	$('.trial-image').css('visibility','visible');
-					// 	next();
-					// }) // end queue for '#gorilla'
-					// .delay(imageDisplayLength)
-					// .queue(function (next) {
-					// 	// this queue isn't strictly necessary, as we loop through the trial state, replacing the trial image
-					// 	$('.trial-image').css('visibility','hidden');
-					// 	next();
-					// }) // end queue for '#gorilla'
-					// .queue(function (next) {
-					// 	// once again, must be inside the queue or it will not display
-					// 	machine.transition(State.Trial, blockStruct);
-					// 	next();
-					// }) // end queue for '#gorilla'
-                });
-            // } // end if
-
-			// if (blockStruct.trialArrayURLs.length === 0) {
-			// 	// then we need to initialise another trial!
-			// 	machine.transition(State.Response, blockStruct);
-			// } else {
-				// then we need to start, or are still, looping through the trial array
-				// $('.trial-image').hide();
-
-				// choose the first, or next, image from the trial array
-				// const thistrial: string = utils.takeFirst(blockStruct.trialArrayURLs);
-
-				// $('.fixation-cross').hide();
-				// $('.trial-image').hide();
-				// trialCounter++;
-
-				// gorilla.populateAndLoad($('#gorilla'), 'trial', {
-					// thistrial: thistrial,
-				// }, () => {
-				// gorilla.populateAndLoad('#gorilla', 'trial', {
-				// 	thistrial: thistrial,
-				// }, () => {}); // end populate
-				// while (true) {
-				console.log("The maximum index of the trial array is " + (blockStruct.trialArrayURLs.length - 1));
-				// $('#gorilla')
-				// 	.queue(function () {
-				// 		for (var i: number; i < (blockStruct.trialArrayURLs.length - 1); i++) {
-				// 		// while (blockStruct.trialArrayURLs.length > 0) {
-				// 			// const thistrial: string = utils.takeFirst(blockStruct.trialArrayURLs);
-				// 			console.log("We are at trial " + (i + 1))
-				// 			const thistrial: string = blockStruct.trialArrayURLs[i];
-				// 			gorilla.populate('#gorilla', 'trial', {thistrial: thistrial});
-				// 			// gorilla.refreshLayout();
-				// 			$('#gorilla')
-				// 				.queue(function () {
-				// 					$('.trial-image').show();
-				// 					gorilla.refreshLayout();
-				// 					$(this).dequeue();
-				// 				})
-				// 				.delay(imageDisplayLength);
-				//
-				// 				// .queue(function () {
-				// 				// 	if (blockStruct.trialArrayURLs.length === 0) {
-				// 				// 		machine.transition(State.Trial, blockStruct);
-				// 				// 		// break;
-				// 				// 	}
-				// 				// 	$(this).dequeue();
-				// 				// })
-				// 		} // end for
-				// 		$(this).dequeue();
-				// 	}) // end queue
-				// 	.queue( function () {
-				// 		machine.transition(State.Block, blockStruct);
-				// 		$(this).dequeue();
-				// 	})
-				// machine.transition(State.Block, blockStruct);
-				// $('.trial-image').hide();
-				// gorilla.refreshLayout();
-				// console.log("We are at trial counter " + trialCounter + " and we have chosen the image " + thistrial);
-
-				// $('#gorilla')
-				// 	.queue(function () {
-				// 		$('.trial-image').show();
-				// 		gorilla.refreshLayout();
-				// 		$(this).dequeue();
-				// 	}) // end queue for '#gorilla'
-				// 	.delay(imageDisplayLength)
-				// 	// .queue(function () {
-				// 	// 	$('.trial-image').hide();
-				// 	// 	gorilla.refreshLayout();
-				// 	// 	$(this).dequeue();
-				// 	// }) // end queue for '#gorilla'
-				// 	.queue(function () {
-				// 		machine.transition(State.Trial, blockStruct);
-				// 		$(this).dequeue();
-				// 	})
-				// // machine.transition(State.Trial, blockStruct);
-
-
-				// }) // end populateAndLoad
-			// } // end if
+        });
 		} // end onEnter
 	}) // end addState State.Trial
 
 	SM.addState(State.WatchTypeResponse, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-			// var imageType: string = '';
-			// if (blockStruct.blockType == 'F') {
-			// 	imageType = 'an image of a face';
-			// } else if (blockStruct.blockType == 'P') {
-			// 	imageType = 'a pareidolia image';
-			// } else {// blockStruct.blockType == 'O'
-			// 	imageType = 'an image of a flower';
-			// }
 			gorilla.populateAndLoad($('#gorilla'), 'watch-type-response', {
 					digitalPresent: digitalResponseKey.toUpperCase(),
 					analoguePresent: analogueResponseKey.toUpperCase(),
-					// imageType: imageType,
-				    // blockCounter: blockCounter,
-				    // nBlocks: nBlocks,
-					// trialType: utils.encodeTargetTypeHR(targetType),
-					// e1: gorilla.stimuliURL(examples[0]),
-					// e2: gorilla.stimuliURL(examples[1]),
-					// e3: gorilla.stimuliURL(examples[2]),
-					// imSize: exampleImSize
 				}, (err) => {
-					// $('#gorilla').show();
-					// $('#start-button').one('click', (event: JQueryEventObject) => {
-					// 	machine.transition(State.Block, blockStruct);
-					// }) // end on click
 
 					$('#gorilla')
 		            .queue(function (next) {
 		                $('.watch-type-reponse').show();
-						// $('#digitalOrAnalogue').show();
 		                gorilla.refreshLayout();
 		                gorilla.startStopwatch();
 		                keypressAllowed = true;
-		                // $(this).dequeue();
-						next();
+						        next();
 		            }) // end queue for '#gorilla'
 
 			        $(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
@@ -809,15 +483,15 @@ gorilla.ready(function(){
 
 			            // enter state where it can't enter any more keys
 			            if (e === digitalResponseKeyCode || e === analogueResponseKeyCode) {
-							gorilla.stopStopwatch();
+        							gorilla.stopStopwatch();
 
-							// IMPORTANT: get response time!
-							// This is the main metric!
-							const responseTime: number = gorilla.getStopwatch();
+        							// IMPORTANT: get response time!
+        							// This is the main metric!
+        							const responseTime: number = gorilla.getStopwatch();
 
 			                // update keypress as we have just pressed the key!
 			                keypressAllowed = false;
-							var watchTypeIsCorrect: boolean = false;
+							        var watchTypeIsCorrect: boolean = false;
 
 			                // check if key press was correct
 			                if ((blockStruct.isDigital && !blockStruct.isAnalogue && e === digitalResponseKeyCode) || (blockStruct.isAnalogue && !blockStruct.isDigital && e === analogueResponseKeyCode)) {
@@ -827,34 +501,32 @@ gorilla.ready(function(){
 			                	// incorrect response
 			                }
 
-							var t1Condition: string = ""
-							if (blockStruct.isDigital) {
-								t1Condition = "Digital"
-							} else if (blockStruct.isAnalogue) {
-								t1Condition = "Analogue"
-							}
+        							var t1Condition: string = ""
+        							if (blockStruct.isDigital) {
+        								t1Condition = "Digital"
+        							} else if (blockStruct.isAnalogue) {
+        								t1Condition = "Analogue"
+        							}
 
-							const t1ResponseAsString: string = String.fromCharCode(e)
+        							const t1ResponseAsString: string = String.fromCharCode(e)
 
-							// construct a trial struct to put into the BlockStruct for metrics
-							let thisT1Struct = {
-								t1ConditionType: t1Condition,
-								t1ResponseCorrect: watchTypeIsCorrect,
-								t1ResponseKey: t1ResponseAsString,
-								t1ResponseTime:  responseTime,
-							} as T1Struct
+        							// construct a trial struct to put into the BlockStruct for metrics
+        							let thisT1Struct = {
+        								t1ConditionType: t1Condition,
+        								t1ResponseCorrect: watchTypeIsCorrect,
+        								t1ResponseKey: t1ResponseAsString,
+        								t1ResponseTime:  responseTime,
+        							} as T1Struct
 
-							// Add the trial struct to the block struct so that we can add metrics in one function call
-							blockStruct.thisTrialStruct = thisT1Struct;
+        							// Add the trial struct to the block struct so that we can add metrics in one function call
+        							blockStruct.thisTrialStruct = thisT1Struct;
 
-			                // move on transition
-			                $('#gorilla')
-			                    .queue(function () {
-									// initialise stopwatch again (reset)
-								    // gorilla.initialiseTimer();
-			                        machine.transition(State.T2SeenResponse, blockStruct);
-			                        $(this).dequeue();
-			                    }); // end queue for '#gorilla'
+        			                // move on transition
+        			                $('#gorilla')
+        			                    .queue(function () {
+        			                        machine.transition(State.T2SeenResponse, blockStruct);
+        			                        $(this).dequeue();
+        			                    }); // end queue for '#gorilla'
 			            } // end checking if key pressed is K or L
 			        }) // end response keypress
 
@@ -869,36 +541,21 @@ gorilla.ready(function(){
 				imageType = 'a face';
 			} else if (blockStruct.blockType == 'P') {
 				imageType = 'an object that looks like a face';
-			// } else {// blockStruct.blockType == 'O'
-		} else if (blockStruct.blockType == 'O') {
+		  } else if (blockStruct.blockType == 'O') {
 				imageType = 'a flower';
 			}
 			gorilla.populateAndLoad($('#gorilla'), 't2-seen-response', {
 					imageType: imageType,
 					targetPresent: presentResponseKey.toUpperCase(),
 					targetAbsent: absentResponseKey.toUpperCase(),
-				    // blockCounter: blockCounter,
-				    // nBlocks: nBlocks,
-					// trialType: utils.encodeTargetTypeHR(targetType),
-					// e1: gorilla.stimuliURL(examples[0]),
-					// e2: gorilla.stimuliURL(examples[1]),
-					// e3: gorilla.stimuliURL(examples[2]),
-					// imSize: exampleImSize
 				}, (err) => {
-					// $('#gorilla').show();
-					// $('#start-button').one('click', (event: JQueryEventObject) => {
-					// 	machine.transition(State.Block, blockStruct);
-					// }) // end on click
-
 					$('#gorilla')
 		            .queue(function (next) {
 		                $('.t2-seen-reponse').show();
-						// $('#digitalOrAnalogue').show();
 		                gorilla.refreshLayout();
 		                gorilla.startStopwatch();
 		                keypressAllowed = true;
-		                // $(this).dequeue();
-						next();
+						        next();
 		            }) // end queue for '#gorilla'
 
 			        $(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
@@ -910,54 +567,44 @@ gorilla.ready(function(){
 
 			            // enter state where it can't enter any more keys
 			            if (e === presentResponseKeyCode || e === absentResponseKeyCode) {
-							gorilla.stopStopwatch();
+        							gorilla.stopStopwatch();
 
-							// IMPORTANT: get response time!
-							// This is the main metric!
-							const responseTime: number = gorilla.getStopwatch();
+        							// IMPORTANT: get response time!
+        							// This is the main metric!
+        							const responseTime: number = gorilla.getStopwatch();
 
-			                // update keypress as we have just pressed the key!
-			                keypressAllowed = false;
-							        var correctResponse: boolean = false;
+        			                // update keypress as we have just pressed the key!
+        			                keypressAllowed = false;
+        							        var correctResponse: boolean = false;
 
-			                // check if key press was correct
-			                if ((blockStruct.t2Condition == "Present" && e === presentResponseKeyCode) || (blockStruct.t2Condition == "Absent" && e === absentResponseKeyCode)) {
-			                	// correct!
-			                	correctResponse = true;
-			                } else {
-			                	// incorrect response
-			                }
+        			                // check if key press was correct
+        			                if ((blockStruct.t2Condition == "Present" && e === presentResponseKeyCode) || (blockStruct.t2Condition == "Absent" && e === absentResponseKeyCode)) {
+        			                	// correct!
+        			                	correctResponse = true;
+        			                } else {
+        			                	// incorrect response
+        			                }
 
-							const t2ResponseAsString: string = String.fromCharCode(e)
+        							const t2ResponseAsString: string = String.fromCharCode(e)
 
 
-							// Actually *store* the data!
-							// IMPORTANT: these keys had to be imported into the `Metircs` tab!
-							gorilla.metric({
-								t1_response_key: blockStruct.thisTrialStruct.t1ResponseKey,
-								t1_condition: blockStruct.thisTrialStruct.t1ConditionType,
-								t1_response_correct: blockStruct.thisTrialStruct.t1ResponseCorrect,
-								t1_response_time: blockStruct.thisTrialStruct.t1ResponseTime,
-                t2_category: blockStruct.blockType,
-								t2_condition: blockStruct.t2Condition,
-                t2_position_gap: blockStruct.t2PosGap,
-								t2_response_correct: correctResponse,
-								t2_response_key: t2ResponseAsString,
-								// trial_number: trialNumber,
-								// trial_condition: informationStruct.trialStruct.isPresentString, // present or absent trial; previously "condition1"
-								// target_condition:  informationStruct.trialStruct.trialCondition, // type of condition; previously "condition2"
-								// target_condition_coded:  informationStruct.trialStruct.targetConditionCoded,
-								// target_img:  informationStruct.trialStruct.targetImg, // the name of the taget image (or null); previously "stim1"
-								// target_location:  informationStruct.trialStruct.targetLocation,
-								// key:  key, // the response key for this trial
-								// correct:  informationStruct.trialStruct.correct, // boolean; whether correct or not
-								t2_response_time:  responseTime,
-								// timed_out: informationStruct.trialStruct.timedOut,
-								// trial_array: informationStruct.trialStruct.humanReadableTrialArray,
-								// age: participantAge,
-								// id: participantID,
-								// gender: participantGender,
-							}); // end metric
+        							// Actually *store* the data!
+        							// IMPORTANT: these keys had to be imported into the `Metircs` tab!
+        							gorilla.metric({
+        								t1_response_key: blockStruct.thisTrialStruct.t1ResponseKey,
+        								t1_condition: blockStruct.thisTrialStruct.t1ConditionType,
+        								t1_response_correct: blockStruct.thisTrialStruct.t1ResponseCorrect,
+        								t1_response_time: blockStruct.thisTrialStruct.t1ResponseTime,
+                        t2_category: blockStruct.blockType,
+        								t2_condition: blockStruct.t2Condition,
+                        t2_position_gap: blockStruct.t2PosGap,
+        								t2_response_correct: correctResponse,
+        								t2_response_key: t2ResponseAsString,
+        								t2_response_time:  responseTime,
+        								// age: participantAge,
+        								// id: participantID,
+        								// gender: participantGender,
+        							}); // end metric
 
 			                // move on transition
 			                $('#gorilla')
