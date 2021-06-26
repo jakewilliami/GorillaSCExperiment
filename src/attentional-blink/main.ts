@@ -20,12 +20,13 @@ const nDistractors: number = 100; // 400
 const beforeFixationDelay: number = 500;
 const fixationLength: number = 500;
 const afterFixationDelay: number = 0;
-const imageDisplayLength: number = 200; // 70
+const imageDisplayLength: number = 70; // 70
 var trialCounter: number = 0;
 const presentResponseKey: string = 'k';
 const absentResponseKey: string = 'l';
 const digitalResponseKey: string = 'k';
 const analogueResponseKey: string = 'l';
+const nBlocks: number = 3;
 
 // 3 blocks, with constant T2 type
 
@@ -109,6 +110,7 @@ interface T1Struct {
 
 interface BlockStruct {
 	blockType: string,
+  blockTypeHR: string,
 	digitalWatchURLsArray: string[],
 	analogueWatchURLsArray: string[],
 	t2DisplayPotentialArray: number[],
@@ -164,6 +166,9 @@ gorilla.ready(function(){
 
 	// construct a number array to help determine which type of watch to display
 	var watchDisplayTypes: number[] = utils.constructNumberArray(1, nT1ImagesPerBlock);
+
+  // initialise a block counter
+  var blockCounter: number = 0;
 
 	// An attempt at preloading all images at the start
 	/*
@@ -240,6 +245,8 @@ gorilla.ready(function(){
 	SM.addState(State.BlockInitialiser, {
 		// this state constructs everything needed for a single block
 		onEnter: (machine: stateMachine.Machine) => {
+      // increment block counter
+      blockCounter++;
 			// get variables based on block type (e.g., object, face, pareidolia)
 			const blockType: string = utils.takeRand(blockTypes); // remove a random element from the blockTypes array
 			console.log("We have chosen block type " + blockType);
@@ -250,12 +257,16 @@ gorilla.ready(function(){
 
 			// construct tT array
 			var t2TargetURLsArray: string[] = [];
+      var imageTypeHR: string;
 			if (blockType == 'F') {
 				t2TargetURLsArray = utils.takeNRand(allFaceURLs, nT2ImagesPerBlock);
+        imageTypeHR = 'a face';
 			} else if (blockType == 'P') {
 				t2TargetURLsArray = utils.takeNRand(allPareidoliaURLs, nT2ImagesPerBlock);
+        imageTypeHR = 'an object that looks like a face';
 			} else { // blockType == 'O'
 				t2TargetURLsArray = utils.takeNRand(allObjectURLs, nT2ImagesPerBlock);
+        imageTypeHR = 'a flower';
 			};
 			console.log("The random second target images we have in this block is: " + t2TargetURLsArray);
 
@@ -264,6 +275,7 @@ gorilla.ready(function(){
 
 			let blockStruct = {
 				blockType: blockType,
+        blockTypeHR: imageTypeHR,
 				digitalWatchURLsArray: digitalWatchURLsArray,
 				analogueWatchURLsArray: analogueWatchURLsArray,
 				t2DisplayPotentialArray: t2DisplayPotentialArray,
@@ -276,7 +288,17 @@ gorilla.ready(function(){
 				isAnalogue: false,
 			} as BlockStruct
 
-			machine.transition(State.Block, blockStruct);
+      // display block instructions
+      gorilla.populateAndLoad($('#gorilla'), 'block-instructions', {
+				  blockCounter: blockCounter,
+				  nBlocks: nBlocks,
+					trialType: imageTypeHR,
+				}, (err) => {
+					$('#gorilla').show();
+					$('#start-button').one('click', (event: JQueryEventObject) => {
+						machine.transition(State.Block, blockStruct);
+					}) // end on keypress
+				}); // end populate and load
 		}, // end onEnter State.BlockInitialiser
 	}) // end addState State.BlockInitialiser
 
@@ -295,7 +317,6 @@ gorilla.ready(function(){
 			} else {
 				// if our trial is not over yet, continue
 				machine.transition(State.PreTrial, blockStruct)
-
 			}
 		}, // end onEnter State.Block
 	}) // end addState State.Block
@@ -383,30 +404,30 @@ gorilla.ready(function(){
 		}, // end onEnter State.PreTrial
 	}) // end addState State.PreTrial
 
-	SM.addState(State.FixationCross, {
-		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-			gorilla.populate('#gorilla', 'fixation', {});
-			console.log("Showing fixation cross for " + fixationLength / 1000 + " seconds");
-			$('#gorilla')
-				.delay(beforeFixationDelay)
-				.queue(function () {
-					$('.fixation-cross').show();
-					gorilla.refreshLayout();
-					$(this).dequeue();
-				})// end queue for '#gorilla'
-				.delay(fixationLength)
-				.queue(function () {
-					$('.fixation-cross').hide();
-					gorilla.refreshLayout();
-					$(this).dequeue();
-				}) // end queue for '#gorilla'
-				.delay(afterFixationDelay)
-				.queue(function () {
-					machine.transition(State.Trial, blockStruct);
-					$(this).dequeue();
-				});
-		} // end onEnter
-	}) // end addState State.FixationCross
+	// SM.addState(State.FixationCross, {
+	// 	onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
+	// 		gorilla.populate('#gorilla', 'fixation', {});
+	// 		console.log("Showing fixation cross for " + fixationLength / 1000 + " seconds");
+	// 		$('#gorilla')
+	// 			.delay(beforeFixationDelay)
+	// 			.queue(function () {
+	// 				$('.fixation-cross').show();
+	// 				gorilla.refreshLayout();
+	// 				$(this).dequeue();
+	// 			})// end queue for '#gorilla'
+	// 			.delay(fixationLength)
+	// 			.queue(function () {
+	// 				$('.fixation-cross').hide();
+	// 				gorilla.refreshLayout();
+	// 				$(this).dequeue();
+	// 			}) // end queue for '#gorilla'
+	// 			.delay(afterFixationDelay)
+	// 			.queue(function () {
+	// 				machine.transition(State.Trial, blockStruct);
+	// 				$(this).dequeue();
+	// 			});
+	// 	} // end onEnter
+	// }) // end addState State.FixationCross
 
 	SM.addState(State.Trial, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
@@ -536,16 +557,8 @@ gorilla.ready(function(){
 
 	SM.addState(State.T2SeenResponse, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-			var imageType: string = '';
-			if (blockStruct.blockType == 'F') {
-				imageType = 'a face';
-			} else if (blockStruct.blockType == 'P') {
-				imageType = 'an object that looks like a face';
-		  } else if (blockStruct.blockType == 'O') {
-				imageType = 'a flower';
-			}
 			gorilla.populateAndLoad($('#gorilla'), 't2-seen-response', {
-					imageType: imageType,
+					imageType: blockStruct.blockTypeHR,
 					targetPresent: presentResponseKey.toUpperCase(),
 					targetAbsent: absentResponseKey.toUpperCase(),
 				}, (err) => {
@@ -586,7 +599,6 @@ gorilla.ready(function(){
         			                }
 
         							const t2ResponseAsString: string = String.fromCharCode(e)
-
 
         							// Actually *store* the data!
         							// IMPORTANT: these keys had to be imported into the `Metircs` tab!
