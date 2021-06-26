@@ -77,6 +77,7 @@ var allDistractorURLs: string[];
 
 // possible states in state machine
 enum State {
+  PreloadArrays,
 	PreloadStimuli,
 	Instructions,
 	BlockInitialiser,
@@ -129,72 +130,112 @@ var participantID: string;
 var participantGender: string;
 var participantAge: number;
 
+
+//// INITIALISE URL LISTS BEFORE TASK BEGINS
+// set number array for main target variables
+var allFacesAsNumbers: number[];
+var allObjectsAsNumbers: number[];
+var allPareidoliaAsNumbers: number[];
+var allDigitalWatchesAsNumbers: number[];
+var allAnalogueWatchesAsNumbers: number[];
+// construct array of T2 images
+var allFaceNames: string[];
+var allObjectNames: string[];
+var allPareidoliaNames: string[];
+var allDigitalWatchNames: string[];
+var allAnalogueWatchNames: string[];
+
+// set URL array of all distractors
+var allDistractorNumbers: number[];
+var allDistractorNames: string[];
+
+// construct a number array to help determine which type of watch to display
+var watchDisplayTypes: number[];
+
 // this is the main gorilla function call!
 gorilla.ready(function(){
-	// initialise stopwatch
-    gorilla.initialiseTimer();
-
-	//// INITIALISE URL LISTS BEFORE TASK BEGINS
-	// set number array for main target variables
-	const allFacesAsNumbers: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock);
-	const allObjectsAsNumbers: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock);
-	const allPareidoliaAsNumbers: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock);
-	const allDigitalWatchesAsNumbers: number[] = utils.constructNumberArray(1, nSpecificWatches)
-	const allAnalogueWatchesAsNumbers: number[] = utils.constructNumberArray(1, nSpecificWatches)
-	// construct array of T2 images
-	const allFaceNames: string[] = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + stimExt);
-	const allObjectNames: string[] = utils.constructNameArray(allObjectsAsNumbers, 'Flower', '.' + stimExt);
-	const allPareidoliaNames: string[] = utils.constructNameArray(allPareidoliaAsNumbers, 'Pareidolia', '.' + stimExt);
-	const allDigitalWatchNames: string[] = utils.constructNameArray(allDigitalWatchesAsNumbers, 'Digital', '.' + stimExt);
-	const allAnalogueWatchNames: string[] = utils.constructNameArray(allAnalogueWatchesAsNumbers, 'Analogue', '.' + stimExt);
-	// convert to URLs
-	allFaceURLs = constructURLArray(allFaceNames);
-	allObjectURLs = constructURLArray(allObjectNames);
-	allPareidoliaURLs = constructURLArray(allPareidoliaNames);
-	allDigitalWatchURLs = constructURLArray(allDigitalWatchNames);
-	allAnalogueWatchURLs = constructURLArray(allAnalogueWatchNames);
-
-	// set URL array of all distractors
-	const allDistractorNumbers: number[] = utils.constructNumberArray(1, nDistractors);
-	const allDistractorNames: string[] = utils.constructNameArray(allDistractorNumbers, 'D', '.' + stimExt)
-	allDistractorURLs = constructURLArray(allDistractorNames);
-
-	// construct a number array to help determine which type of watch to display
-	var watchDisplayTypes: number[] = utils.constructNumberArray(1, nT1ImagesPerBlock);
-
-  // initialise a block counter
-  var blockCounter: number = 0;
-
-	// An attempt at preloading all images at the start
-
-	// initialise stimulus container arrays for each type of image
-	var allFaceContainers: StimulusContainer[] = [];
-	var allObjectContainers: StimulusContainer[] = [];
-	var allPareidoliaContainers: StimulusContainer[] = [];
-	var allDistractorContainers: StimulusContainer[] = [];
-
-  const allImageURLs: string[] = [
-      ...allDistractorURLs,
-      ...allDigitalWatchURLs,
-      ...allAnalogueWatchURLs,
-      ...allFaceURLs,
-      ...allPareidoliaURLs,
-      ...allObjectURLs
-  ];
-
 	// initialise stopwatch
   gorilla.initialiseTimer();
 
 	// initialise state machine
 	var SM = new stateMachine.StateMachine();
 
+  // initialise a block counter
+  var blockCounter: number = 0;
+
+  SM.addState(State.PreloadArrays, {
+    onEnter: (machine: stateMachine.Machine) => {
+      gorilla.populateAndLoad('#gorilla', 'loading', {}, () => {
+        	//// INITIALISE URL LISTS BEFORE TASK BEGINS
+        	// set number array for main target variables
+        	allFacesAsNumbers = utils.constructNumberArray(1, nT2ImagesPerBlock);
+        	allObjectsAsNumbers = utils.constructNumberArray(1, nT2ImagesPerBlock);
+        	allPareidoliaAsNumbers = utils.constructNumberArray(1, nT2ImagesPerBlock);
+        	allDigitalWatchesAsNumbers = utils.constructNumberArray(1, nSpecificWatches);
+        	allAnalogueWatchesAsNumbers = utils.constructNumberArray(1, nSpecificWatches);
+        	// construct array of T2 images
+        	allFaceNames = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + stimExt);
+        	allObjectNames = utils.constructNameArray(allObjectsAsNumbers, 'Flower', '.' + stimExt);
+        	allPareidoliaNames = utils.constructNameArray(allPareidoliaAsNumbers, 'Pareidolia', '.' + stimExt);
+        	allDigitalWatchNames = utils.constructNameArray(allDigitalWatchesAsNumbers, 'Digital', '.' + stimExt);
+        	allAnalogueWatchNames = utils.constructNameArray(allAnalogueWatchesAsNumbers, 'Analogue', '.' + stimExt);
+        	// convert to URLs
+        	allFaceURLs = constructURLArray(allFaceNames);
+        	allObjectURLs = constructURLArray(allObjectNames);
+        	allPareidoliaURLs = constructURLArray(allPareidoliaNames);
+        	allDigitalWatchURLs = constructURLArray(allDigitalWatchNames);
+        	allAnalogueWatchURLs = constructURLArray(allAnalogueWatchNames);
+
+        	// set URL array of all distractors
+        	allDistractorNumbers = utils.constructNumberArray(1, nDistractors);
+        	allDistractorNames = utils.constructNameArray(allDistractorNumbers, 'D', '.' + stimExt)
+        	allDistractorURLs = constructURLArray(allDistractorNames);
+
+        	// construct a number array to help determine which type of watch to display
+        	watchDisplayTypes = utils.constructNumberArray(1, nT1ImagesPerBlock);
+
+          // put all image URLs into a single vector for preloading
+          const allImageURLs: string[] = [
+              ...allDistractorURLs,
+              ...allDigitalWatchURLs,
+              ...allAnalogueWatchURLs,
+              ...allFaceURLs,
+              ...allPareidoliaURLs,
+              ...allObjectURLs
+          ];
+
+          machine.transition(State.PreloadStimuli, allImageURLs);
+      });
+    } // end onEnter
+  }) // end addState PreloadStimuli
+
 	SM.addState(State.PreloadStimuli, {
-		onEnter: (machine: stateMachine.Machine) => {
+		onEnter: (machine: stateMachine.Machine, allImageURLs: string[]) => {
+      // // put all image URLs into a single vector for preloading
+      // const allImageURLs: string[] = [
+      //     ...allDistractorURLs,
+      //     ...allDigitalWatchURLs,
+      //     ...allAnalogueWatchURLs,
+      //     ...allFaceURLs,
+      //     ...allPareidoliaURLs,
+      //     ...allObjectURLs
+      // ];
+      // gorilla.populateAndLoad('#gorilla', 'loading', {}, () => {});
+      // $('#gorilla').show();
+      // $('#loading__container').show();
+      // gorilla.populateAndLoad('#gorilla', 'loading', {}, () => {
 			gorilla.populateAndLoad('#gorilla', 'allstim', {stimulusarray: allImageURLs},() => {
 				machine.transition(State.Instructions);
 				// $().show();
 			})
-		} // end onEnter
+      // });
+		},
+    onExit: (machine: stateMachine.Machine) => {
+      // $(window).load(function() {
+        document.getElementById("loading").remove();
+        // document.getElementsByClassName("sg-wrapper")[0].style.visibility = 'visible'; // there should only be one sg-wrapper class...
+      // });
+    } // end onExit
 	}) // end addState PreloadStimuli
 
 	// In this state we will display our instructions for the task
@@ -616,6 +657,6 @@ gorilla.ready(function(){
 
 	// calling this function starts gorilla and the task as a whole
 	gorilla.run(function () {
-        SM.start(State.PreloadStimuli);
+        SM.start(State.PreloadArrays);
 	}) // end gorilla run
 }) // end gorilla ready

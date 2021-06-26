@@ -100,3 +100,56 @@
 td {
     padding: 0 15px;
 }
+
+/* loading content gif */
+.loading__container {
+    position: absolute;
+    margin: auto;
+    height: 50px;
+    width: 50px;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.loading__a, .loading__b {
+    position: absolute;
+    height: 50px;
+    width: 50px;
+    background-color: #e61234;//#00a9e8;
+    opacity: 0.6;
+    top: 0;
+    left: 0;
+    border-radius: 100%;
+    animation: 2.1s ease-in-out 0s infinite normal none running;
+}
+.loading__a {
+    animation-name: bounce;
+}
+.loading__b {
+    animation-name: debounce;
+}
+@keyframes bounce {
+    0%, 100% {
+        transform: scale(0);
+    } 50% {
+        transform: scale(1);
+    }
+}
+@keyframes debounce {
+    0%, 100% {
+        transform: scale(1);
+    } 50% {
+        transform: scale(0);
+    }
+}
+
+div.loading_container_with_caption {
+    vertical-align: top;
+    display: inline-block;
+    text-align: center;
+    width: 120px;
+}
+.caption {
+    display: block;
+}
