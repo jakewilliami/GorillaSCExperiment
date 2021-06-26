@@ -16,7 +16,7 @@ const nWatchImages: number = 100;
 const nInImageSequence: number = 20; // i.e., 20 images are displayed in the trial
 var blockTypes: string[] = ['F', 'P', 'O']; // face, pareidolia, objects (flowers)
 const stimExt: string = 'png';
-const nDistractors: number = 100; // 400
+const nDistractors: number = 500;
 const beforeFixationDelay: number = 500;
 const fixationLength: number = 500;
 const afterFixationDelay: number = 0;
@@ -124,11 +124,6 @@ interface BlockStruct {
 	thisTrialStruct: T1Struct,
 }
 
-interface StimulusContainer {
-	stimURL: string,
-	globalIndex: number,
-}
-
 // need demographics to be global
 var participantID: string;
 var participantGender: string;
@@ -171,59 +166,36 @@ gorilla.ready(function(){
   var blockCounter: number = 0;
 
 	// An attempt at preloading all images at the start
-	/*
+
 	// initialise stimulus container arrays for each type of image
 	var allFaceContainers: StimulusContainer[] = [];
 	var allObjectContainers: StimulusContainer[] = [];
 	var allPareidoliaContainers: StimulusContainer[] = [];
 	var allDistractorContainers: StimulusContainer[] = [];
 
-	// construct object for iterating over all image types
-	let allImageURLsAndContainers: {URLs: string[], container: StimulusContainer[]}[] = [
-		{URLs: allFaceURLs, container: allFaceContainers},
-		{URLs: allObjectURLs, container: allObjectContainers},
-		{URLs: allPareidoliaURLs, container: allPareidoliaContainers},
-		{URLs: allDistractorURLs, container: allDistractorContainers},
-	];
-
-	var allImageContainers: StimulusContainer[] = [];
-
-	var globalImageIndex = 0;
-	for (var i: number; i < (allImageURLsAndContainers.length - 1); i++) {
-		let URLs: string[] = allImageURLsAndContainers[i].URLs;
-		let container: StimulusContainer[] = allImageURLsAndContainers[i].container;
-
-		for (var j: number; j < (URLs.length - 1); j++) {
-			let thisStimContainer = {
-				stimURL: URLs[j],
-				globalIndex: globalImageIndex,
-			} as StimulusContainer
-
-			container.push(thisStimContainer);
-			allImageContainers.push(thisStimContainer)
-			globalImageIndex++;
-		}
-	}
-
-	console.log(allImageContainers);
-	*/
+  const allImageURLs: string[] = [
+      ...allDistractorURLs,
+      ...allDigitalWatchURLs,
+      ...allAnalogueWatchURLs,
+      ...allFaceURLs,
+      ...allPareidoliaURLs,
+      ...allObjectURLs
+  ];
 
 	// initialise stopwatch
-    gorilla.initialiseTimer();
+  gorilla.initialiseTimer();
 
 	// initialise state machine
 	var SM = new stateMachine.StateMachine();
 
-	/*
 	SM.addState(State.PreloadStimuli, {
 		onEnter: (machine: stateMachine.Machine) => {
-			gorilla.populateAndLoad('#gorilla', 'allstim', {stimulusarray: allImageContainers},() => {
+			gorilla.populateAndLoad('#gorilla', 'allstim', {stimulusarray: allImageURLs},() => {
 				machine.transition(State.Instructions);
 				// $().show();
 			})
 		} // end onEnter
 	}) // end addState PreloadStimuli
-	*/
 
 	// In this state we will display our instructions for the task
 	SM.addState(State.Instructions, {
@@ -644,6 +616,6 @@ gorilla.ready(function(){
 
 	// calling this function starts gorilla and the task as a whole
 	gorilla.run(function () {
-        SM.start(State.Instructions);
+        SM.start(State.PreloadStimuli);
 	}) // end gorilla run
 }) // end gorilla ready
