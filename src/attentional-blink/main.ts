@@ -21,7 +21,6 @@ const beforeFixationDelay: number = 500;
 const fixationLength: number = 500;
 const afterFixationDelay: number = 0;
 const imageDisplayLength: number = 70; // 70
-var trialCounter: number = 0;
 const presentResponseKey: string = 'k';
 const absentResponseKey: string = 'l';
 const digitalResponseKey: string = 'k';
@@ -82,6 +81,7 @@ enum State {
 	Instructions,
 	BlockInitialiser,
 	Block,
+  InterBlockBreak,
 	PreTrial,
 	FixationCross,
 	Trial,
@@ -110,6 +110,7 @@ interface T1Struct {
 }
 
 interface BlockStruct {
+  trialCounter: number,
 	blockType: string,
   blockTypeHR: string,
 	digitalWatchURLsArray: string[],
@@ -204,6 +205,8 @@ gorilla.ready(function(){
               ...allObjectURLs
           ];
 
+          console.log("There are " + (allImageURLs.length + 1) + " images preloaded")
+
           machine.transition(State.PreloadStimuli, allImageURLs);
       });
     } // end onEnter
@@ -211,31 +214,10 @@ gorilla.ready(function(){
 
 	SM.addState(State.PreloadStimuli, {
 		onEnter: (machine: stateMachine.Machine, allImageURLs: string[]) => {
-      // // put all image URLs into a single vector for preloading
-      // const allImageURLs: string[] = [
-      //     ...allDistractorURLs,
-      //     ...allDigitalWatchURLs,
-      //     ...allAnalogueWatchURLs,
-      //     ...allFaceURLs,
-      //     ...allPareidoliaURLs,
-      //     ...allObjectURLs
-      // ];
-      // gorilla.populateAndLoad('#gorilla', 'loading', {}, () => {});
-      // $('#gorilla').show();
-      // $('#loading__container').show();
-      // gorilla.populateAndLoad('#gorilla', 'loading', {}, () => {
 			gorilla.populateAndLoad('#gorilla', 'allstim', {stimulusarray: allImageURLs},() => {
 				machine.transition(State.Instructions);
-				// $().show();
 			})
-      // });
-		},
-    onExit: (machine: stateMachine.Machine) => {
-      // $(window).load(function() {
-        document.getElementById("loading").remove();
-        // document.getElementsByClassName("sg-wrapper")[0].style.visibility = 'visible'; // there should only be one sg-wrapper class...
-      // });
-    } // end onExit
+		}, // on onEnter
 	}) // end addState PreloadStimuli
 
 	// In this state we will display our instructions for the task
@@ -287,6 +269,7 @@ gorilla.ready(function(){
 			var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock);
 
 			let blockStruct = {
+        trialCounter: 0,
 				blockType: blockType,
         blockTypeHR: imageTypeHR,
 				digitalWatchURLsArray: digitalWatchURLsArray,
@@ -328,14 +311,33 @@ gorilla.ready(function(){
 					machine.transition(State.BlockInitialiser)
 				}
 			} else {
-				// if our trial is not over yet, continue
-				machine.transition(State.PreTrial, blockStruct)
+				// if our trial is not over yet
+        if (blockStruct.trialCounter == nT2ImagesPerBlock) { // either go to a break screen
+				    machine.transition(State.InterBlockBreak, blockStruct)
+        } else { // or continue
+            machine.transition(State.PreTrial, blockStruct)
+        }
 			}
 		}, // end onEnter State.Block
 	}) // end addState State.Block
 
+  SM.addState(State.InterBlockBreak, {
+    // this state determines whether or not to go to the next block, do another trial, or finish
+    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
+      gorilla.populateAndLoad('#gorilla', 'inter-block-break', {}, () => {
+        $('#next-button').one('click', (event: JQueryEventObject) => {
+					// transition to the rest of block
+					machine.transition(State.PreTrial, blockStruct)
+				}) // end on click start button
+      })
+    }, // end onEnter State.Block
+  }) // end addState State.Block
+
 	SM.addState(State.PreTrial, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
+      // increment trail counter (needed for breaks)
+      blockStruct.trialCounter++;
+
 			// initialise distractor array
 			var trialArrayURLs: string[] = [];
 
