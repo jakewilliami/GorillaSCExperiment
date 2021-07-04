@@ -76,12 +76,12 @@ var allDistractorURLs: string[];
 
 // possible states in state machine
 enum State {
-  PreloadArrays,
+  	PreloadArrays,
 	PreloadStimuli,
 	Instructions,
 	BlockInitialiser,
 	Block,
-  InterBlockBreak,
+  	InterBlockBreak,
 	PreTrial,
 	FixationCross,
 	Trial,
@@ -110,9 +110,9 @@ interface T1Struct {
 }
 
 interface BlockStruct {
-  trialCounter: number,
+  	trialCounter: number,
 	blockType: string,
-  blockTypeHR: string,
+  	blockTypeHR: string,
 	digitalWatchURLsArray: string[],
 	analogueWatchURLsArray: string[],
 	t2DisplayPotentialArray: number[],
@@ -215,7 +215,11 @@ gorilla.ready(function(){
 	SM.addState(State.PreloadStimuli, {
 		onEnter: (machine: stateMachine.Machine, allImageURLs: string[]) => {
 			gorilla.populateAndLoad('#gorilla', 'allstim', {stimulusarray: allImageURLs},() => {
-				machine.transition(State.Instructions);
+				// document.addEventListener("DOMContentLoaded", () => {
+				// $(window).load(function() {
+				// window.addEventListener('load', (event) => {
+					machine.transition(State.Instructions);
+				// });
 			})
 		}, // on onEnter
 	}) // end addState PreloadStimuli
@@ -240,8 +244,8 @@ gorilla.ready(function(){
 	SM.addState(State.BlockInitialiser, {
 		// this state constructs everything needed for a single block
 		onEnter: (machine: stateMachine.Machine) => {
-      // increment block counter
-      blockCounter++;
+		    // increment block counter
+		    blockCounter++;
 			// get variables based on block type (e.g., object, face, pareidolia)
 			const blockType: string = utils.takeRand(blockTypes); // remove a random element from the blockTypes array
 			console.log("We have chosen block type " + blockType);
@@ -252,26 +256,26 @@ gorilla.ready(function(){
 
 			// construct tT array
 			var t2TargetURLsArray: string[] = [];
-      var imageTypeHR: string;
+      		var imageTypeHR: string;
 			if (blockType == 'F') {
 				t2TargetURLsArray = utils.takeNRand(allFaceURLs, nT2ImagesPerBlock);
-        imageTypeHR = 'a face';
+        		imageTypeHR = 'a face';
 			} else if (blockType == 'P') {
 				t2TargetURLsArray = utils.takeNRand(allPareidoliaURLs, nT2ImagesPerBlock);
-        imageTypeHR = 'an object that looks like a face';
+        		imageTypeHR = 'an object that looks like a face';
 			} else { // blockType == 'O'
 				t2TargetURLsArray = utils.takeNRand(allObjectURLs, nT2ImagesPerBlock);
-        imageTypeHR = 'a flower';
+        		imageTypeHR = 'a flower';
 			};
 			console.log("The random second target images we have in this block is: " + t2TargetURLsArray);
 
-			var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock); // whether or not T2 is displayed
+			var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nT1ImagesPerBlock); // whether or not T2 is displayed
 			var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock);
 
 			let blockStruct = {
-        trialCounter: 0,
+        		trialCounter: 0,
 				blockType: blockType,
-        blockTypeHR: imageTypeHR,
+        		blockTypeHR: imageTypeHR,
 				digitalWatchURLsArray: digitalWatchURLsArray,
 				analogueWatchURLsArray: analogueWatchURLsArray,
 				t2DisplayPotentialArray: t2DisplayPotentialArray,
@@ -335,8 +339,8 @@ gorilla.ready(function(){
 
 	SM.addState(State.PreTrial, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-      // increment trail counter (needed for breaks)
-      blockStruct.trialCounter++;
+	      	// increment trail counter (needed for breaks)
+	      	blockStruct.trialCounter++;
 
 			// initialise distractor array
 			var trialArrayURLs: string[] = [];
@@ -355,7 +359,7 @@ gorilla.ready(function(){
 				t1ImageURL = utils.takeRand(blockStruct.analogueWatchURLsArray);
 			}
 			console.log("T1 image has been chosen: " + t1ImageURL);
-			console.log("T1 image possibilities left are" + blockStruct.digitalWatchURLsArray + " or " + blockStruct.analogueWatchURLsArray);
+			console.log("T1 image possibilities left are " + blockStruct.digitalWatchURLsArray + " or " + blockStruct.analogueWatchURLsArray);
 
 			// choose whether or not T2 is displayed
 			const t2DeterministicNumber: number = utils.takeRand(blockStruct.t2DisplayPotentialArray)
@@ -368,8 +372,8 @@ gorilla.ready(function(){
 				const randomInsertIndex: number = utils.randInt(0, nInImageSequence - 1);
 				// insert T1 into trial array
 				utils.insert(trialArrayURLs, randomInsertIndex, t1ImageURL);
-        // be sure to redefine the position gap for metric recording
-        blockStruct.t2PosGap = 0;
+		        // be sure to redefine the position gap for metric recording
+		        blockStruct.t2PosGap = 0;
 			} else {
 				// display T2; more complex choices to make (what T2 is)
 				blockStruct.t2Condition = "Present";
@@ -414,7 +418,8 @@ gorilla.ready(function(){
 
 			// update blockStruct to have correct trial array
 			blockStruct.trialArrayURLs = trialArrayURLs;
-
+			
+			console.log("THE TRIAL COUNTER IS " + blockStruct.trialCounter);
 			machine.transition(State.Trial, blockStruct);
 		}, // end onEnter State.PreTrial
 	}) // end addState State.PreTrial
