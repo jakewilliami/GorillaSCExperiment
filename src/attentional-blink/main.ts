@@ -26,6 +26,7 @@ const absentResponseKey: string = 'l';
 const digitalResponseKey: string = 'k';
 const analogueResponseKey: string = 'l';
 const nBlocks: number = 3;
+const loadingMessage: string = 'Please wait while images are caching.  This may take some time.';
 
 // 3 blocks, with constant T2 type
 
@@ -166,7 +167,9 @@ gorilla.ready(function(){
 
   SM.addState(State.PreloadArrays, {
     onEnter: (machine: stateMachine.Machine) => {
-      gorilla.populateAndLoad('#gorilla', 'loading', {}, () => {
+      gorilla.populateAndLoad('#gorilla', 'loading', {
+		  	loadingMessage: loadingMessage,
+	  }, () => {
         	//// INITIALISE URL LISTS BEFORE TASK BEGINS
         	// set number array for main target variables
         	allFacesAsNumbers = utils.constructNumberArray(1, nT2ImagesPerBlock);
@@ -214,7 +217,10 @@ gorilla.ready(function(){
 
 	SM.addState(State.PreloadStimuli, {
 		onEnter: (machine: stateMachine.Machine, allImageURLs: string[]) => {
-			gorilla.populateAndLoad('#gorilla', 'allstim', {stimulusarray: allImageURLs},() => {
+			gorilla.populateAndLoad('#gorilla', 'allstim', {
+				loadingMessage: loadingMessage,
+				stimulusarray: allImageURLs,
+			},() => {
 				// document.addEventListener("DOMContentLoaded", () => {
 				// $(window).load(function() {
 				// window.addEventListener('load', (event) => {
