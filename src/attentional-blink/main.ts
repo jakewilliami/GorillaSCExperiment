@@ -26,7 +26,9 @@ const absentResponseKey: string = 'l';
 const digitalResponseKey: string = 'k';
 const analogueResponseKey: string = 'l';
 const nBlocks: number = 3;
-const loadingMessage: string = 'Please wait while images are caching.  This may take some time.';
+const loadingMessage: string = 'Please wait while the experiment is loading.  This may take some time.';
+const consentFilename: string = 'PareidoliaVisualSearch_InfoSheet.pdf';
+const debriefFilename: string = 'PareidoliaVisualSearch_Debriefing.pdf';
 
 // 3 blocks, with constant T2 type
 
@@ -79,6 +81,9 @@ var allDistractorURLs: string[];
 enum State {
   	PreloadArrays,
 	PreloadStimuli,
+	Consent,
+	RequestFullscreen,
+	Demographics,
 	Instructions,
 	BlockInitialiser,
 	Block,
@@ -86,7 +91,6 @@ enum State {
 	PreTrial,
 	FixationCross,
 	Trial,
-	// Response,
 	WatchTypeResponse,
 	T2SeenResponse,
 	Finish,
@@ -153,6 +157,11 @@ var allDistractorNames: string[];
 
 // construct a number array to help determine which type of watch to display
 var watchDisplayTypes: number[];
+
+// need demographics to be global
+var participantID: string;
+var participantGender: string;
+var participantAge: number;
 
 // this is the main gorilla function call!
 gorilla.ready(function(){
@@ -224,11 +233,83 @@ gorilla.ready(function(){
 				// document.addEventListener("DOMContentLoaded", () => {
 				// $(window).load(function() {
 				// window.addEventListener('load', (event) => {
-					machine.transition(State.Instructions);
+					machine.transition(State.Consent);
 				// });
 			})
 		}, // on onEnter
 	}) // end addState PreloadStimuli
+	
+	SM.addState(State.Consent, {
+		onEnter: (machine: stateMachine.Machine) => {
+			gorilla.populate('#gorilla', 'consent', {
+				consentform: gorilla.resourceURL(consentFilename)
+			})
+			gorilla.refreshLayout();
+			$('#start-button').one('click', (event: JQueryEventObject) => {
+				machine.transition(State.RequestFullscreen);
+			}) // end on keypress
+			$('#decline-button').one('click', (event: JQueryEventObject) => {
+				machine.transition(State.Finish);
+			}) // end on keypress
+		} // end onEnter
+	}) // end addState State.Consent
+	
+	SM.addState(State.RequestFullscreen, {
+		onEnter: (machine: stateMachine.Machine) => {
+			gorilla.populate('#gorilla', 'request-fs', {})
+			gorilla.refreshLayout();
+			$('#fs-button').one('click', (event: JQueryEventObject) => {
+			    if(!utils.isFullscreen()){
+                    utils.launchIntoFullscreen(document.documentElement);
+                }
+				machine.transition(State.Demographics);
+			}) // end on keypress
+			$(document).one('keypress', (event: JQueryEventObject) => {
+			    if(!utils.isFullscreen()){
+                    utils.launchIntoFullscreen(document.documentElement);
+                }
+				machine.transition(State.Demographics);
+			}) // end on keypress
+		} // end onEnter
+	}) // end addState State.Consent
+	
+	SM.addState(State.Demographics, {
+		onEnter: (machine: stateMachine.Machine) => {
+			// need to turn off keypress handler for the time being
+			// so that the demographics page doesn't unexpectedly
+			// update when we write out name &c.
+			$(document).off('keypress');
+			
+			$('.incomplete-message').hide();
+			$('.invalid-age').hide();
+			gorilla.refreshLayout();
+			gorilla.populate('#gorilla', 'demographics', {})
+				
+			$('#next-button').on('click', (event: JQueryEventObject) => {
+				participantGender = (<HTMLInputElement>document.getElementById("gender")).value;
+				participantID = (<HTMLInputElement>document.getElementById("PID")).value;
+				var rawAge = (<HTMLInputElement>document.getElementById("age")).value;
+				
+				if (participantID == "" || rawAge == "" || participantGender === "undef") {
+					$('.invalid-age').hide();
+					$('.incomplete-message').show();
+				} else {
+					var intAge = parseInt(rawAge);
+					if (isNaN(intAge)) {
+						// tell them to enter a valid age
+						$('.incomplete-message').hide();
+						$('.invalid-age').show();
+					} else {
+						// we have a valid integer and it's chill
+						$('.invalid-age').hide();
+						$('.incomplete-message').hide();
+						participantAge = intAge;
+						machine.transition(State.Instructions);
+					}
+				}
+			}) // end on click
+		} // end onEnter
+	}) // end addState State.Consent
 
 	// In this state we will display our instructions for the task
 	SM.addState(State.Instructions, {
@@ -633,15 +714,15 @@ gorilla.ready(function(){
         								t1_condition: blockStruct.thisTrialStruct.t1ConditionType,
         								t1_response_correct: blockStruct.thisTrialStruct.t1ResponseCorrect,
         								t1_response_time: blockStruct.thisTrialStruct.t1ResponseTime,
-                        t2_category: blockStruct.blockType,
+                        				t2_category: blockStruct.blockType,
         								t2_condition: blockStruct.t2Condition,
-                        t2_position_gap: blockStruct.t2PosGap,
+                        				t2_position_gap: blockStruct.t2PosGap,
         								t2_response_correct: correctResponse,
         								t2_response_key: t2ResponseAsString,
         								t2_response_time:  responseTime,
-        								// age: participantAge,
-        								// id: participantID,
-        								// gender: participantGender,
+        								age: participantAge,
+        								id: participantID,
+        								gender: participantGender,
         							}); // end metric
 
 			                // move on transition
