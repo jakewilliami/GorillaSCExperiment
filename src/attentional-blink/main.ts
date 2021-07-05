@@ -424,17 +424,9 @@ gorilla.ready(function(){
 	            isAnalogue: false,
 	        } as BlockStruct
 
-	  // display block instructions
-	  gorilla.populateAndLoad($('#gorilla'), 'block-instructions', {
-	              	blockCounter: 0,
-	              	nBlocks: nBlocks,
-	                trialType: imageTypeHR,
-	            }, (err) => {
-	                $('#gorilla').show();
-	                $('#start-button').one('click', (event: JQueryEventObject) => {
-	                    machine.transition(State.PracticeBlock, blockStruct);
-	                }) // end on keypress
-	            }); // end populate and load
+			$('#start-button').one('click', (event: JQueryEventObject) => {
+				machine.transition(State.PracticeBlock, blockStruct);
+			}) // end on keypress
 	    }, // end onEnter State.BlockInitialiser
 	}) // end addState State.BlockInitialiser
 
@@ -443,20 +435,10 @@ gorilla.ready(function(){
 	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
 	        if (blockStruct.digitalWatchURLsArray.length === 0 && blockStruct.analogueWatchURLsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
 	            /// then our block is over
-	            if (blockTypes.length === 0 && allFaceURLs.length == 0 && allObjectURLs.length == 0 && allPareidoliaURLs.length == 0) {
-	                // if there are no other blocks remaining, finish
-	                machine.transition(State.PostPracticeBreak)
-	            } else {
-	                // otherwise, initialise another block
-	                machine.transition(State.PracticeBlockInitialiser)
-	            }
+	            machine.transition(State.PostPracticeBreak)
 	        } else {
 	            // if our trial is not over yet
-	    if (blockStruct.trialCounter == nT2ImagesPerBlock) { // either go to a break screen
-	                // machine.transition(State.PracticeInterBlockBreak, blockStruct)
-	    } else { // or continue
-	        machine.transition(State.PracticePreTrial, blockStruct)
-	    }
+			    machine.transition(State.PracticePreTrial, blockStruct)
 	        }
 	    }, // end onEnter State.Block
 	}) // end addState State.Block
@@ -611,7 +593,7 @@ gorilla.ready(function(){
 	                    gorilla.refreshLayout();
 	                    gorilla.startStopwatch();
 	                    keypressAllowed = true;
-	                            next();
+	                    next();
 	                }) // end queue for '#gorilla'
 
 	                $(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
@@ -623,50 +605,15 @@ gorilla.ready(function(){
 
 	                    // enter state where it can't enter any more keys
 	                    if (e === digitalResponseKeyCode || e === analogueResponseKeyCode) {
-	                                gorilla.stopStopwatch();
-
-	                                // IMPORTANT: get response time!
-	                                // This is the main metric!
-	                                const responseTime: number = gorilla.getStopwatch();
-
 	                        // update keypress as we have just pressed the key!
 	                        keypressAllowed = false;
-	                                var watchTypeIsCorrect: boolean = false;
 
-	                        // check if key press was correct
-	                        if ((blockStruct.isDigital && !blockStruct.isAnalogue && e === digitalResponseKeyCode) || (blockStruct.isAnalogue && !blockStruct.isDigital && e === analogueResponseKeyCode)) {
-	                            // correct!
-	                            watchTypeIsCorrect = true;
-	                        } else {
-	                            // incorrect response
-	                        }
-
-	                                var t1Condition: string = ""
-	                                if (blockStruct.isDigital) {
-	                                    t1Condition = "Digital"
-	                                } else if (blockStruct.isAnalogue) {
-	                                    t1Condition = "Analogue"
-	                                }
-
-	                                const t1ResponseAsString: string = String.fromCharCode(e)
-
-	                                // construct a trial struct to put into the BlockStruct for metrics
-	                                let thisT1Struct = {
-	                                    t1ConditionType: t1Condition,
-	                                    t1ResponseCorrect: watchTypeIsCorrect,
-	                                    t1ResponseKey: t1ResponseAsString,
-	                                    t1ResponseTime:  responseTime,
-	                                } as T1Struct
-
-	                                // Add the trial struct to the block struct so that we can add metrics in one function call
-	                                blockStruct.thisTrialStruct = thisT1Struct;
-
-	                                // move on transition
-	                                $('#gorilla')
-	                                    .queue(function () {
-	                                        machine.transition(State.PracticeT2SeenResponse, blockStruct);
-	                                        $(this).dequeue();
-	                                    }); // end queue for '#gorilla'
+                            // move on transition
+                            $('#gorilla')
+                                .queue(function () {
+                                    machine.transition(State.PracticeT2SeenResponse, blockStruct);
+                                    $(this).dequeue();
+                                }); // end queue for '#gorilla'
 	                    } // end checking if key pressed is K or L
 	                }) // end response keypress
 
@@ -699,43 +646,9 @@ gorilla.ready(function(){
 
 	                    // enter state where it can't enter any more keys
 	                    if (e === presentResponseKeyCode || e === absentResponseKeyCode) {
-	                                gorilla.stopStopwatch();
-
-	                                // IMPORTANT: get response time!
-	                                // This is the main metric!
-	                                const responseTime: number = gorilla.getStopwatch();
-
-	                                // update keypress as we have just pressed the key!
-	                                keypressAllowed = false;
-	                                        var correctResponse: boolean = false;
-
-	                                // check if key press was correct
-	                                if ((blockStruct.t2Condition == "Present" && e === presentResponseKeyCode) || (blockStruct.t2Condition == "Absent" && e === absentResponseKeyCode)) {
-	                                    // correct!
-	                                    correctResponse = true;
-	                                } else {
-	                                    // incorrect response
-	                                }
-
-	                                const t2ResponseAsString: string = String.fromCharCode(e)
-
-	                                // Actually *store* the data!
-	                                // IMPORTANT: these keys had to be imported into the `Metircs` tab!
-	                                gorilla.metric({
-	                                    t1_response_key: blockStruct.thisTrialStruct.t1ResponseKey,
-	                                    t1_condition: blockStruct.thisTrialStruct.t1ConditionType,
-	                                    t1_response_correct: blockStruct.thisTrialStruct.t1ResponseCorrect,
-	                                    t1_response_time: blockStruct.thisTrialStruct.t1ResponseTime,
-	                                    t2_category: blockStruct.blockType,
-	                                    t2_condition: blockStruct.t2Condition,
-	                                    t2_position_gap: blockStruct.t2PosGap,
-	                                    t2_response_correct: correctResponse,
-	                                    t2_response_key: t2ResponseAsString,
-	                                    t2_response_time:  responseTime,
-	                                    age: participantAge,
-	                                    id: participantID,
-	                                    gender: participantGender,
-	                                }); // end metric
+                            // update keypress as we have just pressed the key!
+                            keypressAllowed = false;
+                            var correctResponse: boolean = false;
 
 	                        // move on transition
 	                        $('#gorilla')
@@ -756,7 +669,7 @@ gorilla.ready(function(){
 				gorilla.populateAndLoad($('#gorilla'), 'after-practice', {}, (err) => {
 					// transition when required
 					$('#start-button').one('click', (event: JQueryEventObject) => {
-						machine.transition(State.Block);
+						machine.transition(State.BlockInitialiser);
 					}) // end on keypress
 				}) // end populate and load
 	    } // end onEnter
