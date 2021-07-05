@@ -32,6 +32,7 @@ const consentFilename: string = 'PareidoliaVisualSearch_InfoSheet.pdf';
 const debriefFilename: string = 'PareidoliaVisualSearch_Debriefing.pdf';
 const exampleImageSize: string = '20vh';
 const practiceFeedbackMessageLength: number = 1000;
+const breakEveryNTrials: number = 50;
 
 // 3 blocks, with constant T2 type
 
@@ -818,7 +819,7 @@ gorilla.ready(function(){
 				}
 			} else {
   				// if our trial is not over yet
-          if (blockStruct.trialCounter == nT2ImagesPerBlock) { // either go to a break screen
+          if ((blockStruct.trialCounter % breakEveryNTrials) == 0) { // either go to a break screen
   				    machine.transition(State.InterBlockBreak, blockStruct)
           } else { // or continue
               machine.transition(State.PreTrial, blockStruct)
