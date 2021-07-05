@@ -30,8 +30,8 @@ const nPracticeT2Images: number = 6;
 const loadingMessage: string = 'Please wait while the experiment is loading.  This may take some time.';
 const consentFilename: string = 'PareidoliaVisualSearch_InfoSheet.pdf';
 const debriefFilename: string = 'PareidoliaVisualSearch_Debriefing.pdf';
-const exampleImageSize: string = '2cm';
-const practicePrefix: string = 'bird';
+const exampleImageSize: string = '20vh';
+const practiceFeedbackMessageLength: number = 1000;
 
 // 3 blocks, with constant T2 type
 
@@ -46,7 +46,8 @@ const nT1ImagesPerBlock: number = nT2ImagesPerBlock * 2; // 100 T2 images per bl
 const nPracticeT1Images: number = nPracticeT2Images * 2;
 const constBlockTypes: string[] = [...blockTypes];
 const nSpecificWatches: number = Math.floor(nWatchImages / 2); // half of the watches are digital, the other half are analogue
-const nSpecificWatchesPerBlock: number = nT2ImagesPerBlock * 2;
+// const nSpecificWatchesPerBlock: number = nT2ImagesPerBlock * 2; // 100 * 2 = 200
+const nSpecificWatchesPerBlock: number = nT2ImagesPerBlock; // 100
 
 // global boolean variable which we update in order to check
 // if we are allowed to press the response key or not
@@ -101,6 +102,7 @@ enum State {
 	WatchTypeResponse,
 	T2SeenResponse,
 	// Finishish states
+  Debrief,
 	Finish,
 }
 
@@ -128,9 +130,10 @@ interface T1Struct {
 }
 
 interface BlockStruct {
-  	trialCounter: number,
+  trialCounter: number,
 	blockType: string,
-  	blockTypeHR: string,
+  blockTypeHR: string,
+  watchDisplayTypes: number[],
 	digitalWatchURLsArray: string[],
 	analogueWatchURLsArray: string[],
 	t2DisplayPotentialArray: number[],
@@ -230,12 +233,12 @@ gorilla.ready(function(){
         	allPareidoliaURLs = constructURLArray(allPareidoliaNames);
         	allDigitalWatchURLs = constructURLArray(allDigitalWatchNames);
         	allAnalogueWatchURLs = constructURLArray(allAnalogueWatchNames);
-			
+
         	// set URL array of all distractors
         	allDistractorNumbers = utils.constructNumberArray(1, nDistractors);
         	allDistractorNames = utils.constructNameArray(allDistractorNumbers, 'D', '.' + stimExt)
         	allDistractorURLs = constructURLArray(allDistractorNames);
-			
+
 			// get practice targets
 			practiceDigitalURLs = constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, 3), 'Pdigital', '.' + stimExt));
 			practiceAnalogueURLs = constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, 3), 'Panalogue', '.' + stimExt));
@@ -246,9 +249,6 @@ gorilla.ready(function(){
 				...practiceT2URLs
 			];
 
-        	// construct a number array to help determine which type of watch to display
-        	watchDisplayTypes = utils.constructNumberArray(1, nT1ImagesPerBlock);
-			
 			// add example target arrays as URLs to object
 			allExampleTargets['watch'] = gorilla.stimuliURL('watchExampleTargets.png');
 			allExampleTargets['practice'] = gorilla.stimuliURL('birdExampleTargets.png');
@@ -290,7 +290,7 @@ gorilla.ready(function(){
 			})
 		}, // on onEnter
 	}) // end addState PreloadStimuli
-	
+
 	SM.addState(State.Consent, {
 		onEnter: (machine: stateMachine.Machine) => {
 			gorilla.populate('#gorilla', 'consent', {
@@ -305,7 +305,7 @@ gorilla.ready(function(){
 			}) // end on keypress
 		} // end onEnter
 	}) // end addState State.Consent
-	
+
 	SM.addState(State.RequestFullscreen, {
 		onEnter: (machine: stateMachine.Machine) => {
 			gorilla.populate('#gorilla', 'request-fs', {})
@@ -324,24 +324,24 @@ gorilla.ready(function(){
 			}) // end on keypress
 		} // end onEnter
 	}) // end addState State.Consent
-	
+
 	SM.addState(State.Demographics, {
 		onEnter: (machine: stateMachine.Machine) => {
 			// need to turn off keypress handler for the time being
 			// so that the demographics page doesn't unexpectedly
 			// update when we write out name &c.
 			$(document).off('keypress');
-			
+
 			$('.incomplete-message').hide();
 			$('.invalid-age').hide();
 			gorilla.refreshLayout();
 			gorilla.populate('#gorilla', 'demographics', {})
-				
+
 			$('#next-button').on('click', (event: JQueryEventObject) => {
 				participantGender = (<HTMLInputElement>document.getElementById("gender")).value;
 				participantID = (<HTMLInputElement>document.getElementById("PID")).value;
 				var rawAge = (<HTMLInputElement>document.getElementById("age")).value;
-				
+
 				if (participantID == "" || rawAge == "" || participantGender === "undef") {
 					$('.invalid-age').hide();
 					$('.incomplete-message').show();
@@ -381,7 +381,7 @@ gorilla.ready(function(){
 	        }); // end populate and load
 	    } // end onEnter
 	}) // end addState Instructions
-	
+
 	SM.addState(State.PracticeInstructions, {
 	    onEnter: (machine: stateMachine.Machine) => {
 			$('#gorilla').hide();
@@ -397,23 +397,25 @@ gorilla.ready(function(){
 			}); // end populateAndLoad
 	    } // end onEnter
 	}) // end addState PracticeInstructions
-	
+
 	SM.addState(State.PracticeBlockInitialiser, {
 	    // this state constructs everything needed for a single block
 	    onEnter: (machine: stateMachine.Machine) => {
 	        // construct tT array
 	        var t2TargetURLsArray: string[] = practiceT2URLs;
 	        var imageTypeHR: string = 'a bird';
-			
+
 	        var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nPracticeT1Images); // whether or not T2 is displayed
 	        var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nPracticeT2Images);
+          var watchDisplayTypes: number[] = utils.constructNumberArray(1, nPracticeT1Images);
 
 	        let blockStruct = {
 	            trialCounter: 0,
 	            blockType: 'Bird',
 	            blockTypeHR: imageTypeHR,
-	            digitalWatchURLsArray: practiceDigitalURLs,
-	            analogueWatchURLsArray: practiceAnalogueURLs,
+              watchDisplayTypes: watchDisplayTypes,
+              digitalWatchURLsArray: [...practiceDigitalURLs, ...practiceDigitalURLs],
+	            analogueWatchURLsArray: [...practiceAnalogueURLs, ...practiceAnalogueURLs],
 	            t2DisplayPotentialArray: t2DisplayPotentialArray,
 	            t2DisplayGapOptions: t2DisplayGapOptions,
 	            t2TargetURLsArray: t2TargetURLsArray,
@@ -424,27 +426,29 @@ gorilla.ready(function(){
 	            isAnalogue: false,
 	        } as BlockStruct
 
-			$('#start-button').one('click', (event: JQueryEventObject) => {
+			// $('#start-button').one('click', (event: JQueryEventObject) => {
 				machine.transition(State.PracticeBlock, blockStruct);
-			}) // end on keypress
+			// }) // end on keypress
 	    }, // end onEnter State.BlockInitialiser
 	}) // end addState State.BlockInitialiser
 
 	SM.addState(State.PracticeBlock, {
 	    // this state determines whether or not to go to the next block, do another trial, or finish
 	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-	        if (blockStruct.digitalWatchURLsArray.length === 0 && blockStruct.analogueWatchURLsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
+	        if (blockStruct.digitalWatchURLsArray.length === 0 && blockStruct.analogueWatchURLsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0  && blockStruct.watchDisplayTypes.length == 0) {
 	            /// then our block is over
 	            machine.transition(State.PostPracticeBreak)
 	        } else {
 	            // if our trial is not over yet
-			    machine.transition(State.PracticePreTrial, blockStruct)
+			        machine.transition(State.PracticePreTrial, blockStruct)
 	        }
 	    }, // end onEnter State.Block
 	}) // end addState State.Block
 
 	SM.addState(State.PracticePreTrial, {
 	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
+          console.log("======================================================");
+
 	        // increment trail counter (needed for breaks)
 	        blockStruct.trialCounter++;
 
@@ -452,7 +456,7 @@ gorilla.ready(function(){
 	        var trialArrayURLs: string[] = [];
 
 	        var t1ImageURL: string = '';
-	        const watchTypeDeterministicNumber: number = utils.takeRand(watchDisplayTypes);
+	        const watchTypeDeterministicNumber: number = utils.takeRand(blockStruct.watchDisplayTypes);
 	        var watchType: number = watchTypeDeterministicNumber % 2;
 	        // blockStruct.watchType = watchType;
 	        if (watchType == 0) {
@@ -524,7 +528,7 @@ gorilla.ready(function(){
 
 	        // update blockStruct to have correct trial array
 	        blockStruct.trialArrayURLs = trialArrayURLs;
-	        
+
 	        console.log("THE TRIAL COUNTER IS " + blockStruct.trialCounter);
 	        machine.transition(State.PracticeTrial, blockStruct);
 	    }, // end onEnter State.PreTrial
@@ -608,12 +612,42 @@ gorilla.ready(function(){
 	                        // update keypress as we have just pressed the key!
 	                        keypressAllowed = false;
 
-                            // move on transition
-                            $('#gorilla')
-                                .queue(function () {
-                                    machine.transition(State.PracticeT2SeenResponse, blockStruct);
-                                    $(this).dequeue();
-                                }); // end queue for '#gorilla'
+                          // check if key press was correct
+        	                if ((blockStruct.isDigital && !blockStruct.isAnalogue && e === digitalResponseKeyCode) || (blockStruct.isAnalogue && !blockStruct.isDigital && e === analogueResponseKeyCode)) {
+        	                   // correct!
+        	                   $('#gorilla')
+        	                    .queue(function() {
+        	                        $('.digitalOrAnalogue').hide();
+        	                        $('.response-instructions').hide();
+        	                        $('.practice-feedback-correct').show();
+        	                        gorilla.refreshLayout();
+        	                        $(this).dequeue();
+        	                    })
+        	                    .delay(practiceFeedbackMessageLength)
+        	                    .queue(function() {
+        	                        $('.practice-feedback-correct').hide();
+        	                        gorilla.refreshLayout();
+                                  machine.transition(State.PracticeT2SeenResponse, blockStruct);
+        	                        $(this).dequeue();
+        	                    })
+        	                } else {
+        	                    // incorrect response
+        	                    $('#gorilla')
+        	                    .queue(function() {
+        	                        $('.digitalOrAnalogue').hide();
+        	                        $('.response-instructions').hide();
+        	                        $('.practice-feedback-incorrect').show();
+        	                        gorilla.refreshLayout();
+        	                        $(this).dequeue();
+        	                    })
+        	                    .delay(practiceFeedbackMessageLength)
+        	                    .queue(function() {
+        	                        $('.practice-feedback-incorrect').hide();
+        	                        gorilla.refreshLayout();
+                                  machine.transition(State.PracticeT2SeenResponse, blockStruct);
+        	                        $(this).dequeue();
+        	                    })
+        	                } // end if correct
 	                    } // end checking if key pressed is K or L
 	                }) // end response keypress
 
@@ -650,19 +684,49 @@ gorilla.ready(function(){
                             keypressAllowed = false;
                             var correctResponse: boolean = false;
 
-	                        // move on transition
-	                        $('#gorilla')
-	                            .queue(function () {
-	                                machine.transition(State.PracticeBlock, blockStruct);
-	                                $(this).dequeue();
-	                            }); // end queue for '#gorilla'
+                            // check if key press was correct
+          	                if ((blockStruct.t2Condition == "Present" && e === presentResponseKeyCode) || (blockStruct.t2Condition == "Absent" && e === absentResponseKeyCode)) {
+          	                   // correct!
+          	                   $('#gorilla')
+          	                    .queue(function() {
+          	                        $('.didYouSee').hide();
+          	                        $('.response-instructions').hide();
+          	                        $('.practice-feedback-correct').show();
+          	                        gorilla.refreshLayout();
+          	                        $(this).dequeue();
+          	                    })
+          	                    .delay(practiceFeedbackMessageLength)
+          	                    .queue(function() {
+          	                        $('.practice-feedback-correct').hide();
+          	                        gorilla.refreshLayout();
+                                    machine.transition(State.PracticeBlock, blockStruct);
+          	                        $(this).dequeue();
+          	                    })
+          	                } else {
+          	                    // incorrect response
+          	                    $('#gorilla')
+          	                    .queue(function() {
+          	                        $('.didYouSee').hide();
+          	                        $('.response-instructions').hide();
+          	                        $('.practice-feedback-incorrect').show();
+          	                        gorilla.refreshLayout();
+          	                        $(this).dequeue();
+          	                    })
+          	                    .delay(practiceFeedbackMessageLength)
+          	                    .queue(function() {
+          	                        $('.practice-feedback-incorrect').hide();
+          	                        gorilla.refreshLayout();
+                                    machine.transition(State.PracticeBlock, blockStruct);
+          	                        $(this).dequeue();
+          	                    })
+          	                } // end if correct
 	                    } // end checking if key pressed is K or L
 	                }) // end response keypress
 
 	            }); // end populate and load
 	    } // end onEnter
 	}) // end addState State.Response
-	
+
 	SM.addState(State.PostPracticeBreak, {
 	    onEnter: (machine: stateMachine.Machine) => {
 			// populate our trial screen
@@ -705,11 +769,13 @@ gorilla.ready(function(){
 
 			var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nT1ImagesPerBlock); // whether or not T2 is displayed
 			var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock);
+      var watchDisplayTypes: number[] = utils.constructNumberArray(1, nT1ImagesPerBlock);
 
 			let blockStruct = {
-        		trialCounter: 0,
+        trialCounter: 0,
 				blockType: blockType,
-        		blockTypeHR: imageTypeHR,
+        blockTypeHR: imageTypeHR,
+        watchDisplayTypes: watchDisplayTypes,
 				digitalWatchURLsArray: digitalWatchURLsArray,
 				analogueWatchURLsArray: analogueWatchURLsArray,
 				t2DisplayPotentialArray: t2DisplayPotentialArray,
@@ -727,6 +793,8 @@ gorilla.ready(function(){
 				  blockCounter: blockCounter,
 				  nBlocks: nBlocks,
 					trialType: imageTypeHR,
+          exampleTargets: allExampleTargets[blockType],
+          imSize: exampleImageSize,
 				}, (err) => {
 					$('#gorilla').show();
 					$('#start-button').one('click', (event: JQueryEventObject) => {
@@ -739,22 +807,22 @@ gorilla.ready(function(){
 	SM.addState(State.Block, {
 		// this state determines whether or not to go to the next block, do another trial, or finish
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-			if (blockStruct.digitalWatchURLsArray.length === 0 && blockStruct.analogueWatchURLsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
+			if (blockStruct.digitalWatchURLsArray.length === 0 && blockStruct.analogueWatchURLsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0 && blockStruct.watchDisplayTypes.length === 0) {
 				/// then our block is over
 				if (blockTypes.length === 0 && allFaceURLs.length == 0 && allObjectURLs.length == 0 && allPareidoliaURLs.length == 0) {
-					// if there are no other blocks remaining, finish
-					machine.transition(State.Finish)
+  					// if there are no other blocks remaining, finish
+  					machine.transition(State.Debrief)
 				} else {
-					// otherwise, initialise another block
-					machine.transition(State.BlockInitialiser)
+  					// otherwise, initialise another block
+  					machine.transition(State.BlockInitialiser)
 				}
 			} else {
-				// if our trial is not over yet
-        if (blockStruct.trialCounter == nT2ImagesPerBlock) { // either go to a break screen
-				    machine.transition(State.InterBlockBreak, blockStruct)
-        } else { // or continue
-            machine.transition(State.PreTrial, blockStruct)
-        }
+  				// if our trial is not over yet
+          if (blockStruct.trialCounter == nT2ImagesPerBlock) { // either go to a break screen
+  				    machine.transition(State.InterBlockBreak, blockStruct)
+          } else { // or continue
+              machine.transition(State.PreTrial, blockStruct)
+          }
 			}
 		}, // end onEnter State.Block
 	}) // end addState State.Block
@@ -773,14 +841,18 @@ gorilla.ready(function(){
 
 	SM.addState(State.PreTrial, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-	      	// increment trail counter (needed for breaks)
-	      	blockStruct.trialCounter++;
+      console.log("======================================================");
+
+	    // increment trail counter (needed for breaks)
+	    blockStruct.trialCounter++;
 
 			// initialise distractor array
 			var trialArrayURLs: string[] = [];
 
 			var t1ImageURL: string = '';
-			const watchTypeDeterministicNumber: number = utils.takeRand(watchDisplayTypes);
+			const watchTypeDeterministicNumber: number = utils.takeRand(blockStruct.watchDisplayTypes);
+      console.log("After taking from the watchDisplayTypes array we now have the following array: " + blockStruct.watchDisplayTypes);
+      console.log("We have chosed watchTypeDeterministicNumber to be " + watchTypeDeterministicNumber);
 			var watchType: number = watchTypeDeterministicNumber % 2;
 			// blockStruct.watchType = watchType;
 			if (watchType == 0) {
@@ -852,7 +924,7 @@ gorilla.ready(function(){
 
 			// update blockStruct to have correct trial array
 			blockStruct.trialArrayURLs = trialArrayURLs;
-			
+
 			console.log("THE TRIAL COUNTER IS " + blockStruct.trialCounter);
 			machine.transition(State.Trial, blockStruct);
 		}, // end onEnter State.PreTrial
@@ -1084,6 +1156,18 @@ gorilla.ready(function(){
 				}); // end populate and load
 		} // end onEnter
 	}) // end addState State.Response
+
+  SM.addState(State.Debrief, {
+		onEnter: (machine: stateMachine.Machine) => {
+			gorilla.populate('#gorilla', 'debrief', {
+				debriefform: gorilla.resourceURL(debriefFilename)
+			});
+			gorilla.refreshLayout();
+			$('#start-button').one('click', (event: JQueryEventObject) => {
+				machine.transition(State.Finish);
+			}) // end on keypress
+		}
+	}) // end addState State.Debrief
 
 	// this is the state we enter when we have finished the task
 	SM.addState(State.Finish, {
