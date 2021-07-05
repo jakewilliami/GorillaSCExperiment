@@ -33,7 +33,7 @@ const carPrefix: string = 'C';
 const facePrefix: string = 'F';
 const highFacePrefix: string = 'HF';
 const lowFacePrefix: string = 'LF';
-const practicePrefix: string = 'Bird'; // P for Practice
+const practicePrefix: string = 'P'; // P for Practice
 
 // define file extension
 const imageExt: string = 'png';
@@ -60,36 +60,28 @@ const numberOfPracticeImages: number = pEnd - pStart + 1;
 const nPracticeTrials: number = Math.floor(numberOfPracticeImages / proportionOfPracticeTargets);
 
 // Chooses a random integer between lower and upper inclusive
-export function randInt(lower: number, upper: number) {
+function randInt(lower: number, upper: number) {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower;
 }
 
 // Takes a random index from an array
-function randIndex<T>(arr: T[]) {
+function randIndex(arr: any[]) {
     return randInt(0, (arr.length - 1));
 }
 
 // Choose a random element from an array
-export function randVal<T>(arr: T[]) {
+export function randVal(arr: any[]) {
     const randomIndex: number = randIndex(arr);
     return arr[randomIndex];
 }
 
 // *Takes* a random element from an array.
 // This is a mutating function
-export function takeRand<T>(arr: T[]) {
+export function takeRand(arr: any[]) {
     const randInd: number = randIndex(arr);
-    const randVal: T = arr[randInd];
+    const randVal = arr[randInd];
     arr.splice(randInd, 1);
     return randVal;
-}
-
-// Similar to above, but takes the first element from the array.
-// This is a mutating function
-export function takeFirst<T>(arr: T[]) {
-    const firstVal: T = arr[0];
-    arr.splice(0, 1);
-    return firstVal;
 }
 
 // Chooses n-many unique random numbers between lower and upper inclusive
@@ -104,49 +96,12 @@ function chooseNUniqueRandomWithinRange(n: number, lower: number, upper: number)
     return arr;
 }
 
-// *Takes* n many random elements from an array
-// This is a mutating funciton
-export function takeNRand<T>(arr: T[], n: number) {
-    var outArr: T[] = [];
-    
-    // loop through values of
-    for (var i: number = 0; i < n; i++) {
-        outArr.push(takeRand(arr));
-    }
-    
-    return outArr;
-}
-
-// Chooses n unique random elements from an array
-// This function does NOT mutate the input array
-export function chooseNUniqueRand<T>(arr: T[], n: number) {
-    var tempArr: T[] = [...arr];
-    var outArr: T[] = [];
-    
-    // loop through values of
-    for (var i: number = 0; i < n; i++) {
-        outArr.push(takeRand(tempArr));
-    }
-    
-    return outArr
-}
-
-export function chooseNRand<T>(arr: T[], n: number) {
-    var outArr: T[] = [];
-    
-    for (var i: number = 0; i < n; i++) {
-        outArr.push(randVal(arr));
-    }
-    
-    return outArr;
-}
-
 // Fisher-Yates (aka Knuth) Shuffle; see https://www.wikiwand.com/en/Fisher%E2%80%93Yates_shuffle
 // This shuffles the given array using the above mentioned algorithm
 // This is a mutating function
-export function shuffle<T>(array: T[]) {
+export function shuffle(array: any[]) {
     var currentIndex: number = array.length;
-    var temporaryValue: T;
+    var temporaryValue: any;
     var randomIndex: number;
 
     // While there remain elements to shuffle...
@@ -167,32 +122,10 @@ export function shuffle<T>(array: T[]) {
 // Constructs an array of numbers, ordered, between lower and upper inclusive
 function _constructNumberArray(lower: number, upper: number) {
     var arr: number[] = [];
-    for (var i: number = lower; i <= upper; i++) {
+    for (var i = lower; i <= upper; i++) {
         arr.push(i)
     }
     return arr;
-}
-
-export function constructNumberArray(lower: number, upper: number) {
-    var arr: number[] = [];
-    for (var i: number = lower; i <= upper; i++) {
-        arr.push(i)
-    }
-    return arr;
-}
-
-export function constructShuffledNumberArray(lower: number, upper: number) {
-    var outArr: number[] = constructNumberArray(lower, upper)
-    shuffle(outArr);
-    return outArr;
-}
-
-export function constructNameArray(arrayOfIndices: number[], prefix: string, suffix: string) {
-    var arrayOfNames: string[] = [];
-    for (var i: number = 0; i < arrayOfIndices.length; i++) {
-        arrayOfNames.push(prefix + arrayOfIndices[i] + suffix);
-    }
-    return arrayOfNames;
 }
 
 // Constructs a numbered array of values from tStart to nTrialsPerBlock
@@ -236,7 +169,7 @@ export function constructStimName(prefix: string, imageNumber: number) {
 export function generateDistractorArray(n: number) {
     var distractorNumbers: number[] = chooseNUniqueRandomWithinRange(n, dStart, dEnd);
     var distractorImageNumbers: string[] = [];
-    for (var i: number = 0; i < distractorNumbers.length; i++){
+    for (var i = 0; i < distractorNumbers.length; i++){
         distractorImageNumbers.push(constructStimName(distractorPrefix, distractorNumbers[i]));
     }
 
@@ -248,11 +181,11 @@ export function generateDistractorArray(n: number) {
 // A similar method would be to construct the number array, turn
 // them all into stimulus names, and then use the shuffle algorithm.
 // Have not benchmarked which is faster though.
-export function generatePracticeArray(prefix: string) {
+export function generatePracticeArray() {
     var practiceNumbers: number[] = chooseNUniqueRandomWithinRange((pEnd - pStart + 1), pStart, pEnd);
     var practiceImages: string[] = [];
-    for (var i: number = 0; i < practiceNumbers.length; i++) {
-        practiceImages.push(constructStimName(prefix, practiceNumbers[i]));
+    for (var i = 0; i < practiceNumbers.length; i++) {
+        practiceImages.push(constructStimName(practicePrefix, practiceNumbers[i]));
     }
     
     return practiceImages;

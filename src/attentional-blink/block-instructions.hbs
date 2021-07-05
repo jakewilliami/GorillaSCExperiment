@@ -1,7 +1,11 @@
 <div class="fullheight fullsize" style="position:relative;">
     <div class="content-container">
        <div class="pareidolia-block">
-            <h1>Part {{blockCounter}} of {{nBlocks}}</h1>
+            {{#unless blockCounter}}
+                <h1>Part {{blockCounter}} of {{nBlocks}}</h1>
+            {{else}}
+                <h1>Practice Block</h1>
+            {{/if}}
             <p>Well done, please feel free to take a break before continuing onto to the next section of the experiment.</p>
             <p>
               In the next section, your first task is still to report whether the watch is digital or analogue.

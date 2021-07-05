@@ -1,9 +1,14 @@
 <div class="fullheight fullsize" style="position:relative;">
     <div class="content-container">
         <h1>Instructions</h1>
-        <p>In this experiment, you will see a grid of images. Your task is to find a particular image (target image) in the grid of images as quickly as possible. The target image category will either be a face, an object that looks like a face, or a car. Examples of each of these target images are shown below.</p>
-        <p>You will be told throughout the experiment which target image to search for. Sometimes a target image will be present in the grid and sometimes there will be no target image. Please make your response by using two different fingers from the same hand. </p>
-        <p>Before the experiment begins there will be several practice trials. Click the <kbd>Next</kbd> button when you are ready to proceed to the practice instructions.</p>
+        <span>Welcome! In this experiment, you will see a stream of images flashed very rapidly. Your task will be to detect TWO specific target images in the stream. Throughout the experiment, one target image will be a wristwatch. Your primary task is to indicate whether the watch was digital or analogue. Examples of these watches are shown below. After the image stream, you will be asked to press <kbd>K</kbd> on your keyboard if the watch was digital, and press <kbd>L</kbd> if the watch was analogue.</span>
+        <div align="center">
+            <img src="{{exampleWatches}}" alt="example-t1" style="height:{{imSize}};">
+        </div>
+        <span>Your second task will be to report whether you saw a second target image. Depending on the section of the experiment, your second target image will be either a face, flower, or an object that looks like a face. Examples of these images are shown below. You will be informed before each section about which of these target images you are looking for. After the image stream, you will be asked to press <kbd>K</kbd> if you saw the image <kbd>L</kbd> if you did not. Be aware that the second target image will not always be present in the image stream.</span>
+        <div align="center">
+            <img src="{{exampleTargets}}" alt="example-t2" style="height:{{imSize}};">
+        </div>
     </div>
     <div class="button-container">
         <button class="btn btn-primary" id="start-button">Next</button>

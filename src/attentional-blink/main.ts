@@ -26,9 +26,12 @@ const absentResponseKey: string = 'l';
 const digitalResponseKey: string = 'k';
 const analogueResponseKey: string = 'l';
 const nBlocks: number = 3;
+const nPracticeT2Images: number = 6;
 const loadingMessage: string = 'Please wait while the experiment is loading.  This may take some time.';
 const consentFilename: string = 'PareidoliaVisualSearch_InfoSheet.pdf';
 const debriefFilename: string = 'PareidoliaVisualSearch_Debriefing.pdf';
+const exampleImageSize: string = '2cm';
+const practicePrefix: string = 'bird';
 
 // 3 blocks, with constant T2 type
 
@@ -40,6 +43,7 @@ const debriefFilename: string = 'PareidoliaVisualSearch_Debriefing.pdf';
 const nTrials: number = nT2ImagesPerBlock * 3 * 2; // 100 T2 images per block * 3 blocks * 2 trial types = 600
 const nT2Displayed: number = Math.floor(nT2ImagesPerBlock / blockTypes.length);
 const nT1ImagesPerBlock: number = nT2ImagesPerBlock * 2; // 100 T2 images per block * 2 trial types = 200
+const nPracticeT1Images: number = nPracticeT2Images * 2;
 const constBlockTypes: string[] = [...blockTypes];
 const nSpecificWatches: number = Math.floor(nWatchImages / 2); // half of the watches are digital, the other half are analogue
 const nSpecificWatchesPerBlock: number = nT2ImagesPerBlock * 2;
@@ -67,24 +71,27 @@ function constructURLArray(stimArr: string[]) {
 	return URLs;
 }
 
-// initialise number array for main target variables as global
-var allFaceURLs: string[];
-var allObjectURLs: string[];
-var allPareidoliaURLs: string[];
-var allDigitalWatchURLs: string[];
-var allAnalogueWatchURLs: string[];
-
-// initialise URL array of all distractors as global
-var allDistractorURLs: string[];
-
 // possible states in state machine
 enum State {
+	// Starting states
   	PreloadArrays,
 	PreloadStimuli,
 	Consent,
 	RequestFullscreen,
 	Demographics,
 	Instructions,
+	// Practice states
+	PracticeInstructions,
+	PracticeBlockInitialiser,
+	PracticeBlock,
+  	PracticeInterBlockBreak,
+	PracticePreTrial,
+	PracticeFixationCross,
+	PracticeTrial,
+	PracticeWatchTypeResponse,
+	PracticeT2SeenResponse,
+	PostPracticeBreak,
+	// Main experiment states
 	BlockInitialiser,
 	Block,
   	InterBlockBreak,
@@ -93,6 +100,7 @@ enum State {
 	Trial,
 	WatchTypeResponse,
 	T2SeenResponse,
+	// Finishish states
 	Finish,
 }
 
@@ -105,6 +113,11 @@ interface TrialStruct {
 	t2Present: boolean,
 	t1ResponseCorrect: boolean,
 	t2ResponseCorrect: boolean,
+}
+
+interface PracticeTrialStruct {
+	practiceT1Images: string[],
+	practiceT2Images: string[],
 }
 
 interface T1Struct {
@@ -144,6 +157,7 @@ var allObjectsAsNumbers: number[];
 var allPareidoliaAsNumbers: number[];
 var allDigitalWatchesAsNumbers: number[];
 var allAnalogueWatchesAsNumbers: number[];
+
 // construct array of T2 images
 var allFaceNames: string[];
 var allObjectNames: string[];
@@ -151,12 +165,30 @@ var allPareidoliaNames: string[];
 var allDigitalWatchNames: string[];
 var allAnalogueWatchNames: string[];
 
+// initialise number array for main target variables as global
+var allFaceURLs: string[];
+var allObjectURLs: string[];
+var allPareidoliaURLs: string[];
+var allDigitalWatchURLs: string[];
+var allAnalogueWatchURLs: string[];
+var allPracticeTargetURLs: string[];
+var allExampleTargets: Object = {};
+
+// initialise URL array of all distractors as global
+var allDistractorURLs: string[];
+
 // set URL array of all distractors
 var allDistractorNumbers: number[];
 var allDistractorNames: string[];
 
 // construct a number array to help determine which type of watch to display
 var watchDisplayTypes: number[];
+
+// all practice images
+var practiceDigitalURLs: string[];
+var practiceAnalogueURLs: string[];
+var practiceT1URLs: string[];
+var practiceT2URLs: string[];
 
 // need demographics to be global
 var participantID: string;
@@ -198,14 +230,32 @@ gorilla.ready(function(){
         	allPareidoliaURLs = constructURLArray(allPareidoliaNames);
         	allDigitalWatchURLs = constructURLArray(allDigitalWatchNames);
         	allAnalogueWatchURLs = constructURLArray(allAnalogueWatchNames);
-
+			
         	// set URL array of all distractors
         	allDistractorNumbers = utils.constructNumberArray(1, nDistractors);
         	allDistractorNames = utils.constructNameArray(allDistractorNumbers, 'D', '.' + stimExt)
         	allDistractorURLs = constructURLArray(allDistractorNames);
+			
+			// get practice targets
+			practiceDigitalURLs = constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, 3), 'Pdigital', '.' + stimExt));
+			practiceAnalogueURLs = constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, 3), 'Panalogue', '.' + stimExt));
+			practiceT1URLs = [...practiceDigitalURLs, ...practiceAnalogueURLs];
+			practiceT2URLs = constructURLArray(utils.generatePracticeArray('Bird'));
+			allPracticeTargetURLs = [
+				...practiceT1URLs,
+				...practiceT2URLs
+			];
 
         	// construct a number array to help determine which type of watch to display
         	watchDisplayTypes = utils.constructNumberArray(1, nT1ImagesPerBlock);
+			
+			// add example target arrays as URLs to object
+			allExampleTargets['watch'] = gorilla.stimuliURL('watchExampleTargets.png');
+			allExampleTargets['practice'] = gorilla.stimuliURL('birdExampleTargets.png');
+			allExampleTargets['F'] = gorilla.stimuliURL('faceExampleTargets.png');
+			allExampleTargets['P'] = gorilla.stimuliURL('pareidoliaExampleTargets.png');
+			allExampleTargets['O'] = gorilla.stimuliURL('flowerExampleTargets.png');
+			allExampleTargets['all'] = gorilla.stimuliURL('allTargetsExample.png')
 
           // put all image URLs into a single vector for preloading
           const allImageURLs: string[] = [
@@ -214,10 +264,12 @@ gorilla.ready(function(){
               ...allAnalogueWatchURLs,
               ...allFaceURLs,
               ...allPareidoliaURLs,
-              ...allObjectURLs
+              ...allObjectURLs,
+			  ...allPracticeTargetURLs,
+			  ...Object.keys(allExampleTargets).map(k => allExampleTargets[k]) // URLs from example targets.  Object.values(...) is not stabalised
           ];
 
-          console.log("There are " + (allImageURLs.length + 1) + " images preloaded")
+          console.log("There are " + allImageURLs.length + " images preloaded")
 
           machine.transition(State.PreloadStimuli, allImageURLs);
       });
@@ -316,17 +368,399 @@ gorilla.ready(function(){
 	    onEnter: (machine: stateMachine.Machine) => {
 			$('#gorilla').hide();
 	        gorilla.populateAndLoad($('#gorilla'), 'instructions', {
-
+				exampleWatches: allExampleTargets['watch'],
+				exampleTargets: allExampleTargets['all'],
+				imSize: exampleImageSize,
 	        },
 	        (err) => {
 				$('#gorilla').show();
 				$('#start-button').one('click', (event: JQueryEventObject) => {
 					// transition to the practice trials
-					machine.transition(State.BlockInitialiser);
+					machine.transition(State.PracticeInstructions);
 				}) // end on click start button
 	        }); // end populate and load
 	    } // end onEnter
 	}) // end addState Instructions
+	
+	SM.addState(State.PracticeInstructions, {
+	    onEnter: (machine: stateMachine.Machine) => {
+			$('#gorilla').hide();
+	        gorilla.populateAndLoad($('#gorilla'), 'practice-instructions', {
+				example: allExampleTargets['practice'],
+				imSize: exampleImageSize,
+		   	}, (err) => {
+				$('#gorilla').show();
+				$('#start-button').one('click', (event: JQueryEventObject) => {
+					// transition to the practice trials
+					machine.transition(State.PracticeBlockInitialiser);
+				}) // end on click start button
+			}); // end populateAndLoad
+	    } // end onEnter
+	}) // end addState PracticeInstructions
+	
+	SM.addState(State.PracticeBlockInitialiser, {
+	    // this state constructs everything needed for a single block
+	    onEnter: (machine: stateMachine.Machine) => {
+	        // construct tT array
+	        var t2TargetURLsArray: string[] = practiceT2URLs;
+	        var imageTypeHR: string = 'a bird';
+			
+	        var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nPracticeT1Images); // whether or not T2 is displayed
+	        var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nPracticeT2Images);
+
+	        let blockStruct = {
+	            trialCounter: 0,
+	            blockType: 'Bird',
+	            blockTypeHR: imageTypeHR,
+	            digitalWatchURLsArray: practiceDigitalURLs,
+	            analogueWatchURLsArray: practiceAnalogueURLs,
+	            t2DisplayPotentialArray: t2DisplayPotentialArray,
+	            t2DisplayGapOptions: t2DisplayGapOptions,
+	            t2TargetURLsArray: t2TargetURLsArray,
+	            trialArrayURLs: [],
+	            t2PosGap: 0,
+	            t2Condition: "",
+	            isDigital: false,
+	            isAnalogue: false,
+	        } as BlockStruct
+
+	  // display block instructions
+	  gorilla.populateAndLoad($('#gorilla'), 'block-instructions', {
+	              	blockCounter: 0,
+	              	nBlocks: nBlocks,
+	                trialType: imageTypeHR,
+	            }, (err) => {
+	                $('#gorilla').show();
+	                $('#start-button').one('click', (event: JQueryEventObject) => {
+	                    machine.transition(State.PracticeBlock, blockStruct);
+	                }) // end on keypress
+	            }); // end populate and load
+	    }, // end onEnter State.BlockInitialiser
+	}) // end addState State.BlockInitialiser
+
+	SM.addState(State.PracticeBlock, {
+	    // this state determines whether or not to go to the next block, do another trial, or finish
+	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
+	        if (blockStruct.digitalWatchURLsArray.length === 0 && blockStruct.analogueWatchURLsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
+	            /// then our block is over
+	            if (blockTypes.length === 0 && allFaceURLs.length == 0 && allObjectURLs.length == 0 && allPareidoliaURLs.length == 0) {
+	                // if there are no other blocks remaining, finish
+	                machine.transition(State.PostPracticeBreak)
+	            } else {
+	                // otherwise, initialise another block
+	                machine.transition(State.PracticeBlockInitialiser)
+	            }
+	        } else {
+	            // if our trial is not over yet
+	    if (blockStruct.trialCounter == nT2ImagesPerBlock) { // either go to a break screen
+	                // machine.transition(State.PracticeInterBlockBreak, blockStruct)
+	    } else { // or continue
+	        machine.transition(State.PracticePreTrial, blockStruct)
+	    }
+	        }
+	    }, // end onEnter State.Block
+	}) // end addState State.Block
+
+	SM.addState(State.PracticePreTrial, {
+	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
+	        // increment trail counter (needed for breaks)
+	        blockStruct.trialCounter++;
+
+	        // initialise distractor array
+	        var trialArrayURLs: string[] = [];
+
+	        var t1ImageURL: string = '';
+	        const watchTypeDeterministicNumber: number = utils.takeRand(watchDisplayTypes);
+	        var watchType: number = watchTypeDeterministicNumber % 2;
+	        // blockStruct.watchType = watchType;
+	        if (watchType == 0) {
+	            blockStruct.isDigital = true;
+	            blockStruct.isAnalogue = false;
+	            t1ImageURL = utils.takeRand(blockStruct.digitalWatchURLsArray);
+	        } else { // i.e., watchType == 1
+	            blockStruct.isAnalogue = true;
+	            blockStruct.isDigital = false;
+	            t1ImageURL = utils.takeRand(blockStruct.analogueWatchURLsArray);
+	        }
+	        console.log("T1 image has been chosen: " + t1ImageURL);
+	        console.log("T1 image possibilities left are " + blockStruct.digitalWatchURLsArray + " or " + blockStruct.analogueWatchURLsArray);
+
+	        // choose whether or not T2 is displayed
+	        const t2DeterministicNumber: number = utils.takeRand(blockStruct.t2DisplayPotentialArray)
+	        if (t2DeterministicNumber % 2 == 0) {
+	            // do not display T2
+	            console.log("T2 image is not being displayed");
+	            blockStruct.t2Condition = "Absent";
+	            // construct random distractor array
+	            trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 1);
+	            const randomInsertIndex: number = utils.randInt(0, nInImageSequence - 1);
+	            // insert T1 into trial array
+	            utils.insert(trialArrayURLs, randomInsertIndex, t1ImageURL);
+	            // be sure to redefine the position gap for metric recording
+	            blockStruct.t2PosGap = 0;
+	        } else {
+	            // display T2; more complex choices to make (what T2 is)
+	            blockStruct.t2Condition = "Present";
+	            const t2ImageURL: string = utils.takeRand(blockStruct.t2TargetURLsArray);
+	            console.log("We are going to display T2");
+	            console.log("T2 image has been chosen: " + t2ImageURL);
+	            console.log("T2 image possibilities left are " + blockStruct.t2TargetURLsArray);
+	            // construct random distractor array
+	            trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 2);
+
+	            // choose T2 image gap
+	            const t2ImageTypeNumber: number = utils.takeRand(blockStruct.t2DisplayGapOptions);
+	            var t2PosGap: number;
+	            console.log('Image number type is' + (t2ImageTypeNumber % 3));
+	            const t2ImageTypeNumberModulo: number = t2ImageTypeNumber % 3
+
+	            // cannot divide 100 by 3 evenly, so the one of the t2PosGaps will have to have 34 in them.
+	            if (t2ImageTypeNumber == 100) {
+	                t2PosGap = utils.randVal([1, 3, 7]);
+	            }
+	            else {
+	                if (t2ImageTypeNumberModulo == 0) {
+	                    t2PosGap = 1;
+	                } else if (t2ImageTypeNumberModulo == 1) {
+	                    t2PosGap = 3;
+	                } else { // t2ImageTypeNumberModulo == 2
+	                    t2PosGap = 7;
+	                }
+	            }
+	            console.log('So image gap is' + t2PosGap);
+	            blockStruct.t2PosGap = t2PosGap;
+
+	            const trialArrayT1MaxPos: number = nInImageSequence - t2PosGap;
+	            const randomInsertIndex: number = utils.randInt(0, trialArrayT1MaxPos - 1);
+	            // insert T1 into trial array
+	            utils.insert(trialArrayURLs, randomInsertIndex, t1ImageURL);
+	            // insert T2 into trial array
+	            utils.insert(trialArrayURLs, randomInsertIndex + t2PosGap, t2ImageURL);
+	        }
+
+	        console.log("T2 display potential left are: " + blockStruct.t2DisplayPotentialArray);
+
+	        // update blockStruct to have correct trial array
+	        blockStruct.trialArrayURLs = trialArrayURLs;
+	        
+	        console.log("THE TRIAL COUNTER IS " + blockStruct.trialCounter);
+	        machine.transition(State.PracticeTrial, blockStruct);
+	    }, // end onEnter State.PreTrial
+	}) // end addState State.PreTrial
+
+	SM.addState(State.PracticeTrial, {
+	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
+	        console.log("We are in the sub-trial state, and we are now going to display the trial array: " + blockStruct.trialArrayURLs)
+
+	            function showTrial(i: number) {
+	                $('#gorilla')
+	                .queue(function (next) {
+	                    $('#trial-image-' + i).css('visibility','visible');
+	                    next();
+	                }) // end queue for '#gorilla'
+	                .delay(imageDisplayLength)
+	                .queue(function (next) {
+	                    // this queue isn't strictly necessary, as we loop through the trial state, replacing the trial image
+	                    $('#trial-image-' + i).css('visibility','hidden');
+	                    if ((i + 1) == 20) {
+	                        machine.transition(State.PracticeWatchTypeResponse, blockStruct);
+	                    } else {
+	                        showTrial(i + 1);
+	                    }
+	                    next();
+	                }) // end queue for '#gorilla'
+	            }
+
+	            gorilla.populateAndLoad('#gorilla', 'trial', {trialarray: blockStruct.trialArrayURLs},() => {
+	                $('#gorilla')
+	                    .delay(beforeFixationDelay)
+	                    .queue(function (next) {
+	                        $('.fixation-cross').show();
+	                        gorilla.refreshLayout();
+	                        // $(this).dequeue();
+	                        next();
+	                    })// end queue for '#gorilla'
+	                    .delay(fixationLength)
+	                    .queue(function (next) {
+	                        $('.fixation-cross').hide();
+	                        gorilla.refreshLayout();
+	                        // $(this).dequeue();
+	                        next();
+	                    }) // end queue for '#gorilla'
+	                    .delay(afterFixationDelay)
+	                    .queue(function (next) {
+	                        // machine.transition(State.Trial, blockStruct);
+	                        // $(this).dequeue();
+	                        showTrial(0);
+	                        next();
+	                    });
+	    });
+	    } // end onEnter
+	}) // end addState State.Trial
+
+	SM.addState(State.PracticeWatchTypeResponse, {
+	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
+	        gorilla.populateAndLoad($('#gorilla'), 'watch-type-response', {
+	                digitalPresent: digitalResponseKey.toUpperCase(),
+	                analoguePresent: analogueResponseKey.toUpperCase(),
+	            }, (err) => {
+
+	                $('#gorilla')
+	                .queue(function (next) {
+	                    $('.watch-type-reponse').show();
+	                    gorilla.refreshLayout();
+	                    gorilla.startStopwatch();
+	                    keypressAllowed = true;
+	                            next();
+	                }) // end queue for '#gorilla'
+
+	                $(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
+	                    // exit the keypress event if we are not allowed to!
+	                    if (!keypressAllowed) return;
+
+	                    // get the key that was pressed
+	                    const e = event.which;
+
+	                    // enter state where it can't enter any more keys
+	                    if (e === digitalResponseKeyCode || e === analogueResponseKeyCode) {
+	                                gorilla.stopStopwatch();
+
+	                                // IMPORTANT: get response time!
+	                                // This is the main metric!
+	                                const responseTime: number = gorilla.getStopwatch();
+
+	                        // update keypress as we have just pressed the key!
+	                        keypressAllowed = false;
+	                                var watchTypeIsCorrect: boolean = false;
+
+	                        // check if key press was correct
+	                        if ((blockStruct.isDigital && !blockStruct.isAnalogue && e === digitalResponseKeyCode) || (blockStruct.isAnalogue && !blockStruct.isDigital && e === analogueResponseKeyCode)) {
+	                            // correct!
+	                            watchTypeIsCorrect = true;
+	                        } else {
+	                            // incorrect response
+	                        }
+
+	                                var t1Condition: string = ""
+	                                if (blockStruct.isDigital) {
+	                                    t1Condition = "Digital"
+	                                } else if (blockStruct.isAnalogue) {
+	                                    t1Condition = "Analogue"
+	                                }
+
+	                                const t1ResponseAsString: string = String.fromCharCode(e)
+
+	                                // construct a trial struct to put into the BlockStruct for metrics
+	                                let thisT1Struct = {
+	                                    t1ConditionType: t1Condition,
+	                                    t1ResponseCorrect: watchTypeIsCorrect,
+	                                    t1ResponseKey: t1ResponseAsString,
+	                                    t1ResponseTime:  responseTime,
+	                                } as T1Struct
+
+	                                // Add the trial struct to the block struct so that we can add metrics in one function call
+	                                blockStruct.thisTrialStruct = thisT1Struct;
+
+	                                // move on transition
+	                                $('#gorilla')
+	                                    .queue(function () {
+	                                        machine.transition(State.PracticeT2SeenResponse, blockStruct);
+	                                        $(this).dequeue();
+	                                    }); // end queue for '#gorilla'
+	                    } // end checking if key pressed is K or L
+	                }) // end response keypress
+
+	            }); // end populate and load
+	    } // end onEnter
+	}) // end addState State.WatchTypeResponse
+
+	SM.addState(State.PracticeT2SeenResponse, {
+	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
+	        gorilla.populateAndLoad($('#gorilla'), 't2-seen-response', {
+	                imageType: blockStruct.blockTypeHR,
+	                targetPresent: presentResponseKey.toUpperCase(),
+	                targetAbsent: absentResponseKey.toUpperCase(),
+	            }, (err) => {
+	                $('#gorilla')
+	                .queue(function (next) {
+	                    $('.t2-seen-reponse').show();
+	                    gorilla.refreshLayout();
+	                    gorilla.startStopwatch();
+	                    keypressAllowed = true;
+	                            next();
+	                }) // end queue for '#gorilla'
+
+	                $(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
+	                    // exit the keypress event if we are not allowed to!
+	                    if (!keypressAllowed) return;
+
+	                    // get the key that was pressed
+	                    const e = event.which;
+
+	                    // enter state where it can't enter any more keys
+	                    if (e === presentResponseKeyCode || e === absentResponseKeyCode) {
+	                                gorilla.stopStopwatch();
+
+	                                // IMPORTANT: get response time!
+	                                // This is the main metric!
+	                                const responseTime: number = gorilla.getStopwatch();
+
+	                                // update keypress as we have just pressed the key!
+	                                keypressAllowed = false;
+	                                        var correctResponse: boolean = false;
+
+	                                // check if key press was correct
+	                                if ((blockStruct.t2Condition == "Present" && e === presentResponseKeyCode) || (blockStruct.t2Condition == "Absent" && e === absentResponseKeyCode)) {
+	                                    // correct!
+	                                    correctResponse = true;
+	                                } else {
+	                                    // incorrect response
+	                                }
+
+	                                const t2ResponseAsString: string = String.fromCharCode(e)
+
+	                                // Actually *store* the data!
+	                                // IMPORTANT: these keys had to be imported into the `Metircs` tab!
+	                                gorilla.metric({
+	                                    t1_response_key: blockStruct.thisTrialStruct.t1ResponseKey,
+	                                    t1_condition: blockStruct.thisTrialStruct.t1ConditionType,
+	                                    t1_response_correct: blockStruct.thisTrialStruct.t1ResponseCorrect,
+	                                    t1_response_time: blockStruct.thisTrialStruct.t1ResponseTime,
+	                                    t2_category: blockStruct.blockType,
+	                                    t2_condition: blockStruct.t2Condition,
+	                                    t2_position_gap: blockStruct.t2PosGap,
+	                                    t2_response_correct: correctResponse,
+	                                    t2_response_key: t2ResponseAsString,
+	                                    t2_response_time:  responseTime,
+	                                    age: participantAge,
+	                                    id: participantID,
+	                                    gender: participantGender,
+	                                }); // end metric
+
+	                        // move on transition
+	                        $('#gorilla')
+	                            .queue(function () {
+	                                machine.transition(State.PracticeBlock, blockStruct);
+	                                $(this).dequeue();
+	                            }); // end queue for '#gorilla'
+	                    } // end checking if key pressed is K or L
+	                }) // end response keypress
+
+	            }); // end populate and load
+	    } // end onEnter
+	}) // end addState State.Response
+	
+	SM.addState(State.PostPracticeBreak, {
+	    onEnter: (machine: stateMachine.Machine) => {
+			// populate our trial screen
+				gorilla.populateAndLoad($('#gorilla'), 'after-practice', {}, (err) => {
+					// transition when required
+					$('#start-button').one('click', (event: JQueryEventObject) => {
+						machine.transition(State.Block);
+					}) // end on keypress
+				}) // end populate and load
+	    } // end onEnter
+	}) // end addState AfterPracticeInstructions
 
 	SM.addState(State.BlockInitialiser, {
 		// this state constructs everything needed for a single block
