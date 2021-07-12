@@ -101,21 +101,26 @@ body {
     visibility: hidden;
     display: grid;
     height: 90vh;
-    width: 100vh;
-    grid-template-rows: repeat(1fr);
-    grid-template-columns: repeat(5, minmax(100px, 1fr)); /* The first value is the columns number */
-    grid-column-gap: 8px;
-    grid-row-gap: 8px;
+    width: 90vh;
+    // grid-template-rows: repeat(calc(100vw / 106px), minmax(100px, 1fr));
+    // grid-template-columns: repeat(9, minmax(100px, 1fr)); /* The first value is the columns number */
+    grid-column-gap: 6px;
+    grid-row-gap: 6px;
     padding-bottom: 10vh;
     clear :both;
+    /* Need to shift grid down as we are padding bottom 10vh */
+    -moz-transform: translateY(5vh);
+    -webkit-transform: translateY(5vh);
+    transform: translateY(5vh);
+    /* Need to shift grid left as we are making grid width 90vh */
+    -moz-transform: translateX(-10vh);
+    -webkit-transform: translateX(-10vh);
+    transform: translateX(-10vh);
 }
 
-// .Cell {
-//   padding: 8px;
-// }
 .Cell {
     visibility: hidden;
-    padding: 8px;
+    padding: 6px;
     // width: 2cm;
     // height: 2cm;
     width: 106px;
@@ -128,7 +133,8 @@ body {
 
 .CellImg {
     visility: hidden;
-    display:inline-block;
+    // display:inline-block;
+    // display: block
     vertical-align: middle;
     // width: 1.8cm;
     // height: 1.8cm;
@@ -137,7 +143,7 @@ body {
 }
 
 .Cell::before {
-  content: '';
-  float: left;
-  padding-top: 100%;
+    content: '';
+    float: left;
+    padding-top: 100%;
 }

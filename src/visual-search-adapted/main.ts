@@ -26,6 +26,8 @@ const practiceFeedbackMessageLength: number = 1000;
 const exampleImSize: string = "3cm"; // e.g., example images will be 3cm × 3cm
 const consentFilename: string = "PareidoliaVisualSearch_InfoSheet.pdf"; // these are in the Resources tab
 const debriefFilename: string = "PareidoliaVisualSearch_Debriefing.pdf";
+const nColsInGrid: number = 9;
+const nRowsInGrid: number = 6;
 
 const exampleImages: Object = {
     'C': ['EC1.png', 'EC2.png', 'EC3.png'],
@@ -40,6 +42,22 @@ const exampleImages: Object = {
 // There is not much that you should need
 // to change below this line!
 /*--------------------------------------*/
+
+/*
+const imgContainerSizeInPixels: number = 106;
+
+const vw: number = Math.floor(0.9 * Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0));
+const vh: number = Math.floor(0.9 * Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0));
+
+const nColsInGrid: number = Math.floor(vw / imgContainerSizeInPixels);
+const nRowsInGrid: number = Math.floor(vh / imgContainerSizeInPixels);
+*/
+
+const nGridPositions: number = nColsInGrid * nRowsInGrid;
+const nBlankPositions: number = nGridPositions - 25; // SHOULD USE utils.nImagesInGrid
+const invisibleImageB64Encoded: string = 'R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+const invisibleImage: string = 'data:image/gif;base64,' + invisibleImageB64Encoded;
+// const invisibleImage: string = '';
 
 // possible states in state machine
 enum State {
@@ -119,7 +137,7 @@ function mutateCellElems(styleValue: string) {
 		el.style.visibility = styleValue;
 	});
 	// for (var i: number = 0; i < cellElements.length; i++) {
-	// 	document.getElementById('Cell' + i).style.visibility = styleValue;
+	// 	(<HTMLInputElement>document.getElementById('CellImg' + i)).style.visibility = styleValue;
 	// }
 	return;
 }
@@ -283,7 +301,7 @@ gorilla.ready(function(){
 						practiceTargets: utils.generatePracticeArray(),
 						practiceArrays: utils.constructPracticeArray(),
 						practiceTarget: '',
-						practiceTargetPositions: utils.constructTargetPositions()
+						practiceTargetPositions: utils.constructTargetPositions(nImagesInGrid)
 					} as PracticeTrialStruct
 					machine.transition(State.PracticeTrial, practiceStruct);
 				}) // end on click start button
@@ -293,8 +311,9 @@ gorilla.ready(function(){
 	
 	SM.addState(State.PracticeTrial, {
 	    onEnter: (machine: stateMachine.Machine, practiceStruct: PracticeTrialStruct) => {
-			practiceStruct.practiceArray = [];
+			// practiceStruct.practiceArray = [];
 	        keypressAllowed = false;
+			var trialArray: string[];
 	        
 			// if the practice trials are over, transition to post-practice instructions
 	        if (practiceStruct.practiceArrays.length === 0) {
@@ -312,7 +331,8 @@ gorilla.ready(function(){
 	                
 	                // update metrics
 	                practiceStruct.isPresent = false;
-	                practiceStruct.practiceArray = randomDistractorURLs;
+	                // practiceStruct.practiceArray = randomDistractorURLs;
+					trialArray = randomDistractorURLs;
 	            } else {
 	                // choose from list of targets and append to the 24 distractor images
 	                // Construct 24 random distractor urls
@@ -329,8 +349,20 @@ gorilla.ready(function(){
 	                
 					// update metrics
 	                practiceStruct.isPresent = true;
-	                practiceStruct.practiceArray = randomURLs;
+	                // practiceStruct.practiceArray = randomURLs;
+					trialArray = randomURLs;
 	            } // end if
+				
+				// var trialArrayWithBlanks: string[] = trialArray;
+				console.log(nBlankPositions)
+				for (var i: number = 0; i < nBlankPositions; i++) {
+				    trialArray.push(invisibleImage);
+				}
+				utils.shuffle(trialArray);
+				practiceStruct.practiceArray = trialArray;
+				console.log("trial array: ");
+				console.log(trialArray)
+				
 	            
 	            // hide the display till the images are loaded
 	            // $('.Grid').hide();
@@ -346,6 +378,7 @@ gorilla.ready(function(){
 	            
 	            // populate our trial screen
 	            gorilla.populateAndLoad($('#gorilla'), 'trial', {
+					ncols: nColsInGrid,
 					trials: practiceStruct.practiceArray,
 					responsePresent: presentResponseKey.toUpperCase(),
 					responseAbsent: absentResponseKey.toUpperCase(),
@@ -662,6 +695,7 @@ gorilla.ready(function(){
 				
 				// populate our trial screen
 				gorilla.populateAndLoad($('#gorilla'), 'trial', {
+					ncols: nColsInGrid,
 					trials: trialStruct.trialArray,
 					responsePresent: presentResponseKey.toUpperCase(),
 					responseAbsent: absentResponseKey.toUpperCase(),
