@@ -1,8 +1,10 @@
 <div class="trial-container">
-	<div class="trial-array" hidden>
+	<!-- <div class="trial-array" hidden> -->
+	<div class="Grid" id="trial-array-fs">
         {{#each trials}}
-            <div>
-                <img src={{this}}>
+            <!-- <div> -->
+			<div class="Cell" id="Cell{{@index}}">
+                <img class="CellImg" src={{this}}>
             </div>
         {{/each}}
     </div>

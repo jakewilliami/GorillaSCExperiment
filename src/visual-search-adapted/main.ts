@@ -113,6 +113,27 @@ function constructURLArray(stimArr: string[]) {
 	return URLs;
 }
 
+function mutateCellElems(styleValue: string) {
+	// const cellElements = document.getElementsByClassName('Cell');
+	[].forEach.call(document.querySelectorAll('.CellImg'), (el) => {
+		el.style.visibility = styleValue;
+	});
+	// for (var i: number = 0; i < cellElements.length; i++) {
+	// 	document.getElementById('Cell' + i).style.visibility = styleValue;
+	// }
+	return;
+}
+function hideTrialArray() {
+	$('.Grid').hide();
+	mutateCellElems('hidden');
+	return;
+}
+function showTrialArray() {
+	$('.Grid').show();
+	mutateCellElems('visible');
+	return;
+}
+
 // global boolean variable which we update in order to check
 // if we are allowed to press the response key or not
 var keypressAllowed: boolean = false;
@@ -312,7 +333,12 @@ gorilla.ready(function(){
 	            } // end if
 	            
 	            // hide the display till the images are loaded
-	            $('.trial-array').hide();
+	            // $('.Grid').hide();
+				// $('.Cell').hide();
+				hideTrialArray();
+				// $('#gorilla').getElementById('trial-array-fs').style.display = 'none';
+				// $('.Grid').toggle();
+				// $('#Grid').toggle()
 	            $('.instruction').hide();
 	            $('.timeout-feedback').hide();
 	            $('.practice-feedback-correct').hide();
@@ -332,7 +358,13 @@ gorilla.ready(function(){
 
 	SM.addState(State.PracticeFixationCross, {
 	    onEnter: (machine: stateMachine.Machine, practiceStruct: PracticeTrialStruct) => {
-	        $('.trial-array').hide();
+	        // $('.Grid').hide();
+			hideTrialArray();
+			// $('.Cell').hide();
+			// $('.Grid').toggle();
+			// console.log(document.getElementsByClassName('Cell'));
+			// console.log(document.getElementById('Cell0'))
+			// $('#Grid').toggle()
 	        $('.instruction').hide();
 	        $('.timeout-feedback').hide();
 	        $('.practice-feedback-correct').hide();
@@ -364,7 +396,13 @@ gorilla.ready(function(){
 	        
 	        $('#gorilla')
 	            .queue(function () {
-	                $('.trial-array').show();
+	                // $('.Grid').show();
+					showTrialArray();
+					// $('.Cell').show();
+					// $('.Grid').toggle();
+					// $('#gorilla').getElementById('trial-array-fs').style.display = 'grid';
+					// $(document).getElementsByClassName("Grid")[0].style.visibility = 'visible';
+					// $('#Grid').toggle()
 	                $('.instruction').show();
 	                gorilla.refreshLayout();
 	                gorilla.startStopwatch();
@@ -392,7 +430,11 @@ gorilla.ready(function(){
 	                   // correct!
 	                   $('#gorilla')
 	                    .queue(function() {
-	                        $('.trial-array').hide();
+	                        // $('.Grid').hide();
+							hideTrialArray();
+							// $('.Cell').hide();
+							// $('.Grid').toggle();
+							// $('#gorilla').getElementById('trial-array-fs').style.display = 'none';
 	                        $('.instruction').hide();
 	                        $('.practice-feedback-correct').show();
 	                        gorilla.refreshLayout();
@@ -408,7 +450,11 @@ gorilla.ready(function(){
 	                    // incorrect response
 	                    $('#gorilla')
 	                    .queue(function() {
-	                        $('.trial-array').hide();
+	                        // $('.Grid').hide();
+							hideTrialArray();
+							// $('.Cell').hide();
+							// $('.Grid').toggle();
+							// $('#gorilla').getElementById('trial-array-fs').style.display = 'none';
 	                        $('.instruction').hide();
 	                        $('.practice-feedback-incorrect').show();
 	                        gorilla.refreshLayout();
@@ -436,7 +482,8 @@ gorilla.ready(function(){
 	            .delay(presentationTime)
 	            .then(() => {
 	                keypressAllowed = false;
-	                $('.trial-array').hide();
+	                // $('.Grid').hide();
+					$('.Grid').toggle();
 	                $('.instruction').hide();
 	                $('#gorilla')
 	                .queue(function() {
@@ -606,7 +653,8 @@ gorilla.ready(function(){
 				} as InformationStruct
 				
 				// hide the display till the images are loaded
-				$('.trial-array').hide();
+				// $('.trial-array').hide();
+				hideTrialArray();
 				$('.instruction').hide();
 				$('.timeout-feedback').hide();
 				$('.practice-feedback-correct').hide();
@@ -626,7 +674,8 @@ gorilla.ready(function(){
 	
 	SM.addState(State.FixationCross, {
 		onEnter: (machine: stateMachine.Machine, informationStruct: InformationStruct) => {
-			$('.trial-array').hide();
+			// $('.trial-array').hide();
+			hideTrialArray();
  			$('.instruction').hide();
  			$('.timeout-feedback').hide();
  			$('.practice-feedback-correct').hide();
@@ -657,7 +706,8 @@ gorilla.ready(function(){
 			
 			$('#gorilla')
 				.queue(function () {
-					$('.trial-array').show();
+					// $('.trial-array').show();
+					showTrialArray();
 					$('.instruction').show();
 					gorilla.refreshLayout();
 					gorilla.startStopwatch();
@@ -733,7 +783,8 @@ gorilla.ready(function(){
 				.delay(presentationTime)
 				.then(() => {
 					keypressAllowed = false;
-					$('.trial-array').hide();
+					// $('.trial-array').hide();
+					hideTrialArray();
 					$('.instruction').hide();
 					$('#gorilla')
 					.queue(function() {

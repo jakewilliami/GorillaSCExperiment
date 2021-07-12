@@ -91,3 +91,53 @@
 td {
     padding: 0 15px;
 }
+
+// grid stuff
+body {
+  margin: 0;
+}
+
+.Grid {
+    visibility: hidden;
+    display: grid;
+    height: 90vh;
+    width: 100vh;
+    grid-template-rows: repeat(1fr);
+    grid-template-columns: repeat(5, minmax(100px, 1fr)); /* The first value is the columns number */
+    grid-column-gap: 8px;
+    grid-row-gap: 8px;
+    padding-bottom: 10vh;
+    clear :both;
+}
+
+// .Cell {
+//   padding: 8px;
+// }
+.Cell {
+    visibility: hidden;
+    padding: 8px;
+    // width: 2cm;
+    // height: 2cm;
+    width: 106px;
+    height: 106px;
+    float: left;
+    // line-height: 2cm;
+    line-height: 106px;
+    text-align: center;
+}
+
+.CellImg {
+    visility: hidden;
+    display:inline-block;
+    vertical-align: middle;
+    // width: 1.8cm;
+    // height: 1.8cm;
+    width: 100px;
+    height: 100px;
+}
+
+.Cell::before {
+  content: '';
+  float: left;
+  padding-top: 100%;
+}
