@@ -18,14 +18,14 @@ const dStart: number = 1;
 const dEnd: number = 400;
 // define where numbered targets (per block) start and end
 const tStart: number = 1;
-const tEnd: number = 25;
+export const tEnd: number = 25;
 // define how many practice trials you have
 const pStart: number = 1;
-const pEnd: number = 6;
+export const pEnd: number = 6;
 
 // define number of images in the grid
 // i.e., out grid is 5x5 (25)
-export const nImagesInGrid: number = 25;
+// export const nImagesInGrid: number = 25;
 
 // define distractor and target prefix
 const distractorPrefix: string = 'D';
@@ -36,7 +36,7 @@ const lowFacePrefix: string = 'LF';
 const practicePrefix: string = 'P'; // P for Practice
 
 // define file extension
-const imageExt: string = 'png';
+export const imageExt: string = 'png';
 
 // define image conditions (defined by Lizzie)
 const conditionCodes: Object = {
@@ -54,10 +54,10 @@ const conditionCodes: Object = {
 // set modulo value
 export const moduloVal: number = Math.floor(1 / proportionOfDistractors);
 const numberOfTrialImages: number = tEnd - tStart + 1;
-const nTrialsPerBlock: number = Math.floor(numberOfTrialImages / proportionOfTargets);
+export const nTrialsPerBlock: number = Math.floor(numberOfTrialImages / proportionOfTargets);
 export const practiceModuloVal: number = Math.floor(1 / proportionOfPracticeDistractors);
 const numberOfPracticeImages: number = pEnd - pStart + 1;
-const nPracticeTrials: number = Math.floor(numberOfPracticeImages / proportionOfPracticeTargets);
+export const nPracticeTrials: number = Math.floor(numberOfPracticeImages / proportionOfPracticeTargets);
 
 // Chooses a random integer between lower and upper inclusive
 function randInt(lower: number, upper: number) {
@@ -136,6 +136,10 @@ export function constructBlockArray() {
     // return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
 }
 
+export function constructGridSizeDeterministicArray() {
+    return _constructNumberArray(1, nTrialsPerBlock);
+}
+
 // Constructs a numbered array of values from the first index of targets
 // to the last index of targets.  For example, if you had 25 target images,
 // then the array would be number from 0 to 24.
@@ -147,7 +151,7 @@ export function constructTargetArray() {
 // Constructs an array of indices of possible positions of the target image.
 // For example, if you had a 5x5 target array, constructs an array from
 // 0 to 24.
-export function constructTargetPositions() {
+export function constructTargetPositions(nImages) {
     return _constructNumberArray(0, (nImagesInGrid - 1))
 }
 
@@ -166,14 +170,22 @@ export function constructStimName(prefix: string, imageNumber: number) {
 }
 
 // Constructs a random array of n distractor images by name
-export function generateDistractorArray(n: number) {
+export function generateDistractorArray(n: number, nBlankPositions: number, blankImageSrc: string) {
+    /* choose random distractor numbers */
     var distractorNumbers: number[] = chooseNUniqueRandomWithinRange(n, dStart, dEnd);
-    var distractorImageNumbers: string[] = [];
+    var distractorImages: string[] = [];
+    
+    /* add distractor images to array */
     for (var i = 0; i < distractorNumbers.length; i++){
-        distractorImageNumbers.push(constructStimName(distractorPrefix, distractorNumbers[i]));
+        distractorImages.push(constructStimName(distractorPrefix, distractorNumbers[i]));
     }
-
-    return distractorImageNumbers;
+    /* Add blank images */
+    for (var i: number = 0; i < nBlankPositions; i++) {
+        distractorImages.push(blankImageSrc);
+    }
+    
+    /* return shuffled array */
+    return shuffle(distractorImages);
 }
 
 // Generates a random array of practice images by name.  This

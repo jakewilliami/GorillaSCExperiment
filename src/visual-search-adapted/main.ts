@@ -28,6 +28,9 @@ const consentFilename: string = "PareidoliaVisualSearch_InfoSheet.pdf"; // these
 const debriefFilename: string = "PareidoliaVisualSearch_Debriefing.pdf";
 const nColsInGrid: number = 9;
 const nRowsInGrid: number = 6;
+const possibleImagesInGrid: number[] = [16, 24, 36];
+const imageExt: string = utils.imageExt;
+console.log(imageExt);
 
 const exampleImages: Object = {
     'C': ['EC1.png', 'EC2.png', 'EC3.png'],
@@ -54,7 +57,7 @@ const nRowsInGrid: number = Math.floor(vh / imgContainerSizeInPixels);
 */
 
 const nGridPositions: number = nColsInGrid * nRowsInGrid;
-const nBlankPositions: number = nGridPositions - 25; // SHOULD USE utils.nImagesInGrid
+// const nBlankPositions: number = nGridPositions - 25; // SHOULD USE utils.nImagesInGrid
 const invisibleImageB64Encoded: string = 'R0lGODlhAQABAPAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
 const invisibleImage: string = 'data:image/gif;base64,' + invisibleImageB64Encoded;
 // const invisibleImage: string = '';
@@ -81,6 +84,7 @@ enum State {
 // our TrialStruct struct, which contains information
 // about a trial, to be passed to different states
 interface TrialStruct {
+	nImagesInGrid: number,
 	trialArray: string[],
 	humanReadableTrialArray: string[],
 	trialCondition: string,
@@ -99,8 +103,11 @@ interface TrialStruct {
 interface BlockStruct {
     targetType: string,
     blockArray: number[],
+	possibleGridSizes: number[],
     possibleTrialTargets: number[],
     possibleTrialPositions: number[],
+	possiblePresentGridSizes: number[],
+	possibleAbsentGridSizes: number[],
 }
 
 // An interface to contain the above two
@@ -111,12 +118,15 @@ interface InformationStruct {
 }
 
 interface PracticeTrialStruct {
+	nImagesInGrid: number,
 	practiceTargets: string[],
 	practiceArrays: number[],
 	practiceTarget: string,
 	isPresent: boolean,
 	practiceTargetPositions: number[],
 	practiceArray: string[]
+	possiblePresentGridSizes: number[],
+	possibleAbsentGridSizes: number[],
 }
 
 // Given an array of stimuli names, constructs an array
@@ -124,8 +134,11 @@ interface PracticeTrialStruct {
 function constructURLArray(stimArr: string[]) {
     var URLs: string[] = [];
 	for (var i = 0; i < stimArr.length; i++) {
-		const URL: string = gorilla.stimuliURL(stimArr[i]);
-		URLs.push(URL);
+		var URI: string = stimArr[i];
+		if (URI.endsWith(imageExt)) {
+			URI = gorilla.stimuliURL();
+		}
+		URLs.push(URI);
 	}
 	
 	return URLs;
@@ -156,14 +169,12 @@ function showTrialArray() {
 // if we are allowed to press the response key or not
 var keypressAllowed: boolean = false;
 
-// set trial number
+// set counters
 var trialNumber: number = 0;
-
-// set absent counter
 var absentCount: number = 0;
-
-// block counter and number of blocks for block title
 var blockCounter: number = 0;
+
+// number of blocks (for block.hbs' h1)
 const nBlocks: number = stimConditions.length;
 
 // need demographics to be global
@@ -174,6 +185,11 @@ var participantAge: number;
 // get keycode for response keys
 const presentResponseKeyCode: number = presentResponseKey.toLowerCase().charCodeAt(0);
 const absentResponseKeyCode: number = absentResponseKey.toLowerCase().charCodeAt(0);
+
+// calculate how many present versus absent trials there are.  Important when determining
+const nTargetsInBlock: number = utils.tEnd;
+const nTrialsInBlock: number = utils.nTrialsPerBlock;
+const nAbsentTrialsInBlock: number = nTrialsInBlock - nTargetsInBlock;
 
 // this is the main gorilla function call!
 gorilla.ready(function(){
@@ -289,6 +305,9 @@ gorilla.ready(function(){
 	SM.addState(State.PracticeInstructions, {
 	    onEnter: (machine: stateMachine.Machine) => {
 			var examples: string[] = constructURLArray(exampleImages['P']);
+			var possibleGridSizes: number[] = ;
+			
+			// populate the template
 			$('#gorilla').hide();
 	        gorilla.populateAndLoad($('#gorilla'), 'practice-instructions', {
 				example: gorilla.stimuliURL(utils.randVal(utils.generatePracticeArray())),
@@ -301,7 +320,9 @@ gorilla.ready(function(){
 						practiceTargets: utils.generatePracticeArray(),
 						practiceArrays: utils.constructPracticeArray(),
 						practiceTarget: '',
-						practiceTargetPositions: utils.constructTargetPositions(nImagesInGrid)
+						practiceTargetPositions: utils.constructTargetPositions(nGridPositions),
+						possiblePresentGridSizes: utils.constructGridSizeDeterministicArray(),
+						possibleAbsentGridSizes: utils.constructGridSizeDeterministicArray(),
 					} as PracticeTrialStruct
 					machine.transition(State.PracticeTrial, practiceStruct);
 				}) // end on click start button
@@ -314,6 +335,9 @@ gorilla.ready(function(){
 			// practiceStruct.practiceArray = [];
 	        keypressAllowed = false;
 			var trialArray: string[];
+			const gridSizeDeterministicNumber: number = utils.takeRand(practiceStruct.possibleGridSizes) % 3;
+			const nImagesInGrid: number = possibleImagesInGrid[gridSizeDeterministicNumber];
+			const nBlankPositions: number = nGridPositions - nImagesInGrid;
 	        
 			// if the practice trials are over, transition to post-practice instructions
 	        if (practiceStruct.practiceArrays.length === 0) {
@@ -326,7 +350,8 @@ gorilla.ready(function(){
 	            if (randTrial % utils.practiceModuloVal == 0) {
 	                // generate a list of 25 random distractors
 	                // Construct 25 random distractor urls
-	                const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid);
+					// utils.nPracticeTrials // number of trials overall
+	                const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid, nBlankPositions, invisibleImage);
 	                const randomDistractorURLs: string[] = constructURLArray(randomDistractors);
 	                
 	                // update metrics
@@ -336,7 +361,8 @@ gorilla.ready(function(){
 	            } else {
 	                // choose from list of targets and append to the 24 distractor images
 	                // Construct 24 random distractor urls
-	                const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid - 1);
+	                // const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid - 1);
+					const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid - 1, nBlankPositions, invisibleImage); // remove one for target image
 	                const randomURLs: string[] = constructURLArray(randomDistractors);
 
 	                // choose a random image from the possible image set.  This image cannot be repeated
@@ -354,11 +380,11 @@ gorilla.ready(function(){
 	            } // end if
 				
 				// var trialArrayWithBlanks: string[] = trialArray;
-				console.log(nBlankPositions)
-				for (var i: number = 0; i < nBlankPositions; i++) {
-				    trialArray.push(invisibleImage);
-				}
-				utils.shuffle(trialArray);
+				// console.log(nBlankPositions)
+				// for (var i: number = 0; i < nBlankPositions; i++) {
+				//     trialArray.push(invisibleImage);
+				// }
+				// utils.shuffle(trialArray);
 				practiceStruct.practiceArray = trialArray;
 				console.log("trial array: ");
 				console.log(trialArray)
