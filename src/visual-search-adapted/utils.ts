@@ -123,7 +123,7 @@ export function shuffle(array: any[]) {
 }
 
 // Constructs an array of numbers, ordered, between lower and upper inclusive
-function _constructNumberArray(lower: number, upper: number) {
+export function constructNumberArray(lower: number, upper: number) {
     var arr: number[] = [];
     for (var i = lower; i <= upper; i++) {
         arr.push(i)
@@ -135,18 +135,18 @@ function _constructNumberArray(lower: number, upper: number) {
 // These numbers are taken from the array and used to determine whether
 // to show a distractor or target image
 export function constructBlockArray() {
-    return _constructNumberArray(tStart, nTrialsPerBlock)
+    return constructNumberArray(tStart, nTrialsPerBlock)
     // return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
 }
 
 export function constructGridSizeDeterministicArray(gridType: string) {
     switch (gridType) {
         case 'practice':
-            return _constructNumberArray(1, Math.floor(nPracticeTrials / 2));
+            return constructNumberArray(1, Math.floor(nPracticeTrials / 2));
         case 'absent':
-            return _constructNumberArray(1, Math.floor(nTrialsPerBlock * proportionOfDistractors));
+            return constructNumberArray(1, Math.floor(nTrialsPerBlock * proportionOfDistractors));
         case 'present':
-            return _constructNumberArray(1, nTrialsPerBlock - Math.floor(nTrialsPerBlock * proportionOfDistractors));
+            return constructNumberArray(1, nTrialsPerBlock - Math.floor(nTrialsPerBlock * proportionOfDistractors));
     }
 }
 
@@ -162,7 +162,7 @@ export function constructTargetArray() {
     // }
     // return arr;
     // returns [0, 0, 0, 1, 1, 1, ..., 29, 29, 29]
-    return _constructNumberArray((tStart - 1), (tEnd - 1))
+    return constructNumberArray((tStart - 1), (tEnd - 1))
     // return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 }
 
@@ -170,14 +170,14 @@ export function constructTargetArray() {
 // For example, if you had a 5x5 target array, constructs an array from
 // 0 to 24.
 export function constructTargetPositions(nImages) {
-    return _constructNumberArray(0, (nImages - 1))
+    return constructNumberArray(0, (nImages - 1))
 }
 
 // Constructs an array of values frompStart to the number of practice trials.
 // These numbers are taken from the array and used to determine whether to
 // show a distractor or target for the practice trials.
 export function constructPracticeArray() {
-    return _constructNumberArray(pStart, nPracticeTrials)
+    return constructNumberArray(pStart, nPracticeTrials)
     // return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 }
 
@@ -185,6 +185,14 @@ export function constructPracticeArray() {
 // Uses imageExt defined globally (and privately) above.
 export function constructStimName(prefix: string, imageNumber: number) {
     return prefix + imageNumber + '.' + imageExt;
+}
+
+export function constructNameArray(arrayOfIndices: number[], prefix: string, suffix: string) {
+    var arrayOfNames: string[] = [];
+    for (var i: number = 0; i < arrayOfIndices.length; i++) {
+        arrayOfNames.push(prefix + arrayOfIndices[i] + suffix);
+    }
+    return arrayOfNames;
 }
 
 // Constructs a random array of n distractor images by name

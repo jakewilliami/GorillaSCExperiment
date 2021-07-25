@@ -25,12 +25,15 @@ const presentationTime: number = rawPresentationTime + beforeFixationDelay + fix
 const timeoutMessageLength: number = 1000;
 const practiceFeedbackMessageLength: number = 2000; // previously 1000
 const exampleImSize: string = "3cm"; // e.g., example images will be 3cm × 3cm
+const loadingMessage: string = 'Please wait while the experiment is loading.  This may take some time.';
 const consentFilename: string = "PareidoliaVisualSearch_InfoSheet.pdf"; // these are in the Resources tab
 const debriefFilename: string = "PareidoliaVisualSearch_Debriefing.pdf";
 const nColsInGrid: number = 8; // 9
 const nRowsInGrid: number = 8; // 6
 const possibleImagesInGrid: number[] = [16, 24, 36];
 const imageExt: string = 'png'; // utils.imageExt
+const nDistractors: number = 500;
+const nUniqueTargetsPerBlock: number = 30;
 
 const exampleImages: Object = {
 	'A': 'allTargetsExample.png', // all
@@ -63,6 +66,8 @@ const invisibleImage: string = 'data:image/gif;base64,' + invisibleImageB64Encod
 
 // possible states in state machine
 enum State {
+	PreloadArrays,
+	PreloadStimuli,
 	Consent,
 	RequestFullscreen,
 	Demographics,
@@ -187,10 +192,38 @@ var participantAge: number;
 const presentResponseKeyCode: number = presentResponseKey.toLowerCase().charCodeAt(0);
 const absentResponseKeyCode: number = absentResponseKey.toLowerCase().charCodeAt(0);
 
-// calculate how many present versus absent trials there are.  Important when determining
-const nTargetsInBlock: number = utils.tEnd;
-const nTrialsInBlock: number = utils.nTrialsPerBlock;
-const nAbsentTrialsInBlock: number = nTrialsInBlock - nTargetsInBlock;
+//// INITIALISE URL LISTS BEFORE TASK BEGINS
+// set number array for main target variables
+var allFacesAsNumbers: number[];
+var allObjectsAsNumbers: number[];
+var allPareidoliaAsNumbers: number[];
+
+// construct array of T2 images
+var allFaceNames: string[];
+var allObjectNames: string[];
+var allPareidoliaNames: string[];
+
+// initialise number array for main target variables as global
+var allFaceURLs: string[];
+var allObjectURLs: string[];
+var allPareidoliaURLs: string[];
+var allPracticeTargetURLs: string[];
+
+// initialise URL array of all distractors as global
+var allDistractorURLs: string[];
+
+// set URL array of all distractors
+var allDistractorNumbers: number[];
+var allDistractorNames: string[];
+
+// construct a number array to help determine which type of watch to display
+var watchDisplayTypes: number[];
+
+// all practice images
+var practiceDigitalURLs: string[];
+var practiceAnalogueURLs: string[];
+var practiceT1URLs: string[];
+var practiceT2URLs: string[];
 
 // this is the main gorilla function call!
 gorilla.ready(function(){
@@ -199,6 +232,82 @@ gorilla.ready(function(){
 
 	// initialise state machine
 	var SM = new stateMachine.StateMachine();
+
+	SM.addState(State.PreloadArrays, {
+    onEnter: (machine: stateMachine.Machine) => {
+      gorilla.populateAndLoad('#gorilla', 'loading', {
+		  	loadingMessage: loadingMessage,
+	  }, () => {
+        	//// INITIALISE URL LISTS BEFORE TASK BEGINS
+        	// set number array for main target variables
+        	allFacesAsNumbers = utils.constructNumberArray(1, nUniqueTargetsPerBlock);
+        	allObjectsAsNumbers = utils.constructNumberArray(1, nUniqueTargetsPerBlock);
+        	allPareidoliaAsNumbers = utils.constructNumberArray(1, nUniqueTargetsPerBlock);
+        	// construct array of T2 images
+        	allFaceNames = utils.constructNameArray(allFacesAsNumbers, 'F', '.' + imageExt);
+        	allObjectNames = utils.constructNameArray(allObjectsAsNumbers, 'O', '.' + imageExt);
+        	allPareidoliaNames = utils.constructNameArray(allPareidoliaAsNumbers, 'P', '.' + imageExt);
+        	// convert to URLs
+        	allFaceURLs = constructURLArray(allFaceNames);
+        	allObjectURLs = constructURLArray(allObjectNames);
+        	allPareidoliaURLs = constructURLArray(allPareidoliaNames);
+
+        	// set URL array of all distractors
+        	allDistractorNumbers = utils.constructNumberArray(1, nDistractors);
+        	allDistractorNames = utils.constructNameArray(allDistractorNumbers, 'D', '.' + imageExt)
+        	allDistractorURLs = constructURLArray(allDistractorNames);
+
+			// get practice targets
+			// practiceDigitalURLs = constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, 3), 'Pdigital', '.' + imageExt));
+			// practiceAnalogueURLs = constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, 3), 'Panalogue', '.' + imageExt));
+			// practiceT1URLs = [...practiceDigitalURLs, ...practiceAnalogueURLs];
+			// practiceT2URLs = constructURLArray(utils.generatePracticeArray('Bird'));
+			// allPracticeTargetURLs = [
+			// 	...practiceT1URLs,
+			// 	...practiceT2URLs
+			// ];
+
+			// add example target arrays as URLs to object
+			// allExampleTargets['watch'] = gorilla.stimuliURL('watchExampleTargets.png');
+			// allExampleTargets['practice'] = gorilla.stimuliURL('birdExampleTargets.png');
+			// allExampleTargets['F'] = gorilla.stimuliURL('faceExampleTargets.png');
+			// allExampleTargets['P'] = gorilla.stimuliURL('pareidoliaExampleTargets.png');
+			// allExampleTargets['O'] = gorilla.stimuliURL('flowerExampleTargets.png');
+			// allExampleTargets['all'] = gorilla.stimuliURL('allTargetsExample.png')
+
+          // put all image URLs into a single vector for preloading
+          const allImageURLs: string[] = [
+              ...allDistractorURLs,
+              // ...allDigitalWatchURLs,
+              // ...allAnalogueWatchURLs,
+              ...allFaceURLs,
+              ...allPareidoliaURLs,
+              ...allObjectURLs,
+			  // ...allPracticeTargetURLs,
+			  // ...Object.keys(allExampleTargets).map(k => allExampleTargets[k]) // URLs from example targets.  Object.values(...) is not stabalised
+          ];
+
+          console.log("There are " + allImageURLs.length + " images preloaded")
+
+          machine.transition(State.PreloadStimuli, allImageURLs);
+      });
+    } // end onEnter
+  }) // end addState PreloadStimuli
+
+	SM.addState(State.PreloadStimuli, {
+		onEnter: (machine: stateMachine.Machine, allImageURLs: string[]) => {
+			gorilla.populateAndLoad('#gorilla', 'allstim', {
+				loadingMessage: loadingMessage,
+				stimulusarray: allImageURLs,
+			},() => {
+				// document.addEventListener("DOMContentLoaded", () => {
+				// $(window).load(function() {
+				// window.addEventListener('load', (event) => {
+					machine.transition(State.Consent);
+				// });
+			})
+		}, // on onEnter
+	}) // end addState PreloadStimuli
 
 	// start at trial one
 	// var trial_number: number = gorilla.retrieve('trial_number', 1, true);
@@ -938,6 +1047,7 @@ gorilla.ready(function(){
 
 	// calling this function starts gorilla and the task as a whole
 	gorilla.run(function () {
-        SM.start(State.RequestFullscreen);
+        // SM.start(State.RequestFullscreen);
+				SM.start(State.PreloadArrays);
 	}) // end gorilla run
 }) // end gorilla ready
