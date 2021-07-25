@@ -315,8 +315,8 @@ gorilla.ready(function(){
 						practiceArrays: utils.constructPracticeArray(),
 						practiceTarget: '',
 						practiceTargetPositions: utils.constructTargetPositions(nGridPositions),
-						possiblePresentGridSizes: utils.constructGridSizeDeterministicArray(),
-						possibleAbsentGridSizes: utils.constructGridSizeDeterministicArray(),
+						possiblePresentGridSizes: utils.constructGridSizeDeterministicArray('practice'),
+						possibleAbsentGridSizes: utils.constructGridSizeDeterministicArray('practice'),
 					} as PracticeTrialStruct
 					machine.transition(State.PracticeTrial, practiceStruct);
 				}) // end on click start button
@@ -610,8 +610,8 @@ gorilla.ready(function(){
 				}
 				var possibleTrialPositions: number[] = utils.constructTargetPositions(nGridPositions);
 				// NEEDS TO BE DYNAMIC FOR PRESENT TO ABSENT RATIO
-				var possibleAbsentGridSizes: number[] = utils.constructGridSizeDeterministicArray();
-				var possiblePresentGridSizes: number[] = utils.constructGridSizeDeterministicArray();
+				var possibleAbsentGridSizes: number[] = utils.constructGridSizeDeterministicArray('absent');
+				var possiblePresentGridSizes: number[] = utils.constructGridSizeDeterministicArray('present');
 
 				let blockStruct = {
 					targetType: targetType,

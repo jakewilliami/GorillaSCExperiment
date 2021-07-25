@@ -18,10 +18,13 @@ const dStart: number = 1;
 const dEnd: number = 500; // previously 400
 // define where numbered targets (per block) start and end
 export const tStart: number = 1;
-export const tEnd: number = 25;
+export const tEnd: number = 30; // previously 25
+// const tUniqueEnd: number = 30;
 // define how many practice trials you have
 const pStart: number = 1;
 export const pEnd: number = 6;
+
+const nGridConditions: number = 3;
 
 // define number of images in the grid
 // i.e., out grid is 5x5 (25)
@@ -43,8 +46,6 @@ export const imageExt: string = 'png';
 const conditionCodes: Object = {
     'F': 1,
     'C': 2,
-    // 'LF': 3,
-    // 'HF': 4,
     'P': 3,
 }
 
@@ -55,7 +56,7 @@ const conditionCodes: Object = {
 
 // set modulo value
 export const moduloVal: number = Math.floor(1 / proportionOfDistractors);
-const numberOfTrialImages: number = tEnd - tStart + 1;
+const numberOfTrialImages: number = (tEnd - tStart + 1) * nGridConditions;
 export const nTrialsPerBlock: number = Math.floor(numberOfTrialImages / proportionOfTargets);
 export const practiceModuloVal: number = Math.floor(1 / proportionOfPracticeDistractors);
 const numberOfPracticeImages: number = pEnd - pStart + 1;
@@ -138,14 +139,29 @@ export function constructBlockArray() {
     // return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
 }
 
-export function constructGridSizeDeterministicArray() {
-    return _constructNumberArray(1, nTrialsPerBlock / 2); // nTrialsPerBlock
+export function constructGridSizeDeterministicArray(gridType: string) {
+    switch (gridType) {
+        case 'practice':
+            return _constructNumberArray(1, Math.floor(nPracticeTrials / 2));
+        case 'absent':
+            return _constructNumberArray(1, Math.floor(nTrialsPerBlock * proportionOfDistractors));
+        case 'present':
+            return _constructNumberArray(1, nTrialsPerBlock - Math.floor(nTrialsPerBlock * proportionOfDistractors));
+    }
 }
 
 // Constructs a numbered array of values from the first index of targets
 // to the last index of targets.  For example, if you had 25 target images,
 // then the array would be number from 0 to 24.
 export function constructTargetArray() {
+    // arr: number[] = [];
+    // for (var i: number = 0; i < tUniqueEnd; i++) {
+    //     for (var j: number = 0; j < 3; j++) {
+    //         arr.push(i);
+    //     }
+    // }
+    // return arr;
+    // returns [0, 0, 0, 1, 1, 1, ..., 29, 29, 29]
     return _constructNumberArray((tStart - 1), (tEnd - 1))
     // return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 }
