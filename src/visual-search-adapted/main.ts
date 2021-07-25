@@ -600,7 +600,13 @@ gorilla.ready(function(){
 			    // take it *from* the array, and that value is hence not repeating.
 				// this is used to determine whether we have an absent or present trial
 				var blockArray: number[] = utils.constructBlockArray();
-				var possibleTrialTargets: number[] = utils.constructTargetArray();
+				// var possibleTrialTargets: number[] = utils.constructTargetArray();
+				// each target image needs to appear once per image size condition (i.e., once in a 16 image condition, once in a 36 image condition, and once in a 25 image condition)
+				var possibleTrialTargetObject: Object = {}
+				for (var i: number = 0; i < possibleImagesInGrid.length; i++) {
+					const nImagesInGrid: number = possibleImagesInGrid[i];
+					possibleTrialTargetObject[nImagesInGrid] = utils.constructTargetArray();
+				}
 				var possibleTrialPositions: number[] = utils.constructTargetPositions(nGridPositions);
 				// NEEDS TO BE DYNAMIC FOR PRESENT TO ABSENT RATIO
 				var possibleAbsentGridSizes: number[] = utils.constructGridSizeDeterministicArray();
