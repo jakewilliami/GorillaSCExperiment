@@ -17,7 +17,7 @@ const proportionOfPracticeTargets: number = 1 - proportionOfPracticeDistractors;
 const dStart: number = 1;
 const dEnd: number = 400;
 // define where numbered targets (per block) start and end
-const tStart: number = 1;
+export const tStart: number = 1;
 export const tEnd: number = 25;
 // define how many practice trials you have
 const pStart: number = 1;
@@ -60,7 +60,7 @@ const numberOfPracticeImages: number = pEnd - pStart + 1;
 export const nPracticeTrials: number = Math.floor(numberOfPracticeImages / proportionOfPracticeTargets);
 
 // Chooses a random integer between lower and upper inclusive
-function randInt(lower: number, upper: number) {
+export function randInt(lower: number, upper: number) {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower;
 }
 
@@ -137,7 +137,7 @@ export function constructBlockArray() {
 }
 
 export function constructGridSizeDeterministicArray() {
-    return _constructNumberArray(1, nTrialsPerBlock);
+    return _constructNumberArray(1, nTrialsPerBlock / 2); // nTrialsPerBlock
 }
 
 // Constructs a numbered array of values from the first index of targets
@@ -152,7 +152,7 @@ export function constructTargetArray() {
 // For example, if you had a 5x5 target array, constructs an array from
 // 0 to 24.
 export function constructTargetPositions(nImages) {
-    return _constructNumberArray(0, (nImagesInGrid - 1))
+    return _constructNumberArray(0, (nImages - 1))
 }
 
 // Constructs an array of values frompStart to the number of practice trials.

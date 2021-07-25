@@ -26,10 +26,10 @@ const practiceFeedbackMessageLength: number = 1000;
 const exampleImSize: string = "3cm"; // e.g., example images will be 3cm × 3cm
 const consentFilename: string = "PareidoliaVisualSearch_InfoSheet.pdf"; // these are in the Resources tab
 const debriefFilename: string = "PareidoliaVisualSearch_Debriefing.pdf";
-const nColsInGrid: number = 9;
-const nRowsInGrid: number = 6;
+const nColsInGrid: number = 8; // 9
+const nRowsInGrid: number = 8; // 6
 const possibleImagesInGrid: number[] = [16, 24, 36];
-const imageExt: string = utils.imageExt;
+const imageExt: string = 'png'; // utils.imageExt
 console.log(imageExt);
 
 const exampleImages: Object = {
@@ -135,8 +135,9 @@ function constructURLArray(stimArr: string[]) {
     var URLs: string[] = [];
 	for (var i = 0; i < stimArr.length; i++) {
 		var URI: string = stimArr[i];
-		if (URI.endsWith(imageExt)) {
-			URI = gorilla.stimuliURL();
+		// if (URI.endsWith(imageExt, imageExt.length)) {
+		if (URI.split('.').pop() == imageExt) {
+			URI = gorilla.stimuliURL(URI);
 		}
 		URLs.push(URI);
 	}
@@ -305,7 +306,7 @@ gorilla.ready(function(){
 	SM.addState(State.PracticeInstructions, {
 	    onEnter: (machine: stateMachine.Machine) => {
 			var examples: string[] = constructURLArray(exampleImages['P']);
-			var possibleGridSizes: number[] = ;
+			// var possibleGridSizes: number[] = ;
 			
 			// populate the template
 			$('#gorilla').hide();
@@ -335,10 +336,13 @@ gorilla.ready(function(){
 			// practiceStruct.practiceArray = [];
 	        keypressAllowed = false;
 			var trialArray: string[];
-			const gridSizeDeterministicNumber: number = utils.takeRand(practiceStruct.possibleGridSizes) % 3;
-			const nImagesInGrid: number = possibleImagesInGrid[gridSizeDeterministicNumber];
-			const nBlankPositions: number = nGridPositions - nImagesInGrid;
-	        
+			// const gridSizeDeterministicNumber: number = utils.takeRand(practiceStruct.possibleGridSizes) % 3;
+			// const nImagesInGrid: number = possibleImagesInGrid[gridSizeDeterministicNumber];
+			// const nBlankPositions: number = nGridPositions - nImagesInGrid;
+			// const gridSizeDeterministicNumber: number;
+			// const nImagesInGrid: number;
+			// const nBlankPositions: number;
+			
 			// if the practice trials are over, transition to post-practice instructions
 	        if (practiceStruct.practiceArrays.length === 0) {
 	            machine.transition(State.AfterPracticeInstructions);
@@ -351,8 +355,13 @@ gorilla.ready(function(){
 	                // generate a list of 25 random distractors
 	                // Construct 25 random distractor urls
 					// utils.nPracticeTrials // number of trials overall
+					const gridSizeDeterministicNumber: number = utils.takeRand(practiceStruct.possibleAbsentGridSizes) % 3;
+					const nImagesInGrid: number = possibleImagesInGrid[gridSizeDeterministicNumber];
+					const nBlankPositions: number = nGridPositions - nImagesInGrid;
 	                const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid, nBlankPositions, invisibleImage);
+					// console.log("THESE ARE THE DISTRACTORS: " + randomDistractors)
 	                const randomDistractorURLs: string[] = constructURLArray(randomDistractors);
+					console.log("THESE ARE THE DISTRACTORS: " + randomDistractorURLs)
 	                
 	                // update metrics
 	                practiceStruct.isPresent = false;
@@ -362,6 +371,9 @@ gorilla.ready(function(){
 	                // choose from list of targets and append to the 24 distractor images
 	                // Construct 24 random distractor urls
 	                // const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid - 1);
+					const gridSizeDeterministicNumber: number = utils.takeRand(practiceStruct.possiblePresentGridSizes) % 3;
+					const nImagesInGrid: number = possibleImagesInGrid[gridSizeDeterministicNumber];
+					const nBlankPositions: number = nGridPositions - nImagesInGrid;
 					const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid - 1, nBlankPositions, invisibleImage); // remove one for target image
 	                const randomURLs: string[] = constructURLArray(randomDistractors);
 
@@ -593,15 +605,21 @@ gorilla.ready(function(){
 		        const targetType: string = utils.takeRand(stimConditions);
 				// here we define arrays of values so that we can choose a certain value,
 			    // take it *from* the array, and that value is hence not repeating.
+				// this is used to determine whether we have an absent or present trial
 				var blockArray: number[] = utils.constructBlockArray();
 				var possibleTrialTargets: number[] = utils.constructTargetArray();
-				var possibleTrialPositions: number[] = utils.constructTargetPositions();
+				var possibleTrialPositions: number[] = utils.constructTargetPositions(nGridPositions);
+				// NEEDS TO BE DYNAMIC FOR PRESENT TO ABSENT RATIO
+				var possibleAbsentGridSizes: number[] = utils.constructGridSizeDeterministicArray();
+				var possiblePresentGridSizes: number[] = utils.constructGridSizeDeterministicArray();
 		        
 				let blockStruct = {
 					targetType: targetType,
 					blockArray: blockArray,
 					possibleTrialTargets: possibleTrialTargets,
-					possibleTrialPositions: possibleTrialPositions
+					possibleTrialPositions: possibleTrialPositions,
+					possiblePresentGridSizes: possiblePresentGridSizes,
+					possibleAbsentGridSizes: possibleAbsentGridSizes,
 				} as BlockStruct;
 				
 				// populate our trial screen
@@ -632,6 +650,7 @@ gorilla.ready(function(){
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
 			// ensure no keypress allowed
 			keypressAllowed = false;
+			// var trialArray: string[];
 			
 			// stop trial if we have finished all blocks!
 			if (blockStruct.blockArray.length === 0) {
@@ -668,8 +687,11 @@ gorilla.ready(function(){
 				if (randTrial % utils.moduloVal == 0) {
 				    // increment absent counter
 				    absentCount++;
+					const gridSizeDeterministicNumber: number = utils.takeRand(blockStruct.possibleAbsentGridSizes) % 3;
+					const nImagesInGrid: number = possibleImagesInGrid[gridSizeDeterministicNumber];
+					const nBlankPositions: number = nGridPositions - nImagesInGrid;
 					// Construct 25 random distractor urls
-					const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid);
+					const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid, nBlankPositions, invisibleImage);
 					const randomDistractorURLs: string[] = constructURLArray(randomDistractors);
 
 					// update trialArray with array of distractors
@@ -681,17 +703,22 @@ gorilla.ready(function(){
 					trialStruct.isPresentString = 'absent';
 					trialStruct.targetImg = 'absent' + absentCount;
 				} else {
+					const gridSizeDeterministicNumber: number = utils.takeRand(blockStruct.possiblePresentGridSizes) % 3;
+					const nImagesInGrid: number = possibleImagesInGrid[gridSizeDeterministicNumber];
+					const nBlankPositions: number = nGridPositions - nImagesInGrid;
 					// Construct 24 random distractor urls
-					const randomDistractors: string[] = utils.generateDistractorArray(utils.nImagesInGrid - 1);
+					const randomDistractors: string[] = utils.generateDistractorArray(nImagesInGrid - 1, nBlankPositions, invisibleImage); // remove one for target image
 					const randomURLs: string[] = constructURLArray(randomDistractors);
 
 					// choose a random image from the possible image set.  This image cannot be repeated
 					const randomImageNumber: number = utils.takeRand(blockStruct.possibleTrialTargets) + 1; // add one because array is from 0:24
+					
 					const conditionImage: string = utils.constructStimName(blockStruct.targetType, randomImageNumber);
 					const conditionImageURL: string = gorilla.stimuliURL(conditionImage);
 					
 					// insert image at random position.  This position cannot be repeated
-					const randPosition: number = utils.takeRand(blockStruct.possibleTrialPositions);
+					// const randPosition: number = utils.takeRand(blockStruct.possibleTrialPositions);
+					const randPosition: number = utils.randInt(0, nGridPositions - 1) // we don't care about repeating target positions anymore because the array is presumable sufficiently large
 					utils.insert(randomURLs, randPosition, conditionImageURL)
 					
 					// update metrics
