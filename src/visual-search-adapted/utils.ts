@@ -15,7 +15,7 @@ const proportionOfPracticeTargets: number = 1 - proportionOfPracticeDistractors;
 
 // define where numbered distractors start and end
 const dStart: number = 1;
-const dEnd: number = 400;
+const dEnd: number = 500; // previously 400
 // define where numbered targets (per block) start and end
 export const tStart: number = 1;
 export const tEnd: number = 25;
@@ -29,11 +29,12 @@ export const pEnd: number = 6;
 
 // define distractor and target prefix
 const distractorPrefix: string = 'D';
-const carPrefix: string = 'C';
+const flowerPrefix: string = 'O'; // O for Object; previously cars
 const facePrefix: string = 'F';
-const highFacePrefix: string = 'HF';
-const lowFacePrefix: string = 'LF';
-const practicePrefix: string = 'P'; // P for Practice
+// const highFacePrefix: string = 'HF';
+// const lowFacePrefix: string = 'LF';
+const pareidoliaPrefix: string = 'P';
+const practicePrefix: string = 'B'; // practice; B for Bird
 
 // define file extension
 export const imageExt: string = 'png';
@@ -42,8 +43,9 @@ export const imageExt: string = 'png';
 const conditionCodes: Object = {
     'F': 1,
     'C': 2,
-    'LF': 3,
-    'HF': 4,
+    // 'LF': 3,
+    // 'HF': 4,
+    'P': 3,
 }
 
 /*--------------------------------------*/
@@ -174,7 +176,7 @@ export function generateDistractorArray(n: number, nBlankPositions: number, blan
     /* choose random distractor numbers */
     var distractorNumbers: number[] = chooseNUniqueRandomWithinRange(n, dStart, dEnd);
     var distractorImages: string[] = [];
-    
+
     /* add distractor images to array */
     for (var i = 0; i < distractorNumbers.length; i++){
         distractorImages.push(constructStimName(distractorPrefix, distractorNumbers[i]));
@@ -183,7 +185,7 @@ export function generateDistractorArray(n: number, nBlankPositions: number, blan
     for (var i: number = 0; i < nBlankPositions; i++) {
         distractorImages.push(blankImageSrc);
     }
-    
+
     /* return shuffled array */
     return shuffle(distractorImages);
 }
@@ -199,7 +201,7 @@ export function generatePracticeArray() {
     for (var i = 0; i < practiceNumbers.length; i++) {
         practiceImages.push(constructStimName(practicePrefix, practiceNumbers[i]));
     }
-    
+
     return practiceImages;
 }
 
@@ -221,12 +223,10 @@ export function encodeTargetType(condition: string) {
     switch (condition) {
         case 'F':
             return 'face';
-        case 'C':
-            return 'car';
-        case 'LF':
-            return 'low';
-        case 'HF':
-            return 'high';
+        case 'O':
+            return 'flower';
+        case 'P':
+            return 'pareidolia';
     }
     // should never get here
     return null;
@@ -238,10 +238,9 @@ export function encodeTargetTypeHR(condition: string) {
     switch (condition) {
         case 'F':
             return 'faces';
-        case 'C':
-            return 'cars';
-        case 'LF':
-        case 'HF':
+        case 'O':
+            return 'flowers';
+        case 'P':
             return 'objects that looks like faces';
     }
     // should never get here

@@ -103,7 +103,8 @@ interface BlockStruct {
     targetType: string,
     blockArray: number[],
 	possibleGridSizes: number[],
-    possibleTrialTargets: number[],
+    // possibleTrialTargets: number[],
+		possibleTrialTargets: Object,
     possibleTrialPositions: number[],
 	possiblePresentGridSizes: number[],
 	possibleAbsentGridSizes: number[],
@@ -140,7 +141,7 @@ function constructURLArray(stimArr: string[]) {
 		}
 		URLs.push(URI);
 	}
-	
+
 	return URLs;
 }
 
@@ -195,10 +196,10 @@ const nAbsentTrialsInBlock: number = nTrialsInBlock - nTargetsInBlock;
 gorilla.ready(function(){
     // initialise stopwatch
     gorilla.initialiseTimer();
-	    
+
 	// initialise state machine
 	var SM = new stateMachine.StateMachine();
-	
+
 	// start at trial one
 	// var trial_number: number = gorilla.retrieve('trial_number', 1, true);
 
@@ -216,7 +217,7 @@ gorilla.ready(function(){
 			}) // end on keypress
 		} // end onEnter
 	}) // end addState State.Consent
-	
+
 	SM.addState(State.RequestFullscreen, {
 		onEnter: (machine: stateMachine.Machine) => {
 			gorilla.populate('#gorilla', 'request-fs', {})
@@ -235,24 +236,24 @@ gorilla.ready(function(){
 			}) // end on keypress
 		} // end onEnter
 	}) // end addState State.Consent
-	
+
 	SM.addState(State.Demographics, {
 		onEnter: (machine: stateMachine.Machine) => {
 			// need to turn off keypress handler for the time being
 			// so that the demographics page doesn't unexpectedly
 			// update when we write out name &c.
 			$(document).off('keypress');
-			
+
 			$('.incomplete-message').hide();
 			$('.invalid-age').hide();
 			gorilla.refreshLayout();
 			gorilla.populate('#gorilla', 'demographics', {})
-				
+
 			$('#next-button').on('click', (event: JQueryEventObject) => {
 				participantGender = (<HTMLInputElement>document.getElementById("gender")).value;
 				participantID = (<HTMLInputElement>document.getElementById("PID")).value;
 				var rawAge = (<HTMLInputElement>document.getElementById("age")).value;
-				
+
 				if (participantID == "" || rawAge == "" || participantGender === "undef") {
 					$('.invalid-age').hide();
 					$('.incomplete-message').show();
@@ -294,12 +295,12 @@ gorilla.ready(function(){
 	        }); // end populate and load
 	    } // end onEnter
 	}) // end addState Instructions
-	
+
 	SM.addState(State.PracticeInstructions, {
 	    onEnter: (machine: stateMachine.Machine) => {
 			var examples: string[] = constructURLArray(exampleImages['P']);
 			// var possibleGridSizes: number[] = ;
-			
+
 			// populate the template
 			$('#gorilla').hide();
 	        gorilla.populateAndLoad($('#gorilla'), 'practice-instructions', {
@@ -322,7 +323,7 @@ gorilla.ready(function(){
 			}); // end populateAndLoad
 	    } // end onEnter
 	}) // end addState PracticeInstructions
-	
+
 	SM.addState(State.PracticeTrial, {
 	    onEnter: (machine: stateMachine.Machine, practiceStruct: PracticeTrialStruct) => {
 			// practiceStruct.practiceArray = [];
@@ -334,14 +335,14 @@ gorilla.ready(function(){
 			// const gridSizeDeterministicNumber: number;
 			// const nImagesInGrid: number;
 			// const nBlankPositions: number;
-			
+
 			// if the practice trials are over, transition to post-practice instructions
 	        if (practiceStruct.practiceArrays.length === 0) {
 	            machine.transition(State.AfterPracticeInstructions);
 	        } else {
 	            var trialArray: string[] = [];
 	            const randTrial: number = utils.takeRand(practiceStruct.practiceArrays);
-				
+
 	            // hide so that all images are generated at the same time
 	            if (randTrial % utils.practiceModuloVal == 0) {
 	                // generate a list of 25 random distractors
@@ -354,7 +355,7 @@ gorilla.ready(function(){
 					// console.log("THESE ARE THE DISTRACTORS: " + randomDistractors)
 	                const randomDistractorURLs: string[] = constructURLArray(randomDistractors);
 					console.log("THESE ARE THE DISTRACTORS: " + randomDistractorURLs)
-	                
+
 	                // update metrics
 	                practiceStruct.isPresent = false;
 	                // practiceStruct.practiceArray = randomDistractorURLs;
@@ -372,17 +373,17 @@ gorilla.ready(function(){
 	                // choose a random image from the possible image set.  This image cannot be repeated
 	                const practiceImage: string = utils.takeRand(practiceStruct.practiceTargets);
 	                const conditionImageURL: string = gorilla.stimuliURL(practiceImage);
-	                
+
 	                // insert image at random position.  This position cannot be repeated
 	                const randPosition: number = utils.takeRand(practiceStruct.practiceTargetPositions);
 	                utils.insert(randomURLs, randPosition, conditionImageURL)
-	                
+
 					// update metrics
 	                practiceStruct.isPresent = true;
 	                // practiceStruct.practiceArray = randomURLs;
 					trialArray = randomURLs;
 	            } // end if
-				
+
 				// var trialArrayWithBlanks: string[] = trialArray;
 				// console.log(nBlankPositions)
 				// for (var i: number = 0; i < nBlankPositions; i++) {
@@ -392,8 +393,8 @@ gorilla.ready(function(){
 				practiceStruct.practiceArray = trialArray;
 				console.log("trial array: ");
 				console.log(trialArray)
-				
-	            
+
+
 	            // hide the display till the images are loaded
 	            // $('.Grid').hide();
 				// $('.Cell').hide();
@@ -405,7 +406,7 @@ gorilla.ready(function(){
 	            $('.timeout-feedback').hide();
 	            $('.practice-feedback-correct').hide();
 	            $('.practice-feedback-incorrect').hide();
-	            
+
 	            // populate our trial screen
 	            gorilla.populateAndLoad($('#gorilla'), 'trial', {
 					ncols: nColsInGrid,
@@ -433,7 +434,7 @@ gorilla.ready(function(){
 	        $('.timeout-feedback').hide();
 	        $('.practice-feedback-correct').hide();
 	        $('.practice-feedback-incorrect').hide();
-	        
+
 	        $('#gorilla')
 	            .delay(beforeFixationDelay)
 	            .queue(function () {
@@ -448,7 +449,7 @@ gorilla.ready(function(){
 	                $(this).dequeue();
 	            }) // end queue for '#gorilla'
 	            .delay(afterFixationDelay);
-			
+
 	        machine.transition(State.PracticeImageArray, practiceStruct);
 	    }, // end onEnter
 	}) // end addState for FixationCross
@@ -457,7 +458,7 @@ gorilla.ready(function(){
 	    onEnter: (machine: stateMachine.Machine, practiceStruct: PracticeTrialStruct) => {
 	        // initialise sequence for timeout
 			var stateTimer: gorilla.GorillaTimerSequence;
-	        
+
 	        $('#gorilla')
 	            .queue(function () {
 	                // $('.Grid').show();
@@ -473,22 +474,22 @@ gorilla.ready(function(){
 	                keypressAllowed = true;
 	                $(this).dequeue();
 	            }) // end queue for '#gorilla'
-	        
+
 	        $(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
 	            // exit the keypress event if we are not allowed to!
 	            if (!keypressAllowed) return;
-	            
+
 	            // get the key that was pressed
 	            const e = event.which;
-	            
+
 	            // enter state where it can't enter any more keys
 	            if (e === presentResponseKeyCode || e === absentResponseKeyCode) {
 	                // stop timout timer!
 	                stateTimer.cancel();
-	                
+
 	                // update keypress as we have just pressed the key!
 	                keypressAllowed = false;
-	                
+
 	                // check if key press was correct
 	                if ((practiceStruct.isPresent && e === presentResponseKeyCode) || (!practiceStruct.isPresent && e === absentResponseKeyCode)) {
 	                   // correct!
@@ -531,7 +532,7 @@ gorilla.ready(function(){
 	                        $(this).dequeue();
 	                    })
 	                }
-	                
+
 	                // move on transition
 	                $('#gorilla')
 	                    .queue(function () {
@@ -540,7 +541,7 @@ gorilla.ready(function(){
 	                    }); // end queue for '#gorilla'
 	            } // end checking if key pressed is K or L
 	        }) // end response keypress
-	        
+
 			// Timeout if took too long!
 	        stateTimer = gorilla.addTimerSequence()
 	            .delay(presentationTime)
@@ -561,7 +562,7 @@ gorilla.ready(function(){
 	                    gorilla.refreshLayout();
 	                    $(this).dequeue();
 	                })
-	                
+
 	                $('#gorilla')
 	                    .queue(function () {
 	                        machine.transition(State.PracticeTrial, practiceStruct);
@@ -571,7 +572,7 @@ gorilla.ready(function(){
 	            .run();
 	    }, // end onEnter
 	}) // end addState PracticeImageArray
-	
+
 	SM.addState(State.AfterPracticeInstructions, {
 	    onEnter: (machine: stateMachine.Machine) => {
 			// populate our trial screen
@@ -583,7 +584,7 @@ gorilla.ready(function(){
 				}) // end populate and load
 	    } // end onEnter
 	}) // end addState AfterPracticeInstructions
-	
+
 	SM.addState(State.Block, {
 	    onEnter: (machine: stateMachine.Machine) => {
 			// upon entering the block after the final trial condition
@@ -602,16 +603,16 @@ gorilla.ready(function(){
 				var blockArray: number[] = utils.constructBlockArray();
 				// var possibleTrialTargets: number[] = utils.constructTargetArray();
 				// each target image needs to appear once per image size condition (i.e., once in a 16 image condition, once in a 36 image condition, and once in a 25 image condition)
-				var possibleTrialTargetObject: Object = {}
+				var possibleTrialTargets: Object = {}
 				for (var i: number = 0; i < possibleImagesInGrid.length; i++) {
 					const nImagesInGrid: number = possibleImagesInGrid[i];
-					possibleTrialTargetObject[nImagesInGrid] = utils.constructTargetArray();
+					possibleTrialTargets[nImagesInGrid] = utils.constructTargetArray();
 				}
 				var possibleTrialPositions: number[] = utils.constructTargetPositions(nGridPositions);
 				// NEEDS TO BE DYNAMIC FOR PRESENT TO ABSENT RATIO
 				var possibleAbsentGridSizes: number[] = utils.constructGridSizeDeterministicArray();
 				var possiblePresentGridSizes: number[] = utils.constructGridSizeDeterministicArray();
-		        
+
 				let blockStruct = {
 					targetType: targetType,
 					blockArray: blockArray,
@@ -620,7 +621,7 @@ gorilla.ready(function(){
 					possiblePresentGridSizes: possiblePresentGridSizes,
 					possibleAbsentGridSizes: possibleAbsentGridSizes,
 				} as BlockStruct;
-				
+
 				// populate our trial screen
 				$('#gorilla').hide();
 				const examples: string[] = utils.shuffle(exampleImages[targetType]);
@@ -628,7 +629,7 @@ gorilla.ready(function(){
 				    blockCounter: blockCounter,
 				    nBlocks: nBlocks,
 					trialType: utils.encodeTargetTypeHR(targetType),
-					e1: gorilla.stimuliURL(exampleImages[targetType]),
+					example: gorilla.stimuliURL(exampleImages[targetType]),
 					imSize: exampleImSize
 				}, (err) => {
 					$('#gorilla').show();
@@ -639,7 +640,7 @@ gorilla.ready(function(){
 			} // end if
 	    } // end onEnter
 	}); // end add state Block
-	
+
 	// in this state, an array of images will be displayed and a response button
 	// will be pressed
 	SM.addState(State.Trial, {
@@ -648,21 +649,21 @@ gorilla.ready(function(){
 			// ensure no keypress allowed
 			keypressAllowed = false;
 			// var trialArray: string[];
-			
+
 			// stop trial if we have finished all blocks!
 			if (blockStruct.blockArray.length === 0) {
 				machine.transition(State.Block);
 			} else {
 				// increment trial number
 				trialNumber++;
-				
+
 				var trialArray: string[] = [];
 				const randTrial: number = utils.takeRand(blockStruct.blockArray);
-				
+
 				// some metrics for later
 				const condType = utils.encodeTargetType(blockStruct.targetType);
 				const blockCode: number = utils.getCondCode(blockStruct.targetType);
-				
+
 				// initialise trialStruct for this trial
 				let trialStruct = {
 					trialArray: [],
@@ -677,7 +678,7 @@ gorilla.ready(function(){
 					responseTime: null,
 					timedOut: false,
 				} as TrialStruct;
-				
+
 				// if the random trial number is zero modulo some value,
 				// then it should be a distractor.  This modulo value is defined
 				// in utils, based on the proportion of trials you need
@@ -693,7 +694,7 @@ gorilla.ready(function(){
 
 					// update trialArray with array of distractors
 					trialStruct.trialArray = randomDistractorURLs;
-				    
+
 				    // update metrics
 				    trialStruct.humanReadableTrialArray = randomDistractors;
 					trialStruct.isPresent = false;
@@ -708,16 +709,17 @@ gorilla.ready(function(){
 					const randomURLs: string[] = constructURLArray(randomDistractors);
 
 					// choose a random image from the possible image set.  This image cannot be repeated
-					const randomImageNumber: number = utils.takeRand(blockStruct.possibleTrialTargets) + 1; // add one because array is from 0:24
-					
+					const randomImageNumber: number = utils.takeRand(blockStruct.possibleTrialTargets[nImagesInGrid]) + 1; // add one because array is from 0:29
+					console.log("NOW WE HAVE THE FOLLOWING POSSIBLE TARGETS FOR IMAGE NUMBER " +nImagesInGrid + " : " + blockStruct.possibleTrialTargets[nImagesInGrid])
+
 					const conditionImage: string = utils.constructStimName(blockStruct.targetType, randomImageNumber);
 					const conditionImageURL: string = gorilla.stimuliURL(conditionImage);
-					
+
 					// insert image at random position.  This position cannot be repeated
 					// const randPosition: number = utils.takeRand(blockStruct.possibleTrialPositions);
 					const randPosition: number = utils.randInt(0, nGridPositions - 1) // we don't care about repeating target positions anymore because the array is presumable sufficiently large
 					utils.insert(randomURLs, randPosition, conditionImageURL)
-					
+
 					// update metrics
 					trialStruct.trialArray = randomURLs;
 					trialStruct.humanReadableTrialArray = utils.insert(randomDistractors, randPosition, conditionImage);
@@ -734,7 +736,7 @@ gorilla.ready(function(){
 					blockStruct: blockStruct,
 					trialStruct: trialStruct
 				} as InformationStruct
-				
+
 				// hide the display till the images are loaded
 				// $('.trial-array').hide();
 				hideTrialArray();
@@ -742,7 +744,7 @@ gorilla.ready(function(){
 				$('.timeout-feedback').hide();
 				$('.practice-feedback-correct').hide();
 	            $('.practice-feedback-incorrect').hide();
-				
+
 				// populate our trial screen
 				gorilla.populateAndLoad($('#gorilla'), 'trial', {
 					ncols: nColsInGrid,
@@ -756,7 +758,7 @@ gorilla.ready(function(){
 			} // end if-else
 		} // end onEnter
 	}); // end addState Trial
-	
+
 	SM.addState(State.FixationCross, {
 		onEnter: (machine: stateMachine.Machine, informationStruct: InformationStruct) => {
 			// $('.trial-array').hide();
@@ -765,7 +767,7 @@ gorilla.ready(function(){
  			$('.timeout-feedback').hide();
  			$('.practice-feedback-correct').hide();
 	        $('.practice-feedback-incorrect').hide();
-			
+
 			$('#gorilla')
 				.delay(beforeFixationDelay)
 				.queue(function () {
@@ -783,12 +785,12 @@ gorilla.ready(function(){
 			machine.transition(State.ImageArray, informationStruct);
 		} // end onEnter
 	}) // end addState for FixationCross
-	
+
 	SM.addState(State.ImageArray, {
 		onEnter: (machine: stateMachine.Machine, informationStruct: InformationStruct) => {
 			// initialise sequence for timeout
 			var stateTimer: gorilla.GorillaTimerSequence;
-			
+
 			$('#gorilla')
 				.queue(function () {
 					// $('.trial-array').show();
@@ -799,31 +801,31 @@ gorilla.ready(function(){
 					keypressAllowed = true;
 					$(this).dequeue();
 				}) // end queue for '#gorilla'
-			
+
 			$(document).off('keypress').on('keypress', (event: JQueryEventObject) => {
 				// exit the keypress event if we are not allowed to
 				if (!keypressAllowed) return;
-				
+
 				// get the key that was pressed
 				const e = event.which;
-				
+
 				// enter state where it can't enter any more keys
 				if (e === presentResponseKeyCode || e === absentResponseKeyCode) {
 					gorilla.stopStopwatch();
-					
+
 					// IMPORTANT: get response time!
 					// This is the main metric!
 					informationStruct.trialStruct.responseTime = gorilla.getStopwatch();
-					
+
 					// stop timout timer
 					stateTimer.cancel();
-					
+
 					// update keypress as we have just pressed the key!
 					keypressAllowed = false;
-					
+
 					// get string of key pressed from character code
 					var key = String.fromCharCode(e);
-					
+
 					// check if key press was correct
 					if ((informationStruct.trialStruct.isPresent && e === presentResponseKeyCode) || (!informationStruct.trialStruct.isPresent && e === absentResponseKeyCode)) {
 						informationStruct.trialStruct.correct = 1;
@@ -834,7 +836,7 @@ gorilla.ready(function(){
 						// the scoping so I have to change it.  Don't ask why.
 						informationStruct.trialStruct.correct = 0;
 					}
-					
+
 					// Actually *store* the data!
 					// IMPORTANT: these keys had to be imported into the `Metircs` tab!
 					gorilla.metric({
@@ -862,7 +864,7 @@ gorilla.ready(function(){
 						}); // end queue for '#gorilla'
 				} // end checking if key pressed is 75:76 (K or L)
 			}) // end response keypress
-			
+
 			// timeout!
 			stateTimer = gorilla.addTimerSequence()
 				.delay(presentationTime)
@@ -900,7 +902,7 @@ gorilla.ready(function(){
 						id: participantID,
 						gender: participantGender,
 					});// end metric
-					
+
 					$('#gorilla')
 						.queue(function () {
 							machine.transition(State.Trial, informationStruct.blockStruct);
@@ -910,7 +912,7 @@ gorilla.ready(function(){
 				.run();
 		} // end onEnter
 	}) // end addState ImageArray
-	
+
 	SM.addState(State.Debrief, {
 		onEnter: (machine: stateMachine.Machine) => {
 			gorilla.populate('#gorilla', 'debrief', {
