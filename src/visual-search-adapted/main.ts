@@ -417,6 +417,7 @@ gorilla.ready(function(){
 	            // populate our trial screen
 	            gorilla.populateAndLoad($('#gorilla'), 'trial', {
 					ncols: nColsInGrid,
+					nrows: nRowsInGrid,
 					trials: practiceStruct.practiceArray,
 					responsePresent: presentResponseKey.toUpperCase(),
 					responseAbsent: absentResponseKey.toUpperCase(),
@@ -749,6 +750,7 @@ gorilla.ready(function(){
 				// populate our trial screen
 				gorilla.populateAndLoad($('#gorilla'), 'trial', {
 					ncols: nColsInGrid,
+					nrows: nRowsInGrid,
 					trials: trialStruct.trialArray,
 					responsePresent: presentResponseKey.toUpperCase(),
 					responseAbsent: absentResponseKey.toUpperCase(),
