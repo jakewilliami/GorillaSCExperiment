@@ -12,7 +12,8 @@ import utils = require('utils');
 /*--------------------------------------*/
 
 // define some global variables
-var stimConditions: string[] = ['C', 'F', 'HF', 'LF'];
+// var stimConditions: string[] = ['O', 'F', 'HF', 'LF'];
+var stimConditions: string[] = ['O', 'F', 'P']; // O for object, which are flowers
 const presentResponseKey: string = 'k'
 const absentResponseKey: string = 'l'
 const beforeFixationDelay: number = 500;
@@ -30,15 +31,13 @@ const nColsInGrid: number = 8; // 9
 const nRowsInGrid: number = 8; // 6
 const possibleImagesInGrid: number[] = [16, 24, 36];
 const imageExt: string = 'png'; // utils.imageExt
-console.log(imageExt);
 
 const exampleImages: Object = {
-    'C': ['EC1.png', 'EC2.png', 'EC3.png'],
-    'F': ['EF1.png', 'EF2.png', 'EF3.png'],
-    'P': ['P1.png', 'P2.png', 'P3.png', 'P4.png', 'P5.png', 'P6.png'], // practice
-	'E': ['EC.png', 'EF.png', 'EP.png'], // example
-    'HF': ['EP1.png', 'EP2.png', 'EP3.png'], // pareidolia example
-    'LF': ['EP1.png', 'EP2.png', 'EP3.png']
+	'A': 'allTargetsExample.png', // all
+    'O': 'flowerExampleTargets.png', // Object
+    'F': 'faceExampleTargets.png',
+    'B': ['B1.png', 'B2.png', 'B3.png', 'B4.png', 'B5.png', 'B6.png'], // practice (birds)
+	'P': 'pareidoliaExampleTargets.png', // pareidolia
 };
 
 /* ------------------------------------- */
@@ -46,7 +45,7 @@ const exampleImages: Object = {
 // to change below this line!
 /*--------------------------------------*/
 
-/*
+/* // Back when we were doing dynamic grid sizes
 const imgContainerSizeInPixels: number = 106;
 
 const vw: number = Math.floor(0.9 * Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0));
@@ -278,16 +277,9 @@ gorilla.ready(function(){
 	// In this state we will display our instructions for the task
 	SM.addState(State.Instructions, {
 	    onEnter: (machine: stateMachine.Machine) => {
-			const randExampleFace: string = utils.randVal(exampleImages['F']);
-			const randExamplePareidolia: string = utils.randVal(exampleImages['HF']);
-	        const randExampleCar: string = utils.randVal(exampleImages['C']);
-            const randExampleImages: string[] = [randExampleFace, randExamplePareidolia, randExampleCar];
-	        const examples: string[] = constructURLArray(randExampleImages);
 			$('#gorilla').hide();
 	        gorilla.populateAndLoad($('#gorilla'), 'instructions', {
-	            e1: examples[0],
-	            e2: examples[1],
-	            e3: examples[2],
+				example: gorilla.stimuliURL(exampleImages['A']),
 				responseTimeAllowed: rawPresentationTime/1000,
 	            imSize: exampleImSize,
 				responsePresent: presentResponseKey.toUpperCase(),
@@ -630,9 +622,7 @@ gorilla.ready(function(){
 				    blockCounter: blockCounter,
 				    nBlocks: nBlocks,
 					trialType: utils.encodeTargetTypeHR(targetType),
-					e1: gorilla.stimuliURL(examples[0]),
-					e2: gorilla.stimuliURL(examples[1]),
-					e3: gorilla.stimuliURL(examples[2]),
+					e1: gorilla.stimuliURL(exampleImages[targetType]),
 					imSize: exampleImSize
 				}, (err) => {
 					$('#gorilla').show();
