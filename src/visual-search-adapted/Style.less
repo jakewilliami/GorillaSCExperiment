@@ -104,8 +104,8 @@ body {
     width: 90vh;
     // grid-template-rows: repeat(calc(100vw / 106px), minmax(100px, 1fr));
     // grid-template-columns: repeat(9, minmax(100px, 1fr)); /* The first value is the columns number */
-    grid-column-gap: 6px;
-    grid-row-gap: 6px;
+    grid-column-gap: 4px; // previously 4.8px // previously previously 6px
+    grid-row-gap: 4px; // previously 4.8px // previously previously 6px
     padding-bottom: 10vh;
     clear :both;
     /* Need to shift grid down as we are padding bottom 10vh */
@@ -120,14 +120,14 @@ body {
 
 .Cell {
     visibility: hidden;
-    padding: 6px;
+    padding: 4px; // previously 4.8px // previously previously 6px
     // width: 2cm;
     // height: 2cm;
-    width: 106px;
-    height: 106px;
+    width: 84px; // previously 84.8 // previously previously 106px
+    height: 84px; // previously 84.8 // previously previously 106px
     float: left;
     // line-height: 2cm;
-    line-height: 106px;
+    line-height: 84px; // previously 84.8 // previously previously 106px
     text-align: center;
 }
 
@@ -136,10 +136,8 @@ body {
     // display:inline-block;
     // display: block
     vertical-align: middle;
-    // width: 1.8cm;
-    // height: 1.8cm;
-    width: 100px;
-    height: 100px;
+    width: 80px; // previously 100px
+    height: 80px; // previously 100px
 }
 
 .Cell::before {
