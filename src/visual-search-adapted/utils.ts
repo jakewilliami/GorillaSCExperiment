@@ -57,7 +57,7 @@ const conditionCodes: Object = {
 // set modulo value
 export const moduloVal: number = Math.floor(1 / proportionOfDistractors);
 const numberOfTrialImages: number = (tEnd - tStart + 1) * nGridConditions;
-export const nTrialsPerBlock: number = Math.floor(numberOfTrialImages / proportionOfTargets);
+export const nTrialsPerBlock: number = Math.ceil(numberOfTrialImages / proportionOfTargets); // 135 // previously floor
 export const practiceModuloVal: number = Math.floor(1 / proportionOfPracticeDistractors);
 const numberOfPracticeImages: number = pEnd - pStart + 1;
 export const nPracticeTrials: number = Math.floor(numberOfPracticeImages / proportionOfPracticeTargets);

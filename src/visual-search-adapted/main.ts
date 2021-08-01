@@ -14,8 +14,8 @@ import utils = require('utils');
 // define some global variables
 // var stimConditions: string[] = ['O', 'F', 'HF', 'LF'];
 var stimConditions: string[] = ['O', 'F', 'P']; // O for object, which are flowers
-const presentResponseKey: string = 'k'
-const absentResponseKey: string = 'l'
+const presentResponseKey: string = 'p'
+const absentResponseKey: string = 'a'
 const beforeFixationDelay: number = 500;
 const fixationLength: number = 500;
 const afterFixationDelay: number = 0;
@@ -26,8 +26,8 @@ const timeoutMessageLength: number = 1000;
 const practiceFeedbackMessageLength: number = 2000; // previously 1000
 const exampleImSize: string = "3cm"; // e.g., example images will be 3cm × 3cm
 const loadingMessage: string = 'Please wait while the experiment is loading.  This may take some time.';
-const consentFilename: string = "PareidoliaVisualSearch_InfoSheet.pdf"; // these are in the Resources tab
-const debriefFilename: string = "PareidoliaVisualSearch_Debriefing.pdf";
+const consentFilename: string = "VS_consent.pdf"; // these are in the Resources tab
+const debriefFilename: string = "VS_debrief.pdf";
 const nColsInGrid: number = 8; // 9
 const nRowsInGrid: number = 8; // 6
 const possibleImagesInGrid: number[] = [16, 24, 36];
@@ -101,6 +101,7 @@ interface TrialStruct {
 	correct: number,
 	responseTime: number,
 	timedOut: boolean,
+	setSize: number,
 }
 
 // As above, for different blocks
@@ -786,6 +787,7 @@ gorilla.ready(function(){
 					correct: null,
 					responseTime: null,
 					timedOut: false,
+					setSize: 0
 				} as TrialStruct;
 
 				// if the random trial number is zero modulo some value,
@@ -809,6 +811,7 @@ gorilla.ready(function(){
 					trialStruct.isPresent = false;
 					trialStruct.isPresentString = 'absent';
 					trialStruct.targetImg = 'absent' + absentCount;
+					trialStruct.setSize = nImagesInGrid;
 				} else {
 					const gridSizeDeterministicNumber: number = utils.takeRand(blockStruct.possiblePresentGridSizes) % 3;
 					const nImagesInGrid: number = possibleImagesInGrid[gridSizeDeterministicNumber];
@@ -836,6 +839,7 @@ gorilla.ready(function(){
 					trialStruct.isPresent = true;
 					trialStruct.isPresentString = 'present';
 					trialStruct.targetLocation = randPosition;
+					trialStruct.setSize = nImagesInGrid;
 				} // end if
 
 				// package all needed data into an information struct
@@ -963,6 +967,7 @@ gorilla.ready(function(){
 						age: participantAge,
 						id: participantID,
 						gender: participantGender,
+						setSize: informationStruct.trialStruct.setSize,
 					}); // end metric
 
 					// move on transition
@@ -1010,6 +1015,7 @@ gorilla.ready(function(){
 						age: participantAge,
 						id: participantID,
 						gender: participantGender,
+						setSize: informationStruct.trialStruct.setSize,
 					});// end metric
 
 					$('#gorilla')
@@ -1022,17 +1028,17 @@ gorilla.ready(function(){
 		} // end onEnter
 	}) // end addState ImageArray
 
-	SM.addState(State.Debrief, {
+ SM.addState(State.Debrief, {
 		onEnter: (machine: stateMachine.Machine) => {
 			gorilla.populate('#gorilla', 'debrief', {
 				debriefform: gorilla.resourceURL(debriefFilename)
 			});
 			gorilla.refreshLayout();
-			$('#start-button').one('click', (event: JQueryEventObject) => {
-				machine.transition(State.Finish);
+			$('#next-button').one('click', (event: JQueryEventObject) => {
+				gorilla.finish();
 			}) // end on keypress
 		}
-	}) // end addState State.Consent
+	}) // end addState State.Debrief
 
 	// this is the state we enter when we have finished the task
 	SM.addState(State.Finish, {
@@ -1040,7 +1046,7 @@ gorilla.ready(function(){
 			gorilla.populate('#gorilla', 'finish', {});
 			gorilla.refreshLayout();
 			$('#next-button').one('click', (event: JQueryEventObject) => {
-				gorilla.finish();
+				machine.transition(State.Debrief);
 			})
 		} // end onEnter
 	}) // end addState Finish
