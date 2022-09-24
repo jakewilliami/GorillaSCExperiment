@@ -1,0 +1,58 @@
+<div class="fullheight fullsize" style="position:relative;">
+    <div class="content-container" align="center">
+        <h1>Participant details</h1>
+        <form name="demographics-form" action="#">
+            <table>
+                <tr>
+                    <p class="form-box">
+                        <td align="center">
+                            <label for="PID">Student ID number: </label>
+                        <!-- </td> -->
+                        <!-- <td align="left"> -->
+                            <input id="PID" name="PID">
+                        </td>
+                    </p>
+                </tr>
+                <tr>
+                    <p class="form-box">
+                        <td align="center">
+                            <label for="age">Age: </label>
+                        <!-- </td> -->
+                        <!-- <td align="left"> -->
+                            <input id="age" name="age">
+                        </td>
+                    </p>
+                </tr>
+                <tr>
+                    <p class="form-box">
+                        <td align="center">
+                            <label for="gender" title="Gender">Gender: </label>
+                        <!-- </td> -->
+                        <!-- <td align="left"> -->
+                            <select id="gender" name="gender">
+                                <optgroup label="Genders">
+                                    <option value="undef" style="color: grey">(undefined)</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </optgroup>
+                            </select>
+                        </td>
+                    </p>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div class="button-container">
+        <!-- <button class="btn btn-primary response-button" id="next-button" data-response="Next">Next</button> -->
+        <button class="btn btn-primary" id="next-button">Next</button>
+    </div>
+    <div class="form-error">
+        <div class="incomplete-message" hidden>
+            <p>Please fill in everything before continuing.</p>
+        </div>
+        <div class="invalid-age" hidden>
+            <p>Please enter a valid age!</p>
+        </div>
+    </div>
+</div>
