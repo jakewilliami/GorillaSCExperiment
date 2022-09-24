@@ -49,7 +49,7 @@ export function takeFirst<T>(arr: T[]) {
 
 // Chooses n-many unique random numbers between lower and upper inclusive
 function chooseNUniqueRandomWithinRange(n: number, lower: number, upper: number) {
-    var arr: number[] = [];
+    const arr: number[] = [];
     while(arr.length < n) {
         const a = randInt(lower, upper);
         if (arr.indexOf(a) === -1) {
@@ -62,10 +62,10 @@ function chooseNUniqueRandomWithinRange(n: number, lower: number, upper: number)
 // *Takes* n many random elements from an array
 // This is a mutating funciton
 export function takeNRand<T>(arr: T[], n: number) {
-    var outArr: T[] = [];
+    const outArr: T[] = [];
     
     // loop through values of
-    for (var i: number = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) {
         outArr.push(takeRand(arr));
     }
     
@@ -75,11 +75,11 @@ export function takeNRand<T>(arr: T[], n: number) {
 // Chooses n unique random elements from an array
 // This function does NOT mutate the input array
 export function chooseNUniqueRand<T>(arr: T[], n: number) {
-    var tempArr: T[] = [...arr];
-    var outArr: T[] = [];
+    const tempArr: T[] = [...arr];
+    const outArr: T[] = [];
     
     // loop through values of
-    for (var i: number = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) {
         outArr.push(takeRand(tempArr));
     }
     
@@ -87,9 +87,9 @@ export function chooseNUniqueRand<T>(arr: T[], n: number) {
 }
 
 export function chooseNRand<T>(arr: T[], n: number) {
-    var outArr: T[] = [];
+    const outArr: T[] = [];
     
-    for (var i: number = 0; i < n; i++) {
+    for (let i = 0; i < n; i++) {
         outArr.push(randVal(arr));
     }
     
@@ -100,9 +100,9 @@ export function chooseNRand<T>(arr: T[], n: number) {
 // This shuffles the given array using the above mentioned algorithm
 // This is a mutating function
 export function shuffle<T>(array: T[]) {
-    var currentIndex: number = array.length;
-    var temporaryValue: T;
-    var randomIndex: number;
+    let currentIndex: number = array.length;
+    let temporaryValue: T;
+    let randomIndex: number;
 
     // While there remain elements to shuffle...
     while (0 !== currentIndex) {
@@ -121,30 +121,30 @@ export function shuffle<T>(array: T[]) {
 
 // Constructs an array of numbers, ordered, between lower and upper inclusive
 function _constructNumberArray(lower: number, upper: number) {
-    var arr: number[] = [];
-    for (var i: number = lower; i <= upper; i++) {
+    const arr: number[] = [];
+    for (let i: number = lower; i <= upper; i++) {
         arr.push(i)
     }
     return arr;
 }
 
 export function constructNumberArray(lower: number, upper: number) {
-    var arr: number[] = [];
-    for (var i: number = lower; i <= upper; i++) {
+    const arr: number[] = [];
+    for (let i: number = lower; i <= upper; i++) {
         arr.push(i)
     }
     return arr;
 }
 
 export function constructShuffledNumberArray(lower: number, upper: number) {
-    var outArr: number[] = constructNumberArray(lower, upper)
+    const outArr: number[] = constructNumberArray(lower, upper)
     shuffle(outArr);
     return outArr;
 }
 
 export function constructNameArray(arrayOfIndices: number[], prefix: string, suffix: string) {
-    var arrayOfNames: string[] = [];
-    for (var i: number = 0; i < arrayOfIndices.length; i++) {
+    const arrayOfNames: string[] = [];
+    for (let i = 0; i < arrayOfIndices.length; i++) {
         arrayOfNames.push(prefix + arrayOfIndices[i] + suffix);
     }
     return arrayOfNames;
@@ -189,9 +189,9 @@ export function constructStimName(prefix: string, imageNumber: number) {
 
 // Constructs a random array of n distractor images by name
 export function generateDistractorArray(n: number) {
-    var distractorNumbers: number[] = chooseNUniqueRandomWithinRange(n, utilsConfigs.distractorRange.start, utilsConfigs.distractorRange.end);
-    var distractorImageNumbers: string[] = [];
-    for (var i: number = 0; i < distractorNumbers.length; i++){
+    const distractorNumbers: number[] = chooseNUniqueRandomWithinRange(n, utilsConfigs.distractorRange.start, utilsConfigs.distractorRange.end);
+    const distractorImageNumbers: string[] = [];
+    for (let i = 0; i < distractorNumbers.length; i++){
         distractorImageNumbers.push(constructStimName(utilsConfigs.imagePrefixes[ImageType.Distractor], distractorNumbers[i]));
     }
 
@@ -206,9 +206,9 @@ export function generateDistractorArray(n: number) {
 export function generatePracticeArray(prefix: string) {
     const pStart: number = utilsConfigs.practiceRange.start;
     const pEnd: number = utilsConfigs.practiceRange.end;
-    var practiceNumbers: number[] = chooseNUniqueRandomWithinRange((pEnd - pStart + 1), pStart, pEnd);
-    var practiceImages: string[] = [];
-    for (var i: number = 0; i < practiceNumbers.length; i++) {
+    const practiceNumbers: number[] = chooseNUniqueRandomWithinRange((pEnd - pStart + 1), pStart, pEnd);
+    const practiceImages: string[] = [];
+    for (let i = 0; i < practiceNumbers.length; i++) {
         practiceImages.push(constructStimName(prefix, practiceNumbers[i]));
     }
     

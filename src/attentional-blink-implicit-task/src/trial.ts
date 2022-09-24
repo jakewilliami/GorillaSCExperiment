@@ -1,10 +1,10 @@
 import {
-	ResponseKeyCode, 
+    ResponseKeyCode, 
     BlockStruct,
     TargetCondition,
     GlobalExperimentState,
     State,
-} from 'types';
+} from './types';
 
 export function responseIsAllowed(respCode: number) {
     // return Object.values(ResponseKeyCode).includes(respCode);  // Requires ECMAScript 2017, so we can't use it
@@ -21,7 +21,7 @@ export function responseIsAllowed(respCode: number) {
         }
         return filtered;
     }, [])
-    // return respAllowedValues.includes(respCode);
+    return respAllowedValues.includes(respCode);
 }
 
 export function responseIsCorrect(blockStruct: BlockStruct, respCode: number) {
