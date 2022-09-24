@@ -1,0 +1,155 @@
+@import '/style/style.less';
+
+// define response button
+.fixation-cross {
+    position: relative;
+    bottom: 10pt;
+}
+.trial-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+}
+
+.trial-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+}
+
+.content-container {
+    position: absolute;
+    width: 100%;
+    top: 30%;
+    left: 50%;
+    font-size: 12pt;
+    -moz-transform: translateX(-50%) translateY(-30%);
+    -webkit-transform: translateX(-50%) translateY(-30%);
+    transform: translateX(-50%) translateY(-30%);
+}
+
+.finish-container {
+    position: absolute;
+    width: 50%;
+    top: 30%;
+    left: 50%;
+    font-size: 12pt;
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+}
+
+.button-container {
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    -moz-transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+}
+
+.trial-array {
+    // width: 10cm;
+    // height: 10cm;
+    width: 530px;
+    height: 530px;
+    clear :both;
+}
+.trial-array>div {
+    // width: 2cm;
+    // height: 2cm;
+    width: 106px;
+    height: 106px;
+    float: left;
+    // line-height: 2cm;
+    line-height: 106px;
+    text-align: center;
+}
+.trial-array>div>img {
+    display:inline-block;
+    vertical-align: middle;
+    // width: 1.8cm;
+    // height: 1.8cm;
+    width: 100px;
+    height: 100px;
+}
+
+.form-error {
+    position: absolute;
+    bottom: 20vh;
+    left: 50%;
+    color: red;
+    -moz-transform: translateX(-50%);
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+}
+
+// need incomplete-message and invalid-age to
+// inherit from form-error!
+.incomplete-message>form-error {
+}
+.invalid-age>form-error {
+}
+
+td {
+    padding: 0 15px;
+}
+
+/* loading content gif */
+.loading__container {
+    position: absolute;
+    margin: auto;
+    height: 50px;
+    width: 50px;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.loading__pulse {
+    height: 50px;
+    width: 50px;
+}
+.loading__a, .loading__b {
+    position: absolute;
+    height: 50px;
+    width: 50px;
+    background-color: #e61234;//#00a9e8;
+    opacity: 0.6;
+    top: 0;
+    left: 0;
+    border-radius: 100%;
+    animation: 2.1s ease-in-out 0s infinite normal none running;
+}
+.loading__a {
+    animation-name: bounce;
+}
+.loading__b {
+    animation-name: debounce;
+}
+@keyframes bounce {
+    0%, 100% {
+        transform: scale(0);
+    } 50% {
+        transform: scale(1);
+    }
+}
+@keyframes debounce {
+    0%, 100% {
+        transform: scale(1);
+    } 50% {
+        transform: scale(0);
+    }
+}
+
+.caption {
+    display: block;
+    position: relative;
+    bottom: -3em;
+}
