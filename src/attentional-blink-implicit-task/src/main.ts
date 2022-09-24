@@ -23,8 +23,6 @@ const afterFixationDelay: number = 0;
 const imageDisplayLength: number = 70; // 70
 const presentResponseKey: string = 'k';
 const absentResponseKey: string = 'l';
-const digitalResponseKey: string = 'k';
-const analogueResponseKey: string = 'l';
 const nBlocks: number = 3;
 const nPracticeT2Images: number = 6;
 const loadingMessage: string = 'Please wait while the experiment is loading.  This may take some time.';
@@ -60,8 +58,6 @@ var keypressAllowed: boolean = false;
 // get keycode for response keys
 const presentResponseKeyCode: number = presentResponseKey.toLowerCase().charCodeAt(0);
 const absentResponseKeyCode: number = absentResponseKey.toLowerCase().charCodeAt(0);
-const digitalResponseKeyCode: number = digitalResponseKey.toLowerCase().charCodeAt(0);
-const analogueResponseKeyCode: number = analogueResponseKey.toLowerCase().charCodeAt(0);
 
 
 // Given an array of stimuli names, constructs an array
