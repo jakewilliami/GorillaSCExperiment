@@ -32,6 +32,11 @@ const consentFilename: string = 'AB_consent.pdf';
 const debriefFilename: string = 'AB_debrief.pdf';
 const exampleImageSize: string = '20vh';
 const practiceFeedbackMessageLength: number = 800;
+const lagPositions: number[] = [3, 7];
+
+if ((nT2ImagesPerBlock % lagPositions.length) !== 0) {
+	console.warn('The number of T2 images does not divide equally into the number of lag positions you have specified.')
+}
 
 // 3 blocks, with constant T2 type
 
@@ -463,21 +468,9 @@ gorilla.ready(function(){
 	            const t2ImageTypeNumber: number = utils.takeRand(blockStruct.t2DisplayGapOptions);
 	            var t2PosGap: number;
 	            console.log('Image number type is' + (t2ImageTypeNumber % 3));
-	            const t2ImageTypeNumberModulo: number = t2ImageTypeNumber % 3
+	            const t2ImageTypeNumberModulo: number = t2ImageTypeNumber % lagPositions.length
 
-	            // cannot divide 100 by 3 evenly, so the one of the t2PosGaps will have to have 34 in them.
-	            if (t2ImageTypeNumber == 100) {
-	                t2PosGap = utils.randVal([1, 3, 7]);
-	            }
-	            else {
-	                if (t2ImageTypeNumberModulo == 0) {
-	                    t2PosGap = 1;
-	                } else if (t2ImageTypeNumberModulo == 1) {
-	                    t2PosGap = 3;
-	                } else { // t2ImageTypeNumberModulo == 2
-	                    t2PosGap = 7;
-	                }
-	            }
+				t2PosGap = lagPositions[t2ImageTypeNumberModulo];
 	            console.log('So image gap is' + t2PosGap);
 	            blockStruct.t2PosGap = t2PosGap;
 
@@ -782,21 +775,9 @@ gorilla.ready(function(){
 				const t2ImageTypeNumber: number = utils.takeRand(blockStruct.t2DisplayGapOptions);
 				var t2PosGap: number;
 				console.log('Image number type is' + (t2ImageTypeNumber % 3));
-				const t2ImageTypeNumberModulo: number = t2ImageTypeNumber % 3
+				const t2ImageTypeNumberModulo: number = t2ImageTypeNumber % lagPositions.length;
 
-				// cannot divide 100 by 3 evenly, so the one of the t2PosGaps will have to have 34 in them.
-				if (t2ImageTypeNumber == 100) {
-					t2PosGap = utils.randVal([1, 3, 7]);
-				}
-				else {
-					if (t2ImageTypeNumberModulo == 0) {
-						t2PosGap = 1;
-					} else if (t2ImageTypeNumberModulo == 1) {
-						t2PosGap = 3;
-					} else { // t2ImageTypeNumberModulo == 2
-						t2PosGap = 7;
-					}
-				}
+				t2PosGap = lagPositions[t2ImageTypeNumberModulo];
 				console.log('So image gap is' + t2PosGap);
 				blockStruct.t2PosGap = t2PosGap;
 
