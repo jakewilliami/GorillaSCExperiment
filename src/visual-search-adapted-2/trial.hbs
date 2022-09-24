@@ -1,0 +1,28 @@
+<div class="trial-container">
+	<!-- <div class="trial-array" hidden> -->
+	<div class="Grid" id="trial-array-fs" style="grid-template-rows: repeat({{nrows}}, 106px);grid-template-columns:repeat({{ncols}}, 106px);">
+        {{#each trials}}
+            <!-- <div> -->
+			<div class="Cell" id="Cell{{@index}}">
+                <img class="CellImg" src={{this}}>
+            </div>
+        {{/each}}
+    </div>
+	<img class="target-primer" src={{primerImage}} hidden>
+	<!-- <div class="target-primer" hidden> -->
+		<!-- <img src={{targetImg}}> -->
+	<!-- </div> -->
+    <!-- <div class="instruction" align="center" hidden style="display:none"> -->
+        <!-- <h4><kbd>{{responsePresent}}</kbd> = target present. <kbd>{{responseAbsent}}</kbd> = target absent.</h4> -->
+    <!-- </div> -->
+	<span class="fixation-cross" style="font-size: 30pt;" hidden>+</span> <!-- approx 63pt -->
+	<div class="timeout-feedback" style="font-size: 14pt;" hidden>
+	    <h4>You took too long to respond.</h4>
+    </div>
+    <div class="practice-feedback-correct" style="font-size: 14pt;" hidden>
+	    <h4>Correct!</h4>
+    </div>
+    <div class="practice-feedback-incorrect" style="font-size: 14pt;" hidden>
+	    <h4>Incorrect.  Remember, <kbd>{{responsePresent}}</kbd> = present, <kbd>{{responseAbsent}}</kbd> = absent.</h4>
+    </div>
+</div>
