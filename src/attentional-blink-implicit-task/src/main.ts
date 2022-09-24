@@ -15,6 +15,7 @@ const nT2ImagesPerBlock: number = 60; // 100
 const nWatchImages: number = 100;
 const nInImageSequence: number = 20; // i.e., 20 images are displayed in the trial
 var blockTypes: string[] = ['F', 'P', 'O']; // face, pareidolia, objects (flowers)
+const T1Types: string[] = ['F', 'P', 'O'];
 const stimExt: string = 'png';
 const nDistractors: number = 500;
 const beforeFixationDelay: number = 500;
@@ -46,10 +47,9 @@ if ((nT2ImagesPerBlock % lagPositions.length) !== 0) {
 const nTrials: number = nT2ImagesPerBlock * 3 * 2; // 100 T2 images per block * 3 blocks * 2 trial types = 600
 const nT2Displayed: number = Math.floor(nT2ImagesPerBlock / blockTypes.length);
 const nT1ImagesPerBlock: number = nT2ImagesPerBlock * 2; // 100 T2 images per block * 2 trial types = 200
-const nPracticeT1Images: number = nPracticeT2Images * 2;
+const nPracticeT1Images: number = nPracticeT2Images * 2; // Half of all practice trials have no T2
+const nPracticeT1ImagesPerT1Type: number = Math.floor(nPracticeT1Images / T1Types.length);
 const constBlockTypes: string[] = [...blockTypes];
-// const nWatchImagesPerBlock: number = nT2ImagesPerBlock * 2; // 100 * 2 = 200
-const nWatchImagesPerBlock: number = nT2ImagesPerBlock; // 100
 
 // global boolean variable which we update in order to check
 // if we are allowed to press the response key or not
@@ -70,6 +70,41 @@ function constructURLArray(stimArr: string[]) {
 	}
 
 	return URLs;
+}
+
+enum TargetImageType {
+	Bird = 'bird',
+	Flower = 'flower',
+	Watch = 'watch',
+	Pareidolia = 'pareidolia',
+	Face = 'face',
+}
+
+interface ImageStruct {
+	url: string,
+	name: string,
+	type: TargetImageType,
+}
+
+// Given an image name and type, construct its ImageStruct representation
+function getImageStruct(name: string, type: TargetImageType) {
+	return {
+		url: gorilla.stimuliURL(name),
+		name: name,
+		type: type,
+	} as ImageStruct
+}
+
+// Given an array of stimuli names and their type, constructs an array
+// of stimuli images of type ImageStruct
+function constructImageArray(stimArr: string[], imgType: TargetImageType) {
+    var imageInfoArr: ImageStruct[] = [];
+	for (var i: number = 0; i < stimArr.length; i++) {
+		const imageInfo: ImageStruct = getImageStruct(stimArr[i], imgType);
+		imageInfoArr.push(imageInfo);
+	}
+
+	return imageInfoArr;
 }
 
 // possible states in state machine
@@ -125,14 +160,14 @@ interface BlockStruct {
   	trialCounter: number,
 	blockType: string,
   	blockTypeHR: string,
-	watchURLsArray: string[],
+	t1TargetsArray: ImageStruct[],
 	t2DisplayPotentialArray: number[],
 	t2DisplayGapOptions: number[],
-	t2TargetURLsArray: string[],
+	t2TargetURLsArray: string[],  // Consider using list of ImageStruct here instead of just URLs
 	trialArrayURLs: string[],
 	t2PosGap: number,
 	t2Condition: string,
-	thisTrialStruct: T1Struct,
+	t1ConditionType: TargetImageType,
 	t1Image: string,
 	t2Image: string,
 }
@@ -161,7 +196,7 @@ var allFaceURLs: string[];
 var allObjectURLs: string[];
 var allPareidoliaURLs: string[];
 var allWatchURLs: string[];
-var allPracticeTargetURLs: string[];
+var allPracticeTargetImages: ImageStruct[];  // TODO: this might need to be turned back to URLs in the interest of preloading
 var allExampleTargets: Object = {};
 
 // initialise URL array of all distractors as global
@@ -172,9 +207,11 @@ var allDistractorNumbers: number[];
 var allDistractorNames: string[];
 
 // all practice images
-var practiceWatchURLs: string[];
-var practiceT1URLs: string[];
-var practiceT2URLs: string[];
+var practiceFaceImages: ImageStruct[];
+var practiceWatchImages: ImageStruct[];
+var practicePareidoliaImages: ImageStruct[];
+var practiceT1Images: ImageStruct[];
+var practiceT2Images: ImageStruct[];
 
 // need demographics to be global
 var participantID: string;
@@ -220,16 +257,22 @@ gorilla.ready(function(){
         	allDistractorURLs = constructURLArray(allDistractorNames);
 
 			// get practice targets
-			practiceWatchURLs = constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, 3), 'Pwatch', '.' + stimExt));
-			practiceT1URLs = practiceWatchURLs;
-			practiceT2URLs = constructURLArray(utils.generatePracticeArray('Bird'));
-			allPracticeTargetURLs = [
-				...practiceT1URLs,
-				...practiceT2URLs
+			practiceFaceImages = constructImageArray(utils.constructNameArray(utils.constructNumberArray(1, nPracticeT1ImagesPerT1Type), 'Pface', '.' + stimExt), TargetImageType.Face);
+			practiceWatchImages = constructImageArray(utils.constructNameArray(utils.constructNumberArray(1, nPracticeT1ImagesPerT1Type), 'Pwatch', '.' + stimExt), TargetImageType.Watch);
+			practicePareidoliaImages = constructImageArray(utils.constructNameArray(utils.constructNumberArray(1, nPracticeT1ImagesPerT1Type), 'Ppareidolia', '.' + stimExt), TargetImageType.Pareidolia);
+			practiceT1Images = [
+				...practiceFaceImages,
+				...practiceWatchImages,
+				...practicePareidoliaImages
+			];
+			practiceT2Images = constructImageArray(utils.generatePracticeArray('Bird'), TargetImageType.Bird);
+			allPracticeTargetImages = [
+				...practiceT1Images,
+				...practiceT2Images
 			];
 
 			// add example target arrays as URLs to object
-			allExampleTargets['watch'] = gorilla.stimuliURL('watchExampleTargets.png');
+			allExampleTargets['watch'] = gorilla.stimuliURL('watchExampleTargets.png');  // TODO: change when we update template
 			allExampleTargets['practice'] = gorilla.stimuliURL('birdExampleTargets.png');
 			allExampleTargets['F'] = gorilla.stimuliURL('faceExampleTargets.png');
 			allExampleTargets['P'] = gorilla.stimuliURL('pareidoliaExampleTargets.png');
@@ -237,13 +280,13 @@ gorilla.ready(function(){
 			allExampleTargets['all'] = gorilla.stimuliURL('allTargetsExample.png')
 
           // put all image URLs into a single vector for preloading
-          const allImageURLs: string[] = [
+          const allImageURLs: ImageStruct[] = [
               ...allDistractorURLs,
               ...allWatchURLs,
               ...allFaceURLs,
               ...allPareidoliaURLs,
               ...allObjectURLs,
-			  ...allPracticeTargetURLs,
+			  ...allPracticeTargetImages,
 			  ...Object.keys(allExampleTargets).map(k => allExampleTargets[k]) // URLs from example targets.  Object.values(...) is not stabalised
           ];
 
@@ -380,25 +423,24 @@ gorilla.ready(function(){
 	    // this state constructs everything needed for a single block
 	    onEnter: (machine: stateMachine.Machine) => {
 	        // construct tT array
-	        var t2TargetURLsArray: string[] = practiceT2URLs;
+	        var t2TargetURLsArray: string[] = practiceT2Images;
 	        var imageTypeHR: string = 'a bird';
 
 	        var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nPracticeT1Images); // whether or not T2 is displayed
 	        var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nPracticeT2Images);
-          	var watchDisplayTypes: number[] = utils.constructNumberArray(1, nPracticeT1Images);
 
 	        let blockStruct = {
 	            trialCounter: 0,
 	            blockType: 'Bird',
 	            blockTypeHR: imageTypeHR,
-	            watchURLsArray: practiceWatchURLs,
+	            t1TargetsArray: practiceT1Images,
 	            t2DisplayPotentialArray: t2DisplayPotentialArray,
 	            t2DisplayGapOptions: t2DisplayGapOptions,
 	            t2TargetURLsArray: t2TargetURLsArray,
 	            trialArrayURLs: [],
 	            t2PosGap: 0,
 	            t2Condition: "",
-				thisTrialStruct: {} as T1Struct,
+				t1ConditionType: null,
 				t1Image: "",
 				t2Image: "",
 	        } as BlockStruct
@@ -412,7 +454,7 @@ gorilla.ready(function(){
 	SM.addState(State.PracticeBlock, {
 	    // this state determines whether or not to go to the next block, do another trial, or finish
 	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-	        if (blockStruct.watchURLsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
+	        if (blockStruct.t1TargetsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
 	            /// then our block is over
 	            machine.transition(State.PostPracticeBreak)
 	        } else {
@@ -433,9 +475,9 @@ gorilla.ready(function(){
 	        var trialArrayURLs: string[] = [];
 
 	        var t1ImageURL: string = '';
-	        t1ImageURL = utils.takeRand(blockStruct.watchURLsArray);
+	        t1ImageURL = utils.takeRand(blockStruct.t1TargetsArray);
 	        console.log("T1 image has been chosen: " + t1ImageURL);
-	        console.log("T1 image possibilities left are " + blockStruct.watchURLsArray);
+	        console.log("T1 image possibilities left are " + blockStruct.t1TargetsArray);
 
 	        // choose whether or not T2 is displayed
 	        const t2DeterministicNumber: number = utils.takeRand(blockStruct.t2DisplayPotentialArray)
@@ -634,37 +676,34 @@ gorilla.ready(function(){
 			// construct (potentially repeating; i.e., not unique) array of shuffled watches
 			const watchURLsArray: string[] = utils.chooseNRand(allWatchURLs, nWatchImagesPerBlock);
 
+			var t1TargetURLsArray: string[] = [];
+			FaceURLsArray = utils.chooseNRand(constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, nPracticeT1ImagesPerT1Type), 'Pface', '.' + stimExt)), nT1ImagesPerBlock);
+			WatchURLsArray = utils.chooseNRand(constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, nPracticeT1ImagesPerT1Type), 'Pwatch', '.' + stimExt)), nT1ImagesPerBlock);
+			PareidoliaURLsArray = utils.chooseNRand(constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, nPracticeT1ImagesPerT1Type), 'Ppareidolia', '.' + stimExt)), nT1ImagesPerBlock);
+			t1TargetURLsArray = [
+				...FaceURLsArray,
+				...WatchURLsArray,
+				...PareidoliaURLsArray
+			];
+
 			// construct tT array
-			var t2TargetURLsArray: string[] = [];
-      		var imageTypeHR: string;
-			if (blockType == 'F') {
-				t2TargetURLsArray = utils.takeNRand(allFaceURLs, nT2ImagesPerBlock);
-        		imageTypeHR = 'a face';
-			} else if (blockType == 'P') {
-				t2TargetURLsArray = utils.takeNRand(allPareidoliaURLs, nT2ImagesPerBlock);
-        		imageTypeHR = 'an object that looks like a face';
-			} else { // blockType == 'O'
-				t2TargetURLsArray = utils.takeNRand(allObjectURLs, nT2ImagesPerBlock);
-        		imageTypeHR = 'a flower';
-			};
-			console.log("The random second target images we have in this block is: " + t2TargetURLsArray);
+			var t2TargetURLsArray: string[] = utils.takeNRand(allFlowerURLs, nT2ImagesPerBlock);  // TODO: initialise flower URLs
 
 			var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nT1ImagesPerBlock); // whether or not T2 is displayed
 			var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock);
-      		var watchDisplayTypes: number[] = utils.constructNumberArray(1, nT1ImagesPerBlock);
 
 			let blockStruct = {
         		trialCounter: 0,
 				blockType: blockType,
         		blockTypeHR: imageTypeHR,
-				watchURLsArray: watchURLsArray,
+				t1TargetsArray: watchURLsArray,
 				t2DisplayPotentialArray: t2DisplayPotentialArray,
 				t2DisplayGapOptions: t2DisplayGapOptions,
 				t2TargetURLsArray: t2TargetURLsArray,
 				trialArrayURLs: [],
 				t2PosGap: 0,
 				t2Condition: "",
-				thisTrialStruct: {} as T1Struct,
+				t1ConditionType: {} as T1Struct,
 				t1Image: "",
                 t2Image: "",
 			} as BlockStruct
@@ -688,7 +727,7 @@ gorilla.ready(function(){
 	SM.addState(State.Block, {
 		// this state determines whether or not to go to the next block, do another trial, or finish
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-			if (blockStruct.watchURLsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
+			if (blockStruct.t1TargetsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
 				/// then our block is over
 				if (blockTypes.length === 0 && allFaceURLs.length == 0 && allObjectURLs.length == 0 && allPareidoliaURLs.length == 0) {
   					// if there are no other blocks remaining, finish
@@ -722,22 +761,23 @@ gorilla.ready(function(){
 
 	SM.addState(State.PreTrial, {
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-      console.log("======================================================");
+      		console.log("======================================================");
 
-	    // increment trail counter (needed for breaks)
-	    blockStruct.trialCounter++;
+	    	// increment trail counter (needed for breaks)
+	    	blockStruct.trialCounter++;
 
 			// initialise distractor array
 			var trialArrayURLs: string[] = [];
 
 			var t1ImageURL: string = '';
-			t1ImageURL = utils.takeRand(blockStruct.watchURLsArray);
+			t1ImageURL = utils.takeRand(blockStruct.t1TargetsArray); // TODO: change t1TargetURLsArray to a list of objects as follows: ['https://...', ...] -> [{'https://...', 'Pface1.jpg', 'face'}]
 			
-			var t1ImageURLSplit: string[] = t1ImageURL.split('/')
-            blockStruct.t1Image = t1ImageURLSplit[t1ImageURLSplit.length - 1]
+			var t1ImageURLSplit: string[] = t1ImageURL.split('/');
+            blockStruct.t1Image = t1ImageURLSplit[t1ImageURLSplit.length - 1];
+			blockStruct.t1ConditionType.t1ConditionType = blockStruct.t1Image; // TODO: specify image type of t1 for metrics
             
 			console.log("T1 image has been chosen: " + t1ImageURL);
-			console.log("T1 image possibilities left are " + blockStruct.watchURLsArray);
+			console.log("T1 image possibilities left are " + blockStruct.t1TargetsArray);
 
 			// choose whether or not T2 is displayed
 			const t2DeterministicNumber: number = utils.takeRand(blockStruct.t2DisplayPotentialArray)
@@ -893,7 +933,7 @@ gorilla.ready(function(){
 							// Actually *store* the data!
 							// IMPORTANT: these keys had to be imported into the `Metircs` tab!
 							gorilla.metric({
-								t1_condition: blockStruct.thisTrialStruct.t1ConditionType,
+								t1_condition: blockStruct.t1ConditionType.t1ConditionType,
 								t2_category: blockStruct.blockType,
 								t2_condition: blockStruct.t2Condition,
 								t2_position_gap: blockStruct.t2PosGap,
