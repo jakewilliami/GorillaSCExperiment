@@ -23,10 +23,6 @@ const tEnd: number = 25;
 const pStart: number = 1;
 const pEnd: number = 6;
 
-// define number of images in the grid
-// i.e., out grid is 5x5 (25)
-export const nImagesInGrid: number = 25;
-
 // define distractor and target prefix
 const distractorPrefix: string = 'D';
 const carPrefix: string = 'C';

@@ -45,9 +45,8 @@ const nT2Displayed: number = Math.floor(nT2ImagesPerBlock / blockTypes.length);
 const nT1ImagesPerBlock: number = nT2ImagesPerBlock * 2; // 100 T2 images per block * 2 trial types = 200
 const nPracticeT1Images: number = nPracticeT2Images * 2;
 const constBlockTypes: string[] = [...blockTypes];
-const nSpecificWatches: number = Math.floor(nWatchImages / 2); // half of the watches are digital, the other half are analogue
-// const nSpecificWatchesPerBlock: number = nT2ImagesPerBlock * 2; // 100 * 2 = 200
-const nSpecificWatchesPerBlock: number = nT2ImagesPerBlock; // 100
+// const nWatchImagesPerBlock: number = nT2ImagesPerBlock * 2; // 100 * 2 = 200
+const nWatchImagesPerBlock: number = nT2ImagesPerBlock; // 100
 
 // global boolean variable which we update in order to check
 // if we are allowed to press the response key or not
@@ -89,7 +88,6 @@ enum State {
 	PracticePreTrial,
 	PracticeFixationCross,
 	PracticeTrial,
-	PracticeWatchTypeResponse,
 	PracticeT2SeenResponse,
 	PostPracticeBreak,
 	// Main experiment states
@@ -102,18 +100,15 @@ enum State {
 	WatchTypeResponse,
 	T2SeenResponse,
 	// Finishish states
-  Debrief,
+  	Debrief,
 	Finish,
 }
 
 interface TrialStruct {
-	t1ResponseKey: String,
 	t2ResponseKey: String,
-	t1ResponseTime: number,
 	t2ResponseTime: number,
 	t1ConditionType: string,
 	t2Present: boolean,
-	t1ResponseCorrect: boolean,
 	t2ResponseCorrect: boolean,
 }
 
@@ -123,27 +118,20 @@ interface PracticeTrialStruct {
 }
 
 interface T1Struct {
-	t1ResponseKey: String,
-	t1ResponseTime: number,
 	t1ConditionType: string,
-	t1ResponseCorrect: boolean,
 }
 
 interface BlockStruct {
-  trialCounter: number,
+  	trialCounter: number,
 	blockType: string,
-  blockTypeHR: string,
-  watchDisplayTypes: number[],
-	digitalWatchURLsArray: string[],
-	analogueWatchURLsArray: string[],
+  	blockTypeHR: string,
+	watchURLsArray: string[],
 	t2DisplayPotentialArray: number[],
 	t2DisplayGapOptions: number[],
 	t2TargetURLsArray: string[],
 	trialArrayURLs: string[],
 	t2PosGap: number,
 	t2Condition: string,
-	isDigital: boolean,
-	isAnalogue: boolean,
 	thisTrialStruct: T1Struct,
 	t1Image: string,
 	t2Image: string,
@@ -160,22 +148,19 @@ var participantAge: number;
 var allFacesAsNumbers: number[];
 var allObjectsAsNumbers: number[];
 var allPareidoliaAsNumbers: number[];
-var allDigitalWatchesAsNumbers: number[];
-var allAnalogueWatchesAsNumbers: number[];
+var allWatchesAsNumbers: number[];
 
 // construct array of T2 images
 var allFaceNames: string[];
 var allObjectNames: string[];
 var allPareidoliaNames: string[];
-var allDigitalWatchNames: string[];
-var allAnalogueWatchNames: string[];
+var allWatchNames: string[];
 
 // initialise number array for main target variables as global
 var allFaceURLs: string[];
 var allObjectURLs: string[];
 var allPareidoliaURLs: string[];
-var allDigitalWatchURLs: string[];
-var allAnalogueWatchURLs: string[];
+var allWatchURLs: string[];
 var allPracticeTargetURLs: string[];
 var allExampleTargets: Object = {};
 
@@ -186,12 +171,8 @@ var allDistractorURLs: string[];
 var allDistractorNumbers: number[];
 var allDistractorNames: string[];
 
-// construct a number array to help determine which type of watch to display
-var watchDisplayTypes: number[];
-
 // all practice images
-var practiceDigitalURLs: string[];
-var practiceAnalogueURLs: string[];
+var AnalogueURLs: string[];
 var practiceT1URLs: string[];
 var practiceT2URLs: string[];
 
@@ -221,20 +202,17 @@ gorilla.ready(function(){
         	allFacesAsNumbers = utils.constructNumberArray(1, nT2ImagesPerBlock);
         	allObjectsAsNumbers = utils.constructNumberArray(1, nT2ImagesPerBlock);
         	allPareidoliaAsNumbers = utils.constructNumberArray(1, nT2ImagesPerBlock);
-        	allDigitalWatchesAsNumbers = utils.constructNumberArray(1, nSpecificWatches);
-        	allAnalogueWatchesAsNumbers = utils.constructNumberArray(1, nSpecificWatches);
+        	allWatchesAsNumbers = utils.constructNumberArray(1, nWatchImages);
         	// construct array of T2 images
         	allFaceNames = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + stimExt);
         	allObjectNames = utils.constructNameArray(allObjectsAsNumbers, 'Flower', '.' + stimExt);
         	allPareidoliaNames = utils.constructNameArray(allPareidoliaAsNumbers, 'Pareidolia', '.' + stimExt);
-        	allDigitalWatchNames = utils.constructNameArray(allDigitalWatchesAsNumbers, 'Digital', '.' + stimExt);
-        	allAnalogueWatchNames = utils.constructNameArray(allAnalogueWatchesAsNumbers, 'Analogue', '.' + stimExt);
+        	allWatchNames = utils.constructNameArray(allWatchesAsNumbers, 'Analogue', '.' + stimExt);
         	// convert to URLs
         	allFaceURLs = constructURLArray(allFaceNames);
         	allObjectURLs = constructURLArray(allObjectNames);
         	allPareidoliaURLs = constructURLArray(allPareidoliaNames);
-        	allDigitalWatchURLs = constructURLArray(allDigitalWatchNames);
-        	allAnalogueWatchURLs = constructURLArray(allAnalogueWatchNames);
+        	allWatchURLs = constructURLArray(allWatchNames);
 
         	// set URL array of all distractors
         	allDistractorNumbers = utils.constructNumberArray(1, nDistractors);
@@ -242,8 +220,7 @@ gorilla.ready(function(){
         	allDistractorURLs = constructURLArray(allDistractorNames);
 
 			// get practice targets
-			practiceDigitalURLs = constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, 3), 'Pdigital', '.' + stimExt));
-			practiceAnalogueURLs = constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, 3), 'Panalogue', '.' + stimExt));
+			practiceWatchURLs = constructURLArray(utils.constructNameArray(utils.constructNumberArray(1, 3), 'Pwatch', '.' + stimExt));
 			practiceT1URLs = [...practiceDigitalURLs, ...practiceAnalogueURLs];
 			practiceT2URLs = constructURLArray(utils.generatePracticeArray('Bird'));
 			allPracticeTargetURLs = [
@@ -262,8 +239,7 @@ gorilla.ready(function(){
           // put all image URLs into a single vector for preloading
           const allImageURLs: string[] = [
               ...allDistractorURLs,
-              ...allDigitalWatchURLs,
-              ...allAnalogueWatchURLs,
+              ...allWatchURLs,
               ...allFaceURLs,
               ...allPareidoliaURLs,
               ...allObjectURLs,
@@ -409,15 +385,14 @@ gorilla.ready(function(){
 
 	        var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nPracticeT1Images); // whether or not T2 is displayed
 	        var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nPracticeT2Images);
-          var watchDisplayTypes: number[] = utils.constructNumberArray(1, nPracticeT1Images);
+          	var watchDisplayTypes: number[] = utils.constructNumberArray(1, nPracticeT1Images);
 
 	        let blockStruct = {
 	            trialCounter: 0,
 	            blockType: 'Bird',
 	            blockTypeHR: imageTypeHR,
-              watchDisplayTypes: watchDisplayTypes,
-              digitalWatchURLsArray: [...practiceDigitalURLs, ...practiceDigitalURLs],
-	            analogueWatchURLsArray: [...practiceAnalogueURLs, ...practiceAnalogueURLs],
+              	watchDisplayTypes: watchDisplayTypes,
+	            watchURLsArray: practiceWatchURLs,
 	            t2DisplayPotentialArray: t2DisplayPotentialArray,
 	            t2DisplayGapOptions: t2DisplayGapOptions,
 	            t2TargetURLsArray: t2TargetURLsArray,
@@ -429,7 +404,7 @@ gorilla.ready(function(){
 	        } as BlockStruct
 
 			// $('#start-button').one('click', (event: JQueryEventObject) => {
-				machine.transition(State.PracticeBlock, blockStruct);
+			machine.transition(State.PracticeBlock, blockStruct);
 			// }) // end on keypress
 	    }, // end onEnter State.BlockInitialiser
 	}) // end addState State.BlockInitialiser
@@ -437,12 +412,12 @@ gorilla.ready(function(){
 	SM.addState(State.PracticeBlock, {
 	    // this state determines whether or not to go to the next block, do another trial, or finish
 	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-	        if (blockStruct.digitalWatchURLsArray.length === 0 && blockStruct.analogueWatchURLsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0  && blockStruct.watchDisplayTypes.length == 0) {
+	        if (blockStruct.watchURLsArray.length === 0 blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
 	            /// then our block is over
 	            machine.transition(State.PostPracticeBreak)
 	        } else {
 	            // if our trial is not over yet
-			        machine.transition(State.PracticePreTrial, blockStruct)
+			    machine.transition(State.PracticePreTrial, blockStruct)
 	        }
 	    }, // end onEnter State.Block
 	}) // end addState State.Block
@@ -458,20 +433,9 @@ gorilla.ready(function(){
 	        var trialArrayURLs: string[] = [];
 
 	        var t1ImageURL: string = '';
-	        const watchTypeDeterministicNumber: number = utils.takeRand(blockStruct.watchDisplayTypes);
-	        var watchType: number = watchTypeDeterministicNumber % 2;
-	        // blockStruct.watchType = watchType;
-	        if (watchType == 0) {
-	            blockStruct.isDigital = true;
-	            blockStruct.isAnalogue = false;
-	            t1ImageURL = utils.takeRand(blockStruct.digitalWatchURLsArray);
-	        } else { // i.e., watchType == 1
-	            blockStruct.isAnalogue = true;
-	            blockStruct.isDigital = false;
-	            t1ImageURL = utils.takeRand(blockStruct.analogueWatchURLsArray);
-	        }
+	        t1ImageURL = utils.takeRand(blockStruct.watchURLsArray);
 	        console.log("T1 image has been chosen: " + t1ImageURL);
-	        console.log("T1 image possibilities left are " + blockStruct.digitalWatchURLsArray + " or " + blockStruct.analogueWatchURLsArray);
+	        console.log("T1 image possibilities left are " + blockStruct.watchURLsArray); // PLEASE PICK ME UP FROM HERE
 
 	        // choose whether or not T2 is displayed
 	        const t2DeterministicNumber: number = utils.takeRand(blockStruct.t2DisplayPotentialArray)
@@ -751,8 +715,8 @@ gorilla.ready(function(){
 			console.log("We have chosen block type " + blockType);
 
 			// construct (potentially repeating; i.e., not unique) array of suffled digital/analogue watches
-			const digitalWatchURLsArray: string[] = utils.chooseNRand(allDigitalWatchURLs, nSpecificWatchesPerBlock);
-			const analogueWatchURLsArray: string[] = utils.chooseNRand(allAnalogueWatchURLs, nSpecificWatchesPerBlock);
+			const digitalWatchURLsArray: string[] = utils.chooseNRand(allDigitalWatchURLs, nWatchImagesPerBlock);
+			const analogueWatchURLsArray: string[] = utils.chooseNRand(allAnalogueWatchURLs, nWatchImagesPerBlock);
 
 			// construct tT array
 			var t2TargetURLsArray: string[] = [];
