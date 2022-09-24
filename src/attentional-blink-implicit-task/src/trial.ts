@@ -4,24 +4,22 @@ import {
     TargetCondition,
     GlobalExperimentState,
     State,
-} from './types';
+} from 'types';
 
 export function responseIsAllowed(respCode: number) {
     // return Object.values(ResponseKeyCode).includes(respCode);  // Requires ECMAScript 2017, so we can't use it
-    /*const respAllowedValues: number[] = Object.keys(ResponseKeyCode).filter((item) => {
-        return Number(item);
-    }).map((item) => {
-        return Number(item);
-    });*/
+    const respAllowedValues: string[] = Object.keys(ResponseKeyCode).filter((item) => {
+        return !isNaN(Number(item));
+    });
     // Filter ResponseKeyCode values from Object.keys(ResponseKeyCode) and return them as numbers
-    const respAllowedValues: number[] = Object.keys(ResponseKeyCode).reduce((filtered, k) => {
-        const i = Number(k);
-        if (!isNaN(i)) {
-            filtered.push(i);
+    // Must check each element because `respAllowedValues.includes(respCode.toString())` was erroring
+    const respCodeStr: string = respCode.toString()
+    for (let i = 0; i < respAllowedValues.length; i++) {
+        if (respCodeStr == respAllowedValues[i]) {
+            return true;
         }
-        return filtered;
-    }, [])
-    return respAllowedValues.includes(respCode);
+    }
+    return false;
 }
 
 export function responseIsCorrect(blockStruct: BlockStruct, respCode: number) {
@@ -47,7 +45,17 @@ export function nextState(blockStruct: BlockStruct, exprState: GlobalExperimentS
         if (blockStruct.trialCounter == exprState.nT2ImagesPerBlock) { // either go to a break screen
             return [State.InterBlockBreak, blockStruct];
         } else { // or continue
-            return [State.PreTrialmachine, blockStruct];
+            return [State.PreTrial, blockStruct];
         }
+    }
+}
+
+export function nextPracticeState(blockStruct: BlockStruct) {
+    if (blockStruct.t1TargetsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetsArray.length === 0) {
+        /// then our block is over
+        return [State.PostPracticeBreak,]
+    } else {
+        // if our trial is not over yet
+        return [State.PracticePreTrial, blockStruct]
     }
 }

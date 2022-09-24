@@ -5,7 +5,7 @@
 
 // API imports
 import gorilla = require('gorilla/gorilla');
-import stateMachine = require("gorilla/state_machine");
+import stateMachine = require('gorilla/state_machine');
 // our imports
 import utils = require('utils');
 import trial = require('trial');
@@ -15,6 +15,7 @@ import {
     GlobalExperimentState,
     ImageType,
     ImageStruct,
+    ResponseKeyCode,
     State,
     TargetCondition,
     TrialStruct,
@@ -99,7 +100,7 @@ let allObjectURLs: string[];
 let allPareidoliaURLs: string[];
 let allWatchURLs: string[];
 let allPracticeTargetImages: ImageStruct[];  // TODO: this might need to be turned back to URLs in the interest of preloading
-const allExampleTargets: Record<string, string> = {};
+const allExampleTargets = {};  // I would use type Record<string, string> if I could, but Gorilla complains
 
 // initialise URL array of all distractors as global
 let allDistractorURLs: string[];
@@ -118,11 +119,6 @@ let practiceWatchImages: ImageStruct[];
 let practicePareidoliaImages: ImageStruct[];
 let practiceT1Images: ImageStruct[];
 let practiceT2Images: ImageStruct[];
-
-// need demographics to be global
-let participantID: string;
-let participantGender: string;
-let participantAge: number;
 
 // this is the main gorilla function call!
 gorilla.ready(function(){
@@ -143,15 +139,15 @@ gorilla.ready(function(){
             //// INITIALISE URL LISTS BEFORE TASK BEGINS
             // set number array for main target variables
             // TODO: make these numbers dynamic/come from a dictionary of (ImageType => nImages)
-            allFacesAsNumbers = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock);
-            allObjectsAsNumbers = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock);
-            allPareidoliaAsNumbers = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock);
-            allWatchesAsNumbers = utils.constructNumberArray(1, exprState.nWatchImages); // TODO: nWatchImages doesn't exist
+            allFacesAsNumbers = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);  // TODO: L to check that these numbers are correct (see config.ts)
+            allPareidoliaAsNumbers = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);
+            allWatchesAsNumbers = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);
+            allObjectsAsNumbers = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock); // T2 is always a flower
             // construct array of T2 images
-            allFaceNames = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + exprState.imageUtilsConfigs.imgExt);
-            allObjectNames = utils.constructNameArray(allObjectsAsNumbers, 'Flower', '.' + exprState.imageUtilsConfigs.imgExt);
+            allFaceNames = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + exprState.imageUtilsConfigs.imgExt); // TODO: name images appropriately
             allPareidoliaNames = utils.constructNameArray(allPareidoliaAsNumbers, 'Pareidolia', '.' + exprState.imageUtilsConfigs.imgExt);
-            allWatchNames = utils.constructNameArray(allWatchesAsNumbers, 'Analogue', '.' + exprState.imageUtilsConfigs.imgExt);
+            allWatchNames = utils.constructNameArray(allWatchesAsNumbers, 'Watch', '.' + exprState.imageUtilsConfigs.imgExt);
+            allObjectNames = utils.constructNameArray(allObjectsAsNumbers, 'Flower', '.' + exprState.imageUtilsConfigs.imgExt);
             // convert to URLs
             exprState.allFaceURLs = constructURLArray(allFaceNames);
             exprState.allObjectURLs = constructURLArray(allObjectNames);
@@ -160,12 +156,12 @@ gorilla.ready(function(){
 
             // set URL array of all distractors
             allDistractorNumbers = utils.constructNumberArray(1, exprState.nDistractors);
-            allDistractorNames = utils.constructNameArray(allDistractorNumbers, 'D', '.' + exprState.imageUtilsConfigs.imgExt)
+            allDistractorNames = utils.constructNameArray(allDistractorNumbers, 'D', '.' + exprState.imageUtilsConfigs.imgExt) // TODO: name distractor images appropriately
             allDistractorURLs = constructURLArray(allDistractorNames);
 
             // get practice targets
             practiceImageNumbersPerT1Type = utils.constructNumberArray(1, exprState.nPracticeT1ImagesPerT1Type);
-            practiceFaceNames = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Pface', '.' + exprState.imageUtilsConfigs.imgExt);
+            practiceFaceNames = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Pface', '.' + exprState.imageUtilsConfigs.imgExt); // TODO: name practice images appropriately
             practiceWatchNames = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Pwatch', '.' + exprState.imageUtilsConfigs.imgExt);
             practicePareidoliaNames = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Ppareidolia', '.' + exprState.imageUtilsConfigs.imgExt);
             practiceFaceImages = constructImageArray(practiceFaceNames, ImageType.Face);
@@ -214,11 +210,7 @@ gorilla.ready(function(){
                 loadingMessage: exprState.imageLoadingMessage,
                 stimulusarray: allImageURLs,
             },() => {
-                // document.addEventListener("DOMContentLoaded", () => {
-                // $(window).load(function() {
-                // window.addEventListener('load', (event) => {
-                    machine.transition(State.Consent);
-                // });
+                machine.transition(State.Consent);
             })
         }, // on onEnter
     }) // end addState PreloadStimuli
@@ -362,13 +354,7 @@ gorilla.ready(function(){
     SM.addState(State.PracticeBlock, {
         // this state determines whether or not to go to the next block, do another trial, or finish
         onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-            if (blockStruct.t1TargetsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetsArray.length === 0) {
-                /// then our block is over
-                machine.transition(State.PostPracticeBreak)
-            } else {
-                // if our trial is not over yet
-                machine.transition(State.PracticePreTrial, blockStruct)
-            }
+            machine.transition(...trial.nextPracticeState(blockStruct));  // TODO: this shouldn't be failing but it is
         }, // end onEnter State.Block
     }) // end addState State.Block
 
@@ -382,9 +368,8 @@ gorilla.ready(function(){
             // initialise distractor array
             let trialArrayURLs: string[] = [];
 
-            let t1ImageURL = '';
-            t1ImageURL = utils.takeRand(blockStruct.t1TargetsArray);
-            console.log("T1 image has been chosen: " + t1ImageURL);
+            const t1Image: ImageStruct = utils.takeRand(blockStruct.t1TargetsArray);
+            console.log("T1 image has been chosen: " + t1Image.name);
             console.log("T1 image possibilities left are " + blockStruct.t1TargetsArray);
 
             // choose whether or not T2 is displayed
@@ -394,37 +379,36 @@ gorilla.ready(function(){
                 console.log("T2 image is not being displayed");
                 blockStruct.t2Condition = TargetCondition.Absent;
                 // construct random distractor array
-                trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 1);
-                const randomInsertIndex: number = utils.randInt(0, nInImageSequence - 1);
+                trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, exprState.nImagesInSequence - 1);
+                const randomInsertIndex: number = utils.randInt(0, exprState.nImagesInSequence - 1);
                 // insert T1 into trial array
-                utils.insert(trialArrayURLs, randomInsertIndex, t1ImageURL);
+                utils.insert(trialArrayURLs, randomInsertIndex, t1Image.url);
                 // be sure to redefine the position gap for metric recording
                 blockStruct.t2PosGap = 0;
             } else {
                 // display T2; more complex choices to make (what T2 is)
                 blockStruct.t2Condition = TargetCondition.Present;
-                const t2ImageURL: string = utils.takeRand(blockStruct.t2TargetsArray);
+                const t2Image: ImageStruct = utils.takeRand(blockStruct.t2TargetsArray);
                 console.log("We are going to display T2");
-                console.log("T2 image has been chosen: " + t2ImageURL);
+                console.log("T2 image has been chosen: " + t2Image.name);
                 console.log("T2 image possibilities left are " + blockStruct.t2TargetsArray);
                 // construct random distractor array
-                trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 2);
+                trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, exprState.nImagesInSequence - 2);
 
                 // choose T2 image gap
                 const t2ImageTypeNumber: number = utils.takeRand(blockStruct.t2DisplayGapOptions);
-                console.log('Image number type is' + (t2ImageTypeNumber % 3));
-                const t2ImageTypeNumberModulo: number = t2ImageTypeNumber % lagPositions.length
+                const t2ImageTypeNumberModulo: number = t2ImageTypeNumber % exprState.lagPositions.length;
+                console.log('Image lag type is' + t2ImageTypeNumberModulo);
 
-                const t2PosGap = lagPositions[t2ImageTypeNumberModulo];
-                console.log('So image gap is' + t2PosGap);
-                blockStruct.t2PosGap = t2PosGap;
+                blockStruct.t2PosGap = exprState.lagPositions[t2ImageTypeNumberModulo];
+                console.log('So image gap is' + blockStruct.t2PosGap);
 
-                const trialArrayT1MaxPos: number = nInImageSequence - t2PosGap;
+                const trialArrayT1MaxPos: number = exprState.nImagesInSequence - blockStruct.t2PosGap;
                 const randomInsertIndex: number = utils.randInt(0, trialArrayT1MaxPos - 1);
                 // insert T1 into trial array
-                utils.insert(trialArrayURLs, randomInsertIndex, t1ImageURL);
+                utils.insert(trialArrayURLs, randomInsertIndex, t1Image.url);
                 // insert T2 into trial array
-                utils.insert(trialArrayURLs, randomInsertIndex + t2PosGap, t2ImageURL);
+                utils.insert(trialArrayURLs, randomInsertIndex + blockStruct.t2PosGap, t2Image.url);
             }
 
             console.log("T2 display potential left are: " + blockStruct.t2DisplayPotentialArray);
@@ -447,7 +431,7 @@ gorilla.ready(function(){
                         $('#trial-image-' + i).css('visibility','visible');
                         next();
                     }) // end queue for '#gorilla'
-                    .delay(imageDisplayLength)
+                    .delay(exprState.imageDisplayLength)
                     .queue(function (next) {
                         // this queue isn't strictly necessary, as we loop through the trial state, replacing the trial image
                         $('#trial-image-' + i).css('visibility','hidden');
@@ -462,21 +446,21 @@ gorilla.ready(function(){
 
                 gorilla.populateAndLoad('#gorilla', 'trial', {trialarray: blockStruct.trialArrayURLs},() => {
                     $('#gorilla')
-                        .delay(beforeFixationDelay)
+                        .delay(exprState.beforeFixationDelay)
                         .queue(function (next) {
                             $('.fixation-cross').show();
                             gorilla.refreshLayout();
                             // $(this).dequeue();
                             next();
                         })// end queue for '#gorilla'
-                        .delay(fixationLength)
+                        .delay(exprState.fixationLength)
                         .queue(function (next) {
                             $('.fixation-cross').hide();
                             gorilla.refreshLayout();
                             // $(this).dequeue();
                             next();
                         }) // end queue for '#gorilla'
-                        .delay(afterFixationDelay)
+                        .delay(exprState.afterFixationDelay)
                         .queue(function (next) {
                             // machine.transition(State.Trial, blockStruct);
                             // $(this).dequeue();
@@ -491,8 +475,8 @@ gorilla.ready(function(){
         onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
             gorilla.populateAndLoad($('#gorilla'), 't2-seen-response', {
                     imageType: blockStruct.blockTypeHR,  // TODO: L will need to change this here when she alters the block messages (probably just to delete)
-                    targetPresent: presentResponseKey.toUpperCase(),
-                    targetAbsent: absentResponseKey.toUpperCase(),
+                    targetPresent: String.fromCharCode(ResponseKeyCode.Present),
+                    targetAbsent: String.fromCharCode(ResponseKeyCode.Absent),
                 }, (err) => {
                     $('#gorilla')
                     .queue(function (next) {
@@ -526,7 +510,7 @@ gorilla.ready(function(){
                                     gorilla.refreshLayout();
                                     $(this).dequeue();
                                 })
-                                .delay(practiceFeedbackMessageLength)
+                                .delay(exprState.practiceFeedbackMessageLength)
                                 .queue(function() {
                                     $('.practice-feedback-correct').hide();
                                     gorilla.refreshLayout();
@@ -543,7 +527,7 @@ gorilla.ready(function(){
                                     gorilla.refreshLayout();
                                     $(this).dequeue();
                                 })
-                                .delay(practiceFeedbackMessageLength)
+                                .delay(exprState.practiceFeedbackMessageLength)
                                 .queue(function() {
                                     $('.practice-feedback-incorrect').hide();
                                     gorilla.refreshLayout();
@@ -590,10 +574,10 @@ gorilla.ready(function(){
             ];
 
             // construct tT array
-            const t2TargetURLsArray: string[] = utils.takeNRand(allFlowerURLs, nT2ImagesPerBlock);  // TODO: initialise flower URLs
+            const t2TargetURLsArray: string[] = utils.takeNRand(allFlowerURLs, exprState.nT2ImagesPerBlock);  // TODO: initialise flower URLs
 
-            const t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nT1ImagesPerBlock); // whether or not T2 is displayed
-            const t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nT2ImagesPerBlock);
+            const t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock); // whether or not T2 is displayed
+            const t2DisplayGapOptions: number[] = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock);
 
             const blockStruct = {
                 trialCounter: 0,
@@ -612,15 +596,15 @@ gorilla.ready(function(){
             // display block instructions
             gorilla.populateAndLoad($('#gorilla'), 'block-instructions', {
                 blockCounter: blockCounter,
-                nBlocks: nBlocks,
+                nBlocks: exprState.nBlocks,
                 trialType: imageTypeHR,  // TODO: these will need to be changed as well (when changing the ෴ files)
-                exampleTargets: allExampleTargets[blockType],
-                imSize: exampleImageSize,
+                exampleTargets: allExampleTargets[blockType], // TODO: same here (probably needs deleting)
+                imSize: exprState.exampleImageSize,
             }, (err) => {
-                        $('#gorilla').show();
-                        $('#start-button').one('click', (event: JQueryEventObject) => {
-                            machine.transition(State.Block, blockStruct);
-                        }) // end on keypress
+                $('#gorilla').show();
+                $('#start-button').one('click', (event: JQueryEventObject) => {
+                    machine.transition(State.Block, blockStruct);
+                }) // end on keypress
             }); // end populate and load
         }, // end onEnter State.BlockInitialiser
     }) // end addState State.BlockInitialiser
@@ -671,8 +655,8 @@ gorilla.ready(function(){
                 console.log("T2 image is not being displayed");
                 blockStruct.t2Condition = TargetCondition.Absent;
                 // construct random distractor array
-                trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 1);
-                const randomInsertIndex: number = utils.randInt(0, nInImageSequence - 1);
+                trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, exprState.nImagesInSequence - 1);
+                const randomInsertIndex: number = utils.randInt(0, exprState.nImagesInSequence - 1);
                 // insert T1 into trial array
                 utils.insert(trialArrayURLs, randomInsertIndex, t1ImageURL);
                 // be sure to redefine the position gap for metric recording
@@ -686,7 +670,7 @@ gorilla.ready(function(){
                 console.log("T2 image has been chosen: " + t2ImageURL);
                 console.log("T2 image possibilities left are " + blockStruct.t2TargetsArray);
                 // construct random distractor array
-                trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 2);
+                trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, exprState.nImagesInSequence - 2);
 
                const t2ImageURLSplit: string[] = t2ImageURL.split('/')
                blockStruct.t2Image = t2ImageURLSplit[t2ImageURLSplit.length - 1]
@@ -695,13 +679,13 @@ gorilla.ready(function(){
                 // choose T2 image gap
                 const t2ImageTypeNumber: number = utils.takeRand(blockStruct.t2DisplayGapOptions);
                 console.log('Image number type is' + (t2ImageTypeNumber % 3));
-                const t2ImageTypeNumberModulo: number = t2ImageTypeNumber % lagPositions.length;
+                const t2ImageTypeNumberModulo: number = t2ImageTypeNumber % exprState.lagPositions.length;
 
-                const t2PosGap = lagPositions[t2ImageTypeNumberModulo];
+                const t2PosGap = exprState.lagPositions[t2ImageTypeNumberModulo];
                 console.log('So image gap is' + t2PosGap);
                 blockStruct.t2PosGap = t2PosGap;
 
-                const trialArrayT1MaxPos: number = nInImageSequence - t2PosGap;
+                const trialArrayT1MaxPos: number = exprState.nImagesInSequence - t2PosGap;
                 const randomInsertIndex: number = utils.randInt(0, trialArrayT1MaxPos - 1);
                 // insert T1 into trial array
                 utils.insert(trialArrayURLs, randomInsertIndex, t1ImageURL);
@@ -729,7 +713,7 @@ gorilla.ready(function(){
                     $('#trial-image-' + i).css('visibility','visible');
                     next();
                 }) // end queue for '#gorilla'
-                .delay(imageDisplayLength)
+                .delay(exprState.imageDisplayLength)
                 .queue(function (next) {
                     // this queue isn't strictly necessary, as we loop through the trial state, replacing the trial image
                     $('#trial-image-' + i).css('visibility','hidden');
@@ -744,21 +728,21 @@ gorilla.ready(function(){
 
             gorilla.populateAndLoad('#gorilla', 'trial', {trialarray: blockStruct.trialArrayURLs},() => {
                 $('#gorilla')
-                    .delay(beforeFixationDelay)
+                    .delay(exprState.beforeFixationDelay)
                     .queue(function (next) {
                         $('.fixation-cross').show();
                         gorilla.refreshLayout();
                         // $(this).dequeue();
                         next();
                     })// end queue for '#gorilla'
-                    .delay(fixationLength)
+                    .delay(exprState.fixationLength)
                     .queue(function (next) {
                         $('.fixation-cross').hide();
                         gorilla.refreshLayout();
                         // $(this).dequeue();
                         next();
                     }) // end queue for '#gorilla'
-                    .delay(afterFixationDelay)
+                    .delay(exprState.afterFixationDelay)
                     .queue(function (next) {
                         // machine.transition(State.Trial, blockStruct);
                         // $(this).dequeue();
@@ -773,8 +757,8 @@ gorilla.ready(function(){
         onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
             gorilla.populateAndLoad($('#gorilla'), 't2-seen-response', {
                     imageType: blockStruct.blockTypeHR,
-                    targetPresent: presentResponseKey.toUpperCase(),
-                    targetAbsent: absentResponseKey.toUpperCase(),
+                    targetPresent: String.fromCharCode(ResponseKeyCode.Present),
+                    targetAbsent: String.fromCharCode(ResponseKeyCode.Absent),
                 }, (err) => {
                     $('#gorilla')
                     .queue(function (next) {
@@ -847,7 +831,7 @@ gorilla.ready(function(){
     SM.addState(State.Debrief, {
         onEnter: (machine: stateMachine.Machine) => {
             gorilla.populate('#gorilla', 'debrief', {
-                debriefform: gorilla.resourceURL(debriefFilename)
+                debriefform: gorilla.resourceURL(exprState.debriefFilename)
             });
             gorilla.refreshLayout();
             $('#next-button').one('click', (event: JQueryEventObject) => {

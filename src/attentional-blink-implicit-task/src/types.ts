@@ -73,8 +73,8 @@ export class GlobalExperimentState {
         this.allWatchURLs = [];
 
         // Relative trial/block size calculations
-        this.nTrials = this.nT2ImagesPerBlock * 3 * 2; // 100 T2 images per block * 3 blocks * 2 trial types = 600
-        this.nT1ImagesPerBlock = this.nT2ImagesPerBlock * 2; // 100 T2 images per block * 2 trial types = 200
+        this.nTrials = this.nT2ImagesPerBlock * 3 * 2; // T2 images per block * 3 blocks * 2 trial types
+        this.nT1ImagesPerBlock = this.nT2ImagesPerBlock * 2; // T2 images per block * 2 trial types
         this.nPracticeT1Images = this.nPracticeT2Images * 2; // Half of all practice trials have no T2
         this.nPracticeT1ImagesPerT1Type = Math.floor(this.nPracticeT1Images / exprConfigs.T1Types.length);
 
