@@ -8,57 +8,34 @@ import gorilla = require('gorilla/gorilla');
 import stateMachine = require("gorilla/state_machine");
 // our imports
 import utils = require('utils');
+import trial = require('trial');
+import config = require('config');
+import {
+	GlobalExperimentState, ExperimentConfigs, ResponseKeyCode, 
+	ImageType, ImageStruct, State, TrialStruct, TargetCondition, 
+	PracticeTrialStruct, BlockStruct,
+} from 'types';
 
 /*--------------------------------------*/
+// Define a global experiment struct that will
+// help us to keep track of important experiment
+// information throught all blocks/trials
+/*--------------------------------------*/
 
-const nT2ImagesPerBlock: number = 60; // 100
-const nWatchImages: number = 100;
-const nInImageSequence: number = 20; // i.e., 20 images are displayed in the trial
-var blockTypes: string[] = ['F', 'P', 'O']; // face, pareidolia, objects (flowers)
-const T1Types: string[] = ['F', 'P', 'O'];
-const stimExt: string = 'png';
-const nDistractors: number = 500;
-const beforeFixationDelay: number = 500;
-const fixationLength: number = 500;
-const afterFixationDelay: number = 0;
-const imageDisplayLength: number = 70; // 70
-const presentResponseKey: string = 'k';
-const absentResponseKey: string = 'l';
-const nBlocks: number = 3;
-const nPracticeT2Images: number = 6;
-const loadingMessage: string = 'Please wait while the experiment is loading.  This may take some time.';
-const consentFilename: string = 'AB_consent.pdf';
-const debriefFilename: string = 'AB_debrief.pdf';
-const exampleImageSize: string = '20vh';
-const practiceFeedbackMessageLength: number = 800;
-const lagPositions: number[] = [3, 7];
+var exprState = new GlobalExperimentState(config.exprConfigs);
 
-if ((nT2ImagesPerBlock % lagPositions.length) !== 0) {
+if ((exprState.nT2ImagesPerBlock % exprState.lagPositions.length) !== 0) {
 	console.warn('The number of T2 images does not divide equally into the number of lag positions you have specified.')
 }
 
-// 3 blocks, with constant T2 type
-
-/* ------------------------------------- */
+/*--------------------------------------*/
 // There is not much that you should need
 // to change below this line!
 /*--------------------------------------*/
 
-const nTrials: number = nT2ImagesPerBlock * 3 * 2; // 100 T2 images per block * 3 blocks * 2 trial types = 600
-const nT2Displayed: number = Math.floor(nT2ImagesPerBlock / blockTypes.length);
-const nT1ImagesPerBlock: number = nT2ImagesPerBlock * 2; // 100 T2 images per block * 2 trial types = 200
-const nPracticeT1Images: number = nPracticeT2Images * 2; // Half of all practice trials have no T2
-const nPracticeT1ImagesPerT1Type: number = Math.floor(nPracticeT1Images / T1Types.length);
-const constBlockTypes: string[] = [...blockTypes];
-
 // global boolean variable which we update in order to check
 // if we are allowed to press the response key or not
 var keypressAllowed: boolean = false;
-
-// get keycode for response keys
-const presentResponseKeyCode: number = presentResponseKey.toLowerCase().charCodeAt(0);
-const absentResponseKeyCode: number = absentResponseKey.toLowerCase().charCodeAt(0);
-
 
 // Given an array of stimuli names, constructs an array
 // of stimuli URLs
@@ -72,22 +49,8 @@ function constructURLArray(stimArr: string[]) {
 	return URLs;
 }
 
-enum TargetImageType {
-	Bird = 'bird',
-	Flower = 'flower',
-	Watch = 'watch',
-	Pareidolia = 'pareidolia',
-	Face = 'face',
-}
-
-interface ImageStruct {
-	url: string,
-	name: string,
-	type: TargetImageType,
-}
-
 // Given an image name and type, construct its ImageStruct representation
-function getImageStruct(name: string, type: TargetImageType) {
+function getImageStruct(name: string, type: ImageType) {
 	return {
 		url: gorilla.stimuliURL(name),
 		name: name,
@@ -97,7 +60,7 @@ function getImageStruct(name: string, type: TargetImageType) {
 
 // Given an array of stimuli names and their type, constructs an array
 // of stimuli images of type ImageStruct
-function constructImageArray(stimArr: string[], imgType: TargetImageType) {
+function constructImageArray(stimArr: string[], imgType: ImageType) {
     var imageInfoArr: ImageStruct[] = [];
 	for (var i: number = 0; i < stimArr.length; i++) {
 		const imageInfo: ImageStruct = getImageStruct(stimArr[i], imgType);
@@ -105,71 +68,6 @@ function constructImageArray(stimArr: string[], imgType: TargetImageType) {
 	}
 
 	return imageInfoArr;
-}
-
-// possible states in state machine
-enum State {
-	// Starting states
-  	PreloadArrays,
-	PreloadStimuli,
-	Consent,
-	RequestFullscreen,
-	Demographics,
-	Instructions,
-	// Practice states
-	PracticeInstructions,
-	PracticeBlockInitialiser,
-	PracticeBlock,
-  	PracticeInterBlockBreak,
-	PracticePreTrial,
-	PracticeFixationCross,
-	PracticeTrial,
-	PracticeT2SeenResponse,
-	PostPracticeBreak,
-	// Main experiment states
-	BlockInitialiser,
-	Block,
-  	InterBlockBreak,
-	PreTrial,
-	FixationCross,
-	Trial,
-	T2SeenResponse,
-	// Finishish states
-  	Debrief,
-	Finish,
-}
-
-interface TrialStruct {
-	t2ResponseKey: String,
-	t2ResponseTime: number,
-	t1ConditionType: string,
-	t2Present: boolean,
-	t2ResponseCorrect: boolean,
-}
-
-interface PracticeTrialStruct {
-	practiceT1Images: string[],
-	practiceT2Images: string[],
-}
-
-interface T1Struct {
-	t1ConditionType: string,
-}
-
-interface BlockStruct {
-  	trialCounter: number,
-	blockType: string,
-  	blockTypeHR: string,
-	t1TargetsArray: ImageStruct[],
-	t2DisplayPotentialArray: number[],
-	t2DisplayGapOptions: number[],
-	t2TargetURLsArray: string[],  // Consider using list of ImageStruct here instead of just URLs
-	trialArrayURLs: string[],
-	t2PosGap: number,
-	t2Condition: string,
-	t1ConditionType: TargetImageType,
-	t1Image: string,
-	t2Image: string,
 }
 
 // need demographics to be global
@@ -207,6 +105,10 @@ var allDistractorNumbers: number[];
 var allDistractorNames: string[];
 
 // all practice images
+var practiceImageNumbersPerT1Type: number[];
+var practiceFaceNames: string[];
+var practiceWatchNames: string[];
+var practicePareidoliaNames: string[];
 var practiceFaceImages: ImageStruct[];
 var practiceWatchImages: ImageStruct[];
 var practicePareidoliaImages: ImageStruct[];
@@ -232,40 +134,45 @@ gorilla.ready(function(){
   SM.addState(State.PreloadArrays, {
     onEnter: (machine: stateMachine.Machine) => {
       gorilla.populateAndLoad('#gorilla', 'loading', {
-		  	loadingMessage: loadingMessage,
+		  	loadingMessage: exprState.imageLoadingMessage,
 	  }, () => {
         	//// INITIALISE URL LISTS BEFORE TASK BEGINS
         	// set number array for main target variables
-        	allFacesAsNumbers = utils.constructNumberArray(1, nT2ImagesPerBlock);
-        	allObjectsAsNumbers = utils.constructNumberArray(1, nT2ImagesPerBlock);
-        	allPareidoliaAsNumbers = utils.constructNumberArray(1, nT2ImagesPerBlock);
-        	allWatchesAsNumbers = utils.constructNumberArray(1, nWatchImages);
+			// TODO: make these numbers dynamic/come from a dictionary of (ImageType => nImages)
+        	allFacesAsNumbers = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock);
+        	allObjectsAsNumbers = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock);
+        	allPareidoliaAsNumbers = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock);
+        	allWatchesAsNumbers = utils.constructNumberArray(1, exprState.nWatchImages); // TODO: nWatchImages doesn't exist
         	// construct array of T2 images
-        	allFaceNames = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + stimExt);
-        	allObjectNames = utils.constructNameArray(allObjectsAsNumbers, 'Flower', '.' + stimExt);
-        	allPareidoliaNames = utils.constructNameArray(allPareidoliaAsNumbers, 'Pareidolia', '.' + stimExt);
-        	allWatchNames = utils.constructNameArray(allWatchesAsNumbers, 'Analogue', '.' + stimExt);
+        	allFaceNames = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + exprState.imageUtilsConfigs.imgExt);
+        	allObjectNames = utils.constructNameArray(allObjectsAsNumbers, 'Flower', '.' + exprState.imageUtilsConfigs.imgExt);
+        	allPareidoliaNames = utils.constructNameArray(allPareidoliaAsNumbers, 'Pareidolia', '.' + exprState.imageUtilsConfigs.imgExt);
+        	allWatchNames = utils.constructNameArray(allWatchesAsNumbers, 'Analogue', '.' + exprState.imageUtilsConfigs.imgExt);
         	// convert to URLs
-        	allFaceURLs = constructURLArray(allFaceNames);
-        	allObjectURLs = constructURLArray(allObjectNames);
-        	allPareidoliaURLs = constructURLArray(allPareidoliaNames);
-        	allWatchURLs = constructURLArray(allWatchNames);
+        	exprState.allFaceURLs = constructURLArray(allFaceNames);
+        	exprState.allObjectURLs = constructURLArray(allObjectNames);
+        	exprState.allPareidoliaURLs = constructURLArray(allPareidoliaNames);
+        	exprState.allWatchURLs = constructURLArray(allWatchNames);
 
         	// set URL array of all distractors
-        	allDistractorNumbers = utils.constructNumberArray(1, nDistractors);
-        	allDistractorNames = utils.constructNameArray(allDistractorNumbers, 'D', '.' + stimExt)
+        	allDistractorNumbers = utils.constructNumberArray(1, exprState.nDistractors);
+        	allDistractorNames = utils.constructNameArray(allDistractorNumbers, 'D', '.' + exprState.imageUtilsConfigs.imgExt)
         	allDistractorURLs = constructURLArray(allDistractorNames);
 
 			// get practice targets
-			practiceFaceImages = constructImageArray(utils.constructNameArray(utils.constructNumberArray(1, nPracticeT1ImagesPerT1Type), 'Pface', '.' + stimExt), TargetImageType.Face);
-			practiceWatchImages = constructImageArray(utils.constructNameArray(utils.constructNumberArray(1, nPracticeT1ImagesPerT1Type), 'Pwatch', '.' + stimExt), TargetImageType.Watch);
-			practicePareidoliaImages = constructImageArray(utils.constructNameArray(utils.constructNumberArray(1, nPracticeT1ImagesPerT1Type), 'Ppareidolia', '.' + stimExt), TargetImageType.Pareidolia);
+			practiceImageNumbersPerT1Type = utils.constructNumberArray(1, exprState.nPracticeT1ImagesPerT1Type);
+			practiceFaceNames = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Pface', '.' + exprState.imageUtilsConfigs.imgExt);
+			practiceWatchNames = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Pwatch', '.' + exprState.imageUtilsConfigs.imgExt);;
+			practicePareidoliaNames = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Ppareidolia', '.' + exprState.imageUtilsConfigs.imgExt);;
+			practiceFaceImages = constructImageArray(practiceFaceNames, ImageType.Face);
+			practiceWatchImages = constructImageArray(practiceWatchNames, ImageType.Watch);
+			practicePareidoliaImages = constructImageArray(practicePareidoliaNames, ImageType.Pareidolia);
 			practiceT1Images = [
 				...practiceFaceImages,
 				...practiceWatchImages,
 				...practicePareidoliaImages
 			];
-			practiceT2Images = constructImageArray(utils.generatePracticeArray('Bird'), TargetImageType.Bird);
+			practiceT2Images = constructImageArray(utils.generatePracticeArray('Bird'), ImageType.Bird);
 			allPracticeTargetImages = [
 				...practiceT1Images,
 				...practiceT2Images
@@ -300,7 +207,7 @@ gorilla.ready(function(){
 	SM.addState(State.PreloadStimuli, {
 		onEnter: (machine: stateMachine.Machine, allImageURLs: string[]) => {
 			gorilla.populateAndLoad('#gorilla', 'allstim', {
-				loadingMessage: loadingMessage,
+				loadingMessage: exprState.imageLoadingMessage,
 				stimulusarray: allImageURLs,
 			},() => {
 				// document.addEventListener("DOMContentLoaded", () => {
@@ -315,7 +222,7 @@ gorilla.ready(function(){
 	SM.addState(State.Consent, {
 		onEnter: (machine: stateMachine.Machine) => {
 			gorilla.populate('#gorilla', 'consent', {
-				consentform: gorilla.resourceURL(consentFilename)
+				consentform: gorilla.resourceURL(exprState.consentFilename)
 			})
 			gorilla.refreshLayout();
 			$('#start-button').one('click', (event: JQueryEventObject) => {
@@ -389,9 +296,9 @@ gorilla.ready(function(){
 	    onEnter: (machine: stateMachine.Machine) => {
 			$('#gorilla').hide();
 	        gorilla.populateAndLoad($('#gorilla'), 'instructions', {
-				exampleWatches: allExampleTargets['watch'],
+				exampleWatches: allExampleTargets['watch'],  // TODO: This will also need to be changed when you redo the template files
 				exampleTargets: allExampleTargets['all'],
-				imSize: exampleImageSize,
+				imSize: exprState.exampleImageSize,
 	        },
 	        (err) => {
 				$('#gorilla').show();
@@ -408,7 +315,7 @@ gorilla.ready(function(){
 			$('#gorilla').hide();
 	        gorilla.populateAndLoad($('#gorilla'), 'practice-instructions', {
 				example: allExampleTargets['practice'],
-				imSize: exampleImageSize,
+				imSize: exprState.exampleImageSize,
 		   	}, (err) => {
 				$('#gorilla').show();
 				$('#start-button').one('click', (event: JQueryEventObject) => {
@@ -423,24 +330,22 @@ gorilla.ready(function(){
 	    // this state constructs everything needed for a single block
 	    onEnter: (machine: stateMachine.Machine) => {
 	        // construct tT array
-	        var t2TargetURLsArray: string[] = practiceT2Images;
+	        var t2TargetsArray: ImageStruct[] = practiceT2Images;
 	        var imageTypeHR: string = 'a bird';
 
-	        var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, nPracticeT1Images); // whether or not T2 is displayed
-	        var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, nPracticeT2Images);
+	        var t2DisplayPotentialArray: number[] = utils.constructNumberArray(1, exprState.nPracticeT1Images); // whether or not T2 is displayed
+	        var t2DisplayGapOptions: number[] = utils.constructNumberArray(1, exprState.nPracticeT2Images);
 
 	        let blockStruct = {
 	            trialCounter: 0,
-	            blockType: 'Bird',
-	            blockTypeHR: imageTypeHR,
 	            t1TargetsArray: practiceT1Images,
 	            t2DisplayPotentialArray: t2DisplayPotentialArray,
 	            t2DisplayGapOptions: t2DisplayGapOptions,
-	            t2TargetURLsArray: t2TargetURLsArray,
+	            t2TargetsArray: t2TargetsArray,
 	            trialArrayURLs: [],
 	            t2PosGap: 0,
-	            t2Condition: "",
-				t1ConditionType: null,
+	            t2Condition: TargetCondition.None,
+				thisTrialStruct: {} as TrialStruct,
 				t1Image: "",
 				t2Image: "",
 	        } as BlockStruct
@@ -454,7 +359,7 @@ gorilla.ready(function(){
 	SM.addState(State.PracticeBlock, {
 	    // this state determines whether or not to go to the next block, do another trial, or finish
 	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-	        if (blockStruct.t1TargetsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
+	        if (blockStruct.t1TargetsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetsArray.length === 0) {
 	            /// then our block is over
 	            machine.transition(State.PostPracticeBreak)
 	        } else {
@@ -484,7 +389,7 @@ gorilla.ready(function(){
 	        if (t2DeterministicNumber % 2 == 0) {
 	            // do not display T2
 	            console.log("T2 image is not being displayed");
-	            blockStruct.t2Condition = "Absent";
+	            blockStruct.t2Condition = TargetCondition.Absent;
 	            // construct random distractor array
 	            trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 1);
 	            const randomInsertIndex: number = utils.randInt(0, nInImageSequence - 1);
@@ -494,11 +399,11 @@ gorilla.ready(function(){
 	            blockStruct.t2PosGap = 0;
 	        } else {
 	            // display T2; more complex choices to make (what T2 is)
-	            blockStruct.t2Condition = "Present";
-	            const t2ImageURL: string = utils.takeRand(blockStruct.t2TargetURLsArray);
+	            blockStruct.t2Condition = TargetCondition.Present;
+	            const t2ImageURL: string = utils.takeRand(blockStruct.t2TargetsArray);
 	            console.log("We are going to display T2");
 	            console.log("T2 image has been chosen: " + t2ImageURL);
-	            console.log("T2 image possibilities left are " + blockStruct.t2TargetURLsArray);
+	            console.log("T2 image possibilities left are " + blockStruct.t2TargetsArray);
 	            // construct random distractor array
 	            trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 2);
 
@@ -583,7 +488,7 @@ gorilla.ready(function(){
 	SM.addState(State.PracticeT2SeenResponse, {
 	    onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
 	        gorilla.populateAndLoad($('#gorilla'), 't2-seen-response', {
-	                imageType: blockStruct.blockTypeHR,
+	                imageType: blockStruct.blockTypeHR,  // TODO: L will need to change this here when she alters the block messages (probably just to delete)
 	                targetPresent: presentResponseKey.toUpperCase(),
 	                targetAbsent: absentResponseKey.toUpperCase(),
 	            }, (err) => {
@@ -604,13 +509,13 @@ gorilla.ready(function(){
 	                    const e = event.which;
 
 	                    // enter state where it can't enter any more keys
-	                    if (e === presentResponseKeyCode || e === absentResponseKeyCode) {
+	                    if (trial.responseIsAllowed(e)) {
                             // update keypress as we have just pressed the key!
                             keypressAllowed = false;
                             var correctResponse: boolean = false;
 
                             // check if key press was correct
-          	                if ((blockStruct.t2Condition == "Present" && e === presentResponseKeyCode) || (blockStruct.t2Condition == "Absent" && e === absentResponseKeyCode)) {
+          	                if (trial.responseIsCorrect(blockStruct, e)) {
           	                   // correct!
           	                   $('#gorilla')
           	                    .queue(function() {
@@ -669,9 +574,6 @@ gorilla.ready(function(){
 		onEnter: (machine: stateMachine.Machine) => {
 		    // increment block counter
 		    blockCounter++;
-			// get variables based on block type (e.g., object, face, pareidolia)
-			const blockType: string = utils.takeRand(blockTypes); // remove a random element from the blockTypes array
-			console.log("We have chosen block type " + blockType);
 
 			// construct (potentially repeating; i.e., not unique) array of shuffled watches
 			const watchURLsArray: string[] = utils.chooseNRand(allWatchURLs, nWatchImagesPerBlock);
@@ -694,16 +596,14 @@ gorilla.ready(function(){
 
 			let blockStruct = {
         		trialCounter: 0,
-				blockType: blockType,
-        		blockTypeHR: imageTypeHR,
 				t1TargetsArray: watchURLsArray,
 				t2DisplayPotentialArray: t2DisplayPotentialArray,
 				t2DisplayGapOptions: t2DisplayGapOptions,
-				t2TargetURLsArray: t2TargetURLsArray,
+				t2TargetsArray: t2TargetURLsArray,
 				trialArrayURLs: [],
 				t2PosGap: 0,
-				t2Condition: "",
-				t1ConditionType: {} as T1Struct,
+				t2Condition: TargetCondition.None,
+				thisTrialStruct: {} as TrialStruct,
 				t1Image: "",
                 t2Image: "",
 			} as BlockStruct
@@ -712,7 +612,7 @@ gorilla.ready(function(){
 			gorilla.populateAndLoad($('#gorilla'), 'block-instructions', {
 				blockCounter: blockCounter,
 				nBlocks: nBlocks,
-				trialType: imageTypeHR,
+				trialType: imageTypeHR,  // TODO: these will need to be changed as well (when changing the ෴ files)
 				exampleTargets: allExampleTargets[blockType],
 				imSize: exampleImageSize,
 			}, (err) => {
@@ -727,7 +627,8 @@ gorilla.ready(function(){
 	SM.addState(State.Block, {
 		// this state determines whether or not to go to the next block, do another trial, or finish
 		onEnter: (machine: stateMachine.Machine, blockStruct: BlockStruct) => {
-			if (blockStruct.t1TargetsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetURLsArray.length === 0) {
+			machine.transition(...trial.nextState(blockStruct, exprState));
+			if (blockStruct.t1TargetsArray.length === 0 && blockStruct.t2DisplayGapOptions.length === 0 && blockStruct.t2TargetsArray.length === 0) {
 				/// then our block is over
 				if (blockTypes.length === 0 && allFaceURLs.length == 0 && allObjectURLs.length == 0 && allPareidoliaURLs.length == 0) {
   					// if there are no other blocks remaining, finish
@@ -784,7 +685,7 @@ gorilla.ready(function(){
 			if (t2DeterministicNumber % 2 == 0) {
 				// do not display T2
 				console.log("T2 image is not being displayed");
-				blockStruct.t2Condition = "Absent";
+				blockStruct.t2Condition = TargetCondition.Absent;
 				// construct random distractor array
 				trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 1);
 				const randomInsertIndex: number = utils.randInt(0, nInImageSequence - 1);
@@ -795,11 +696,11 @@ gorilla.ready(function(){
 		        blockStruct.t2Image = ""
 			} else {
 				// display T2; more complex choices to make (what T2 is)
-				blockStruct.t2Condition = "Present";
-				const t2ImageURL: string = utils.takeRand(blockStruct.t2TargetURLsArray);
+				blockStruct.t2Condition = TargetCondition.Present;
+				const t2ImageURL: string = utils.takeRand(blockStruct.t2TargetsArray);
 				console.log("We are going to display T2");
 				console.log("T2 image has been chosen: " + t2ImageURL);
-				console.log("T2 image possibilities left are " + blockStruct.t2TargetURLsArray);
+				console.log("T2 image possibilities left are " + blockStruct.t2TargetsArray);
 				// construct random distractor array
 				trialArrayURLs = utils.chooseNUniqueRand(allDistractorURLs, nInImageSequence - 2);
 
@@ -909,7 +810,7 @@ gorilla.ready(function(){
 			            const e = event.which;
 
 			            // enter state where it can't enter any more keys
-			            if (e === presentResponseKeyCode || e === absentResponseKeyCode) {
+			            if (trial.responseIsAllowed(e)) {
 							gorilla.stopStopwatch();
 
 							// IMPORTANT: get response time!
@@ -921,7 +822,7 @@ gorilla.ready(function(){
 							var correctResponse: boolean = false;
 
 							// check if key press was correct
-							if ((blockStruct.t2Condition == "Present" && e === presentResponseKeyCode) || (blockStruct.t2Condition == "Absent" && e === absentResponseKeyCode)) {
+							if (trial.responseIsCorrect(blockStruct, e)) {
 								// correct!
 								correctResponse = true;
 							} else {

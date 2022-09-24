@@ -4,56 +4,15 @@
 // don't need to be in the main file.
 /*--------------------------------------*/
 
-// define proportion of distractors (i.e., 50% of trials)
-// are distractor arrays, so prop. is 0.5
-const proportionOfDistractors: number = 1 / 3;
-const proportionOfTargets: number = 1 - proportionOfDistractors;
+import config = require('config');
+import { ImageType, ImageUtilsConfigs } from './types';
 
-// ibid. with practice trials
-const proportionOfPracticeDistractors: number = 0.5;
-const proportionOfPracticeTargets: number = 1 - proportionOfPracticeDistractors;
-
-// define where numbered distractors start and end
-const dStart: number = 1;
-const dEnd: number = 400;
-// define where numbered targets (per block) start and end
-const tStart: number = 1;
-const tEnd: number = 25;
-// define how many practice trials you have
-const pStart: number = 1;
-const pEnd: number = 6;
-
-// define distractor and target prefix
-const distractorPrefix: string = 'D';
-const carPrefix: string = 'C';
-const facePrefix: string = 'F';
-const highFacePrefix: string = 'HF';
-const lowFacePrefix: string = 'LF';
-const practicePrefix: string = 'Bird'; // P for Practice
-
-// define file extension
-const imageExt: string = 'png';
-
-// define image conditions (defined by Lizzie)
-const conditionCodes: Object = {
-    'F': 1,
-    'C': 2,
-    'LF': 3,
-    'HF': 4,
-}
+const utilsConfigs: ImageUtilsConfigs = config.exprConfigs.imageUtilsConfigs;
 
 /*--------------------------------------*/
 // There is not much that you should need
 // to change below this line!
 /*--------------------------------------*/
-
-// set modulo value
-export const moduloVal: number = Math.floor(1 / proportionOfDistractors);
-const numberOfTrialImages: number = tEnd - tStart + 1;
-const nTrialsPerBlock: number = Math.floor(numberOfTrialImages / proportionOfTargets);
-export const practiceModuloVal: number = Math.floor(1 / proportionOfPracticeDistractors);
-const numberOfPracticeImages: number = pEnd - pStart + 1;
-const nPracticeTrials: number = Math.floor(numberOfPracticeImages / proportionOfPracticeTargets);
 
 // Chooses a random integer between lower and upper inclusive
 export function randInt(lower: number, upper: number) {
@@ -195,7 +154,7 @@ export function constructNameArray(arrayOfIndices: number[], prefix: string, suf
 // These numbers are taken from the array and used to determine whether
 // to show a distractor or target image
 export function constructBlockArray() {
-    return _constructNumberArray(tStart, nTrialsPerBlock)
+    return _constructNumberArray(utilsConfigs.targetRange.start, utilsConfigs.nTrialsPerBlock)
     // return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50];
 }
 
@@ -203,7 +162,7 @@ export function constructBlockArray() {
 // to the last index of targets.  For example, if you had 25 target images,
 // then the array would be number from 0 to 24.
 export function constructTargetArray() {
-    return _constructNumberArray((tStart - 1), (tEnd - 1))
+    return _constructNumberArray((utilsConfigs.targetRange.start - 1), (utilsConfigs.targetRange.end - 1))
     // return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 }
 
@@ -218,22 +177,22 @@ export function constructTargetPositions() {
 // These numbers are taken from the array and used to determine whether to
 // show a distractor or target for the practice trials.
 export function constructPracticeArray() {
-    return _constructNumberArray(pStart, nPracticeTrials)
+    return _constructNumberArray(utilsConfigs.practiceRange.start, utilsConfigs.nPracticeTrials)
     // return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 }
 
 // Constructs a stimulus name given a prefix and image number.
 // Uses imageExt defined globally (and privately) above.
 export function constructStimName(prefix: string, imageNumber: number) {
-    return prefix + imageNumber + '.' + imageExt;
+    return prefix + imageNumber + '.' + utilsConfigs.imgExt;
 }
 
 // Constructs a random array of n distractor images by name
 export function generateDistractorArray(n: number) {
-    var distractorNumbers: number[] = chooseNUniqueRandomWithinRange(n, dStart, dEnd);
+    var distractorNumbers: number[] = chooseNUniqueRandomWithinRange(n, utilsConfigs.distractorRange.start, utilsConfigs.distractorRange.end);
     var distractorImageNumbers: string[] = [];
     for (var i: number = 0; i < distractorNumbers.length; i++){
-        distractorImageNumbers.push(constructStimName(distractorPrefix, distractorNumbers[i]));
+        distractorImageNumbers.push(constructStimName(utilsConfigs.imagePrefixes[ImageType.Distractor], distractorNumbers[i]));
     }
 
     return distractorImageNumbers;
@@ -245,6 +204,8 @@ export function generateDistractorArray(n: number) {
 // them all into stimulus names, and then use the shuffle algorithm.
 // Have not benchmarked which is faster though.
 export function generatePracticeArray(prefix: string) {
+    const pStart: number = utilsConfigs.practiceRange.start;
+    const pEnd: number = utilsConfigs.practiceRange.end;
     var practiceNumbers: number[] = chooseNUniqueRandomWithinRange((pEnd - pStart + 1), pStart, pEnd);
     var practiceImages: string[] = [];
     for (var i: number = 0; i < practiceNumbers.length; i++) {
@@ -259,12 +220,6 @@ export function generatePracticeArray(prefix: string) {
 export function insert(arr: string[], index: number, item: string) {
     arr.splice(index, 0, item);
     return arr;
-}
-
-// Custom-defined condition codes for one fewer step in
-// data processing
-export function getCondCode(condition: string) {
-    return conditionCodes[condition];
 }
 
 // Condition names for readable data processing
