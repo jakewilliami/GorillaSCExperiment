@@ -70,7 +70,7 @@ const imageUtilsConfigs: ImageUtilsConfigs = {
 // Main experiment configs struct
 export const exprConfigs: ExperimentConfigs = {
     // Trial/block size definitions
-    nT2ImagesPerBlock: 60,
+    nT2ImagesPerBlock: 50, //This was previously 60
     nImagesInSequence: 20,
     nDistractors: 500,
     nBlocks: 3,
