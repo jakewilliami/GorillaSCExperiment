@@ -155,6 +155,7 @@ export enum ResponseKeyCode {
 }
 
 export enum ImageType {
+    None = '',
     Distractor = 'distractor',
     Face = 'face',
     Pareidolia = 'pareidolia',
@@ -235,8 +236,8 @@ export interface BlockStruct {
     t2PosGap: number,
     t2Condition: TargetCondition,
     thisTrialStruct: TrialStruct,
-    t1Image: string,
-    t2Image: string,
+    t1Image: ImageStruct,
+    t2Image: ImageStruct,
 }
 
 export interface NumRange {

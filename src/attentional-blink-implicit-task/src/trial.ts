@@ -1,4 +1,5 @@
 import {
+    ImageStruct,
     ResponseKeyCode, 
     BlockStruct,
     TargetCondition,
@@ -58,4 +59,12 @@ export function nextPracticeState(blockStruct: BlockStruct) {
         // if our trial is not over yet
         return [State.PracticePreTrial, blockStruct]
     }
+}
+
+export function getImageURLs(images: ImageStruct[]) {
+    const URLs: string[] = [];
+    for (let i = 0; i < images.length; i++) {
+        URLs.push(images[i].url);
+    }
+    return URLs;
 }
