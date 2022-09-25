@@ -32,6 +32,10 @@ export class GlobalExperimentState {
     consentFilename: string;
     debriefFilename: string;
 
+    // All image info
+    t1Images: ImageStruct[];
+    t2Images: ImageStruct[];
+    
     // Image URLs
     allFaceURLs: string[];
     allPareidoliaURLs: string[];
@@ -65,6 +69,10 @@ export class GlobalExperimentState {
         this.imageLoadingMessage = exprConfigs.imageLoadingMessage;
         this.consentFilename = exprConfigs.consentFilename;
         this.debriefFilename = exprConfigs.debriefFilename;
+
+        // ALl image info
+        this.t1Images = [];
+        this.t2Images = [];
 
         // Image URLs
         this.allFaceURLs = [];

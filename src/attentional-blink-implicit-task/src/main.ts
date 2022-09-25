@@ -42,18 +42,6 @@ if ((exprState.nT2ImagesPerBlock % exprState.lagPositions.length) !== 0) {
 // if we are allowed to press the response key or not
 let keypressAllowed = false;
 
-// Given an array of stimuli names, constructs an array
-// of stimuli URLs
-function constructURLArray(stimArr: string[]) {
-    const URLs: string[] = [];
-    for (let i = 0; i < stimArr.length; i++) {
-        const URL: string = gorilla.stimuliURL(stimArr[i]);
-        URLs.push(URL);
-    }
-
-    return URLs;
-}
-
 // Given an image name and type, construct its ImageStruct representation
 function getImageStruct(name: string, type: ImageType) {
     return {
@@ -80,34 +68,16 @@ let participantID: string;
 let participantGender: string;
 let participantAge: number;
 
-
-//// INITIALISE URL LISTS BEFORE TASK BEGINS
-// set number array for main target variables
-let allFacesAsNumbers: number[];
-let allObjectsAsNumbers: number[];
-let allPareidoliaAsNumbers: number[];
-let allWatchesAsNumbers: number[];
-
-// construct array of T2 images
-let allFaceNames: string[];
-let allObjectNames: string[];
-let allPareidoliaNames: string[];
-let allWatchNames: string[];
-
-// initialise number array for main target variables as global
-let allFaceURLs: string[];
-let allObjectURLs: string[];
-let allPareidoliaURLs: string[];
-let allWatchURLs: string[];
+// initialise image arrays as global
+let allDistractorImages: ImageStruct[];
+let allFaceImages: ImageStruct[];
+let allObjectImages: ImageStruct[];
+let allPareidoliaImages: ImageStruct[];
+let allWatchImages: ImageStruct[];
 let allPracticeTargetImages: ImageStruct[];  // TODO: this might need to be turned back to URLs in the interest of preloading
+
+// Initialise global target array
 const allExampleTargets = {};  // I would use type Record<string, string> if I could, but Gorilla complains
-
-// initialise URL array of all distractors as global
-let allDistractorURLs: string[];
-
-// set URL array of all distractors
-let allDistractorNumbers: number[];
-let allDistractorNames: string[];
 
 // all practice images
 let practiceImageNumbersPerT1Type: number[];
@@ -139,25 +109,34 @@ gorilla.ready(function(){
             //// INITIALISE URL LISTS BEFORE TASK BEGINS
             // set number array for main target variables
             // TODO: make these numbers dynamic/come from a dictionary of (ImageType => nImages)
-            allFacesAsNumbers = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);  // TODO: L to check that these numbers are correct (see config.ts)
-            allPareidoliaAsNumbers = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);
-            allWatchesAsNumbers = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);
-            allObjectsAsNumbers = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock); // T2 is always a flower
+            const allFacesAsNumbers: number[] = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);  // TODO: L to check that these numbers are correct (see config.ts)
+            const allPareidoliaAsNumbers: number[] = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);
+            const allWatchesAsNumbers: number[] = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);
+            const allObjectsAsNumbers: number[] = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock); // T2 is always a flower
             // construct array of T2 images
-            allFaceNames = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + exprState.imageUtilsConfigs.imgExt); // TODO: name images appropriately
-            allPareidoliaNames = utils.constructNameArray(allPareidoliaAsNumbers, 'Pareidolia', '.' + exprState.imageUtilsConfigs.imgExt);
-            allWatchNames = utils.constructNameArray(allWatchesAsNumbers, 'Watch', '.' + exprState.imageUtilsConfigs.imgExt);
-            allObjectNames = utils.constructNameArray(allObjectsAsNumbers, 'Flower', '.' + exprState.imageUtilsConfigs.imgExt);
+            // TODO: it would be nice to allow constructNameArray to take an ImageType that will construct the image names with preconfigured image name suffixes
+            const allFaceNames: string[] = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + exprState.imageUtilsConfigs.imgExt); // TODO: name images appropriately
+            const allPareidoliaNames: string[] = utils.constructNameArray(allPareidoliaAsNumbers, 'Pareidolia', '.' + exprState.imageUtilsConfigs.imgExt);
+            const allWatchNames: string[] = utils.constructNameArray(allWatchesAsNumbers, 'Watch', '.' + exprState.imageUtilsConfigs.imgExt);
+            const allObjectNames: string[] = utils.constructNameArray(allObjectsAsNumbers, 'Flower', '.' + exprState.imageUtilsConfigs.imgExt);
             // convert to URLs
-            exprState.allFaceURLs = constructURLArray(allFaceNames);
-            exprState.allObjectURLs = constructURLArray(allObjectNames);
-            exprState.allPareidoliaURLs = constructURLArray(allPareidoliaNames);
-            exprState.allWatchURLs = constructURLArray(allWatchNames);
+            allFaceImages = constructImageArray(allFaceNames, ImageType.Face);
+            allObjectImages = constructImageArray(allObjectNames, ImageType.Flower); // This experiment uses flower objects
+            allPareidoliaImages = constructImageArray(allPareidoliaNames, ImageType.Pareidolia);
+            allWatchImages = constructImageArray(allWatchNames, ImageType.Watch);
+            // Add all T1/T2 image information
+            // In the present experiment, T2 is always flower, and T1 can be either a watch, face, or pareidolia face
+            exprState.t1Images = [
+                ...allFaceImages,
+                ...allPareidoliaImages,
+                ...allWatchImages,
+            ];
+            exprState.t2Images = [...allObjectImages]
 
             // set URL array of all distractors
-            allDistractorNumbers = utils.constructNumberArray(1, exprState.nDistractors);
-            allDistractorNames = utils.constructNameArray(allDistractorNumbers, 'D', '.' + exprState.imageUtilsConfigs.imgExt) // TODO: name distractor images appropriately
-            allDistractorURLs = constructURLArray(allDistractorNames);
+            const allDistractorNumbers: number[] = utils.constructNumberArray(1, exprState.nDistractors);
+            const allDistractorNames: string[] = utils.constructNameArray(allDistractorNumbers, 'D', '.' + exprState.imageUtilsConfigs.imgExt) // TODO: name distractor images appropriately
+            allDistractorImages = constructImageArray(allDistractorNames, ImageType.Distractor);
 
             // get practice targets
             practiceImageNumbersPerT1Type = utils.constructNumberArray(1, exprState.nPracticeT1ImagesPerT1Type);
@@ -175,7 +154,7 @@ gorilla.ready(function(){
             practiceT2Images = constructImageArray(utils.generatePracticeArray('Bird'), ImageType.Bird);
             allPracticeTargetImages = [
                 ...practiceT1Images,
-                ...practiceT2Images
+                ...practiceT2Images,
             ];
 
             // add example target arrays as URLs to object
@@ -188,11 +167,9 @@ gorilla.ready(function(){
 
           // put all image URLs into a single vector for preloading
           const allImageURLs: ImageStruct[] = [
-              ...allDistractorURLs,
-              ...allWatchURLs,
-              ...allFaceURLs,
-              ...allPareidoliaURLs,
-              ...allObjectURLs,
+              ...allDistractorImages,
+              ...exprState.t1Images,
+              ...exprState.t2Images,
               ...allPracticeTargetImages,
               ...Object.keys(allExampleTargets).map(k => allExampleTargets[k]) // URLs from example targets.  Object.values(...) is not stabalised
           ];
