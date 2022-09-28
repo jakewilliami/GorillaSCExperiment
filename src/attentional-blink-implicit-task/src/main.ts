@@ -106,13 +106,13 @@ gorilla.ready(function(){
             //// INITIALISE URL LISTS BEFORE TASK BEGINS
             // set number array for main target variables
             // TODO: make these numbers dynamic/come from a dictionary of (ImageType => nImages)
-            const allFacesAsNumbers: number[] = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);  // TODO: L to check that these numbers are correct (see config.ts)
+            const allFacesAsNumbers: number[] = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);  // Set the no. of T1 images per block in config.ts
             const allPareidoliaAsNumbers: number[] = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);
             const allWatchesAsNumbers: number[] = utils.constructNumberArray(1, exprState.nT1ImagesPerBlock);
             const allObjectsAsNumbers: number[] = utils.constructNumberArray(1, exprState.nT2ImagesPerBlock); // T2 is always a flower
             // construct array of T2 images
             // TODO: it would be nice to allow constructNameArray to take an ImageType that will construct the image names with preconfigured image name suffixes
-            const allFaceNames: string[] = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + exprState.imageUtilsConfigs.imgExt); // TODO: name images appropriately
+            const allFaceNames: string[] = utils.constructNameArray(allFacesAsNumbers, 'Face', '.' + exprState.imageUtilsConfigs.imgExt); // Have named images appropriately 
             const allPareidoliaNames: string[] = utils.constructNameArray(allPareidoliaAsNumbers, 'Pareidolia', '.' + exprState.imageUtilsConfigs.imgExt);
             const allWatchNames: string[] = utils.constructNameArray(allWatchesAsNumbers, 'Watch', '.' + exprState.imageUtilsConfigs.imgExt);
             const allObjectNames: string[] = utils.constructNameArray(allObjectsAsNumbers, 'Flower', '.' + exprState.imageUtilsConfigs.imgExt);
@@ -132,12 +132,12 @@ gorilla.ready(function(){
 
             // set URL array of all distractors
             const allDistractorNumbers: number[] = utils.constructNumberArray(1, exprState.nDistractors);
-            const allDistractorNames: string[] = utils.constructNameArray(allDistractorNumbers, 'D', '.' + exprState.imageUtilsConfigs.imgExt) // TODO: name distractor images appropriately
+            const allDistractorNames: string[] = utils.constructNameArray(allDistractorNumbers, 'D', '.' + exprState.imageUtilsConfigs.imgExt) 
             allDistractorImages = constructImageArray(allDistractorNames, ImageType.Distractor);
 
             // get practice targets
             const practiceImageNumbersPerT1Type: number[] = utils.constructNumberArray(1, exprState.nPracticeT1ImagesPerT1Type);
-            const practiceFaceNames: string[] = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Pface', '.' + exprState.imageUtilsConfigs.imgExt); // TODO: name practice images appropriately
+            const practiceFaceNames: string[] = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Pface', '.' + exprState.imageUtilsConfigs.imgExt); // TODO:Get unique images for practice images
             const practiceWatchNames: string[] = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Pwatch', '.' + exprState.imageUtilsConfigs.imgExt);
             const practicePareidoliaNames: string[] = utils.constructNameArray(practiceImageNumbersPerT1Type, 'Ppareidolia', '.' + exprState.imageUtilsConfigs.imgExt);
             practiceFaceImages = constructImageArray(practiceFaceNames, ImageType.Face);
