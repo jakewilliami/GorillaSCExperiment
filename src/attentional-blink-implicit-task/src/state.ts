@@ -7,7 +7,7 @@ import {
 
 // This is one of our main classes that we use to keep 
 // track of experiment information globally.
-class GlobalExperimentState {
+export class GlobalExperimentState {
     // Trial/block size definitions
     nT2ImagesPerBlock: number;
     nImagesInSequence: number;

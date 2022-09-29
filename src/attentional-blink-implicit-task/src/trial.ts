@@ -3,9 +3,10 @@ import {
     ResponseKeyCode, 
     BlockStruct,
     TargetCondition,
-    GlobalExperimentState,
     State,
 } from 'types';
+
+import {GlobalExperimentState} from 'state';
 
 export function responseIsAllowed(respCode: number) {
     // return Object.values(ResponseKeyCode).includes(respCode);  // Requires ECMAScript 2017, so we can't use it
