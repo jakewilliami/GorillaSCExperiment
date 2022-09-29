@@ -6,13 +6,11 @@
 // API imports
 import gorilla = require('gorilla/gorilla');
 import stateMachine = require('gorilla/state_machine');
+
 // our imports
-import utils = require('utils');
-import trial = require('trial');
-import config = require('config');
+import {GlobalExperimentState} from 'state';
 import {
     BlockStruct,
-    GlobalExperimentState,
     ImageType,
     ImageStruct,
     ResponseKeyCode,
@@ -20,7 +18,9 @@ import {
     TargetCondition,
     TrialStruct,
 } from 'types';
-import { getImageURLs } from './trial';
+import config = require('config');
+import utils = require('utils');
+import trial = require('trial');
 
 /*--------------------------------------*/
 // Define a global experiment struct that will
@@ -380,7 +380,7 @@ gorilla.ready(function(){
             console.log("T2 display potential left are: " + blockStruct.t2DisplayPotentialArray);
 
             // update blockStruct to have correct trial array
-            blockStruct.trialArrayURLs = getImageURLs(practiceTrialImageArray);
+            blockStruct.trialArrayURLs = trial.getImageURLs(practiceTrialImageArray);
 
             console.log("THE TRIAL COUNTER IS " + blockStruct.trialCounter);
             machine.transition(State.PracticeTrial, blockStruct);
