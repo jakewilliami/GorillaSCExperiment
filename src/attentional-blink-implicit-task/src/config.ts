@@ -4,7 +4,7 @@ import {
     ResponseKeyCode,
     ImageUtilsConfigs,
     NumRange
-} from 'types';
+} from './types';
 
 // define proportion of distractors (i.e., 33% of trials)
 // are distractor arrays, so proportion is 0.33
@@ -70,7 +70,7 @@ const imageUtilsConfigs: ImageUtilsConfigs = {
 // Main experiment configs struct
 export const exprConfigs: ExperimentConfigs = {
     // Trial/block size definitions
-    nT2ImagesPerBlock: 50, //This was previously 60
+    nT2ImagesPerBlock: 50,
     nImagesInSequence: 20,
     nDistractors: 500,
     nBlocks: 3,
