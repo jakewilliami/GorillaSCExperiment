@@ -16,3 +16,9 @@ In this version of the experiment, the structure of the experiment was heavily m
 
 You can edit configurations for this experiment in [`config.ts`](./src/config.ts).  There may also be parameters (such as target types and response keys) that you should change in [`types.ts`](./src/types.ts).
 
+**In Gorilla, you must omit the file extensions**, so `config.ts` should be named in Gorilla as `config`, &c.
+
+Will from Gorilla support said:
+> The issue here was the naming of the files in the code tab.  They should be without the file extension.  Gorilla will implicitly assume that they are either .js or .ts files and treat them accordingly. If it were possible, another way of fixing this would have been to change the imports to filename.ts However, imports don't allow the extension to be specified so renaming the files was the best option!
+
+
